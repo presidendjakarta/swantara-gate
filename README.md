@@ -1,93 +1,268 @@
-# swantara-gate
+# Swantara Gate - API Gateway Proxy
 
+Aplikasi API Gateway Proxy yang dibangun menggunakan Go (Golang) dengan SQLite sebagai database.
 
+**Repository:** https://github.com/presidendjakarta/swantara-gate
 
-## Getting started
+## 🚀 Fitur Utama
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### Admin Panel
+- ✅ Manajemen User (CRUD dengan role-based access)
+- ✅ Manajemen API Consumers
+- ✅ Manajemen Hosts & Virtual Hosts
+- ✅ Load Balancing Configuration
+- ✅ Multi-port support (HTTP & HTTPS)
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+### Coming Soon
+- ⏳ Virtual Directories (API Routes)
+- ⏳ Authentication (JWT, API Key, Basic Auth)
+- ⏳ Rate Limiting
+- ⏳ Circuit Breaker
+- ⏳ SSL/TLS Management
+- ⏳ Proxy Server
+- ⏳ Health Check
+- ⏳ CORS Configuration
 
-## Add your files
+## 📋 Requirements
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+- Go 1.21 atau lebih tinggi
+- SQLite (pure Go, tidak perlu install SQLite)
+- Postman (untuk testing API)
+
+## 🛠️ Instalasi
+
+### 1. Clone Repository
+```bash
+cd x:\laragon\go-apps\swantara-gate
+```
+
+### 2. Install Dependencies
+```bash
+go mod tidy
+```
+
+### 3. Konfigurasi Environment
+File `.env` sudah tersedia dengan konfigurasi default:
+
+```env
+# Admin Panel Ports
+ADMIN_HTTP_PORT=8080
+ADMIN_HTTPS_PORT=8443
+
+# Proxy Gateway Ports
+PROXY_HTTP_PORT=8000
+PROXY_HTTPS_PORT=8440
+
+# Database
+DATABASE_PATH=./data/database.db
+DATABASE_SQL_PATH=./data/database.sql
+```
+
+### 4. Jalankan Aplikasi
+```bash
+go run cmd/server/main.go
+```
+
+Aplikasi akan berjalan di:
+- Admin HTTP: `http://localhost:8080`
+- Admin HTTPS: `https://localhost:8443` (butuh SSL cert)
+- Proxy HTTP: `http://localhost:8000` (coming soon)
+- Proxy HTTPS: `https://localhost:8440` (coming soon)
+
+## 📚 Struktur Project
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/presidendjakarta/swantara-gate.git
-git branch -M main
-git push -uf origin main
+swantara-gate/
+├── cmd/
+│   └── server/
+│       └── main.go              # Entry point aplikasi
+├── internal/
+│   ├── config/
+│   │   └── config.go            # Konfigurasi aplikasi
+│   ├── database/
+│   │   └── database.go          # Database connection & migration
+│   ├── model/
+│   │   ├── user.go              # User model
+│   │   ├── api_consumer.go      # API Consumer model
+│   │   ├── host.go              # Host model
+│   │   └── virtual_host.go      # Virtual Host model
+│   ├── repository/
+│   │   ├── user_repository.go
+│   │   ├── api_consumer_repository.go
+│   │   ├── host_repository.go
+│   │   └── virtual_host_repository.go
+│   ├── service/
+│   │   ├── user_service.go
+│   │   ├── api_consumer_service.go
+│   │   └── host_service.go
+│   ├── handler/
+│   │   └── admin_handler.go     # HTTP handlers
+│   ├── middleware/
+│   │   └── middleware.go        # Logging & CORS middleware
+│   └── response/
+│       └── response.go          # Response helpers
+├── data/
+│   ├── database.db              # SQLite database file
+│   └── database.sql             # Database schema
+├── docs/
+│   ├── DATABASE_DOCUMENTATION.md
+│   └── API_DOCUMENTATION.md
+├── .env                         # Environment variables
+├── go.mod
+├── go.sum
+└── README.md
 ```
 
-## Integrate with your tools
+## 🧪 Testing dengan Postman
 
-* [Set up project integrations](https://gitlab.com/presidendjakarta/swantara-gate/-/settings/integrations)
+### 1. Health Check
+```bash
+GET http://localhost:8080/api/health
+```
 
-## Collaborate with your team
+**Expected Response:**
+```json
+{
+  "status": "ok",
+  "message": "Swantara Gate Admin API is running"
+}
+```
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+### 2. Create User
+```bash
+POST http://localhost:8080/api/admin/users
+Content-Type: application/json
 
-## Test and Deploy
+{
+  "username": "admin",
+  "password": "admin123",
+  "full_name": "Super Admin",
+  "email": "admin@swantara.com",
+  "role": "super_admin",
+  "is_active": true
+}
+```
 
-Use the built-in continuous integration in GitLab.
+### 3. Get All Users
+```bash
+GET http://localhost:8080/api/admin/users?page=1&limit=10
+```
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+### 4. Create API Consumer
+```bash
+POST http://localhost:8080/api/admin/consumers
+Content-Type: application/json
 
-***
+{
+  "consumer_name": "MyApp",
+  "description": "My mobile application",
+  "contact_email": "dev@myapp.com",
+  "is_active": true
+}
+```
 
-# Editing this README
+### 5. Create Host
+```bash
+POST http://localhost:8080/api/admin/hosts
+Content-Type: application/json
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+{
+  "host_name": "api.example.com",
+  "description": "Main API host",
+  "is_active": true
+}
+```
 
-## Suggestions for a good README
+### 6. Create Virtual Host
+```bash
+POST http://localhost:8080/api/admin/virtual-hosts
+Content-Type: application/json
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+{
+  "host_id": 1,
+  "vhost_name": "v1.api.example.com",
+  "lb_algorithm": "round_robin",
+  "sticky_session": false,
+  "failover_mode": "active-active",
+  "is_active": true
+}
+```
 
-## Name
-Choose a self-explaining name for your project.
+## 📖 API Documentation
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+Dokumentasi lengkap API tersedia di:
+- [API Documentation](docs/API_DOCUMENTATION.md)
+- [Database Documentation](docs/DATABASE_DOCUMENTATION.md)
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## 🔐 Security Features
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- ✅ Password hashing dengan bcrypt
+- ✅ SQLite pure Go (no CGO/gcc required)
+- ✅ CORS middleware
+- ✅ Request logging
+- ✅ Input validation
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## 🏗️ Architecture
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Aplikasi menggunakan **Clean Architecture** dengan lapisan:
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+1. **Handler/Controller** - Menangani HTTP request/response
+2. **Service** - Business logic dan validasi
+3. **Repository** - Database operations
+4. **Model** - Data structures
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## 📝 Database
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+Menggunakan **SQLite** dengan driver pure Go (`modernc.org/sqlite`):
+- ✅ Tidak perlu CGO
+- ✅ Tidak perlu install GCC
+- ✅ Cross-platform compatible
+- ✅ Zero configuration
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## 🔧 Configuration
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+Semua konfigurasi dapat diubah melalui file `.env`:
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| ADMIN_HTTP_PORT | 8080 | Port Admin HTTP |
+| ADMIN_HTTPS_PORT | 8443 | Port Admin HTTPS |
+| PROXY_HTTP_PORT | 8000 | Port Proxy HTTP |
+| PROXY_HTTPS_PORT | 8440 | Port Proxy HTTPS |
+| DATABASE_PATH | ./data/database.db | Path database |
+| APP_ENV | development | Environment (development/production) |
+| LOG_LEVEL | info | Log level (debug/info/warn/error) |
 
-## License
-For open source projects, say how it is licensed.
+## 🚧 Next Steps
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Yang akan diimplementasikan selanjutnya:
+
+1. **Virtual Directories CRUD** - API routes management
+2. **Authentication** - JWT, API Key, Basic Auth
+3. **Proxy Server** - Reverse proxy dengan load balancing
+4. **Rate Limiting** - Request throttling
+5. **Circuit Breaker** - Fault tolerance
+6. **SSL/TLS** - HTTPS dengan Let's Encrypt
+7. **Health Check** - Backend monitoring
+8. **Dashboard UI** - Admin panel frontend
+
+## 🤝 Contributing
+
+Untuk menambahkan fitur baru:
+
+1. Buat branch fitur baru
+2. Commit changes
+3. Push ke branch
+4. Buat Pull Request
+
+## 📄 License
+
+Project ini dibuat untuk tujuan pembelajaran.
+
+## 👥 Author
+
+Swantara Gate API Gateway
+
+---
+
+**Status Development:** ✅ Admin API CRUD已基本完成，可以测试！
