@@ -439,9 +439,16 @@ func setupAdminRouter(
 	// Routes yang dilindungi auth middleware
 	mux.Handle("GET /api/admin/auth/me", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.Me)))
 
-	// Menggunakan middleware
-	_ = authMiddleware // tersedia untuk proteksi route lain di masa depan
-	return middleware.LoggingMiddleware(middleware.CORSMiddleware(mux))
+	// Wrap semua route dengan auth middleware kecuali public routes
+	protectedHandler := authMiddleware.RequireAuthExcept(
+		mux,
+		"/api/health",
+		"/api/admin/auth/login",
+		"/api/admin/auth/refresh",
+		"/api/admin/auth/logout",
+	)
+
+	return middleware.LoggingMiddleware(middleware.CORSMiddleware(protectedHandler))
 }
 
 // toString mengubah int ke string

@@ -82,6 +82,46 @@ func (m *AuthMiddleware) RequireRole(roles ...string) func(http.Handler) http.Ha
 	}
 }
 
+// RequireAuthExcept membungkus handler dengan auth check kecuali untuk path tertentu
+func (m *AuthMiddleware) RequireAuthExcept(next http.Handler, publicPaths ...string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Cek apakah path termasuk public (tidak perlu auth)
+		for _, publicPath := range publicPaths {
+			if r.URL.Path == publicPath {
+				next.ServeHTTP(w, r)
+				return
+			}
+		}
+
+		// Untuk path yang bukan public, wajib auth
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			response.Error(w, http.StatusUnauthorized, "Token tidak ditemukan")
+			return
+		}
+
+		// Ambil token dari "Bearer <token>"
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+			response.Error(w, http.StatusUnauthorized, "Format token tidak valid")
+			return
+		}
+
+		tokenStr := parts[1]
+
+		// Validasi token
+		claims, err := m.AuthService.ValidateAccessToken(tokenStr)
+		if err != nil {
+			response.Error(w, http.StatusUnauthorized, "Token tidak valid atau sudah expired")
+			return
+		}
+
+		// Set claims ke context
+		ctx := context.WithValue(r.Context(), model.ContextKeyClaims, claims)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 // =========================================================
 // LOGIN RATE LIMITER
 // =========================================================
