@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/presidendjakarta/swantara-gate/internal/model"
 	"github.com/presidendjakarta/swantara-gate/internal/response"
@@ -53,15 +54,29 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	response.Success(w, "Token berhasil diperbarui", tokenResp)
 }
 
-// Logout mencabut refresh token
+// Logout mencabut refresh token dan blacklist access token
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	// Parse body (opsional, bisa kosong)
 	var req model.RefreshTokenRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.BadRequest(w, "Request body tidak valid")
+	_ = json.NewDecoder(r.Body).Decode(&req)
+
+	// Ambil access token dari Authorization header untuk di-blacklist
+	var accessToken string
+	authHeader := r.Header.Get("Authorization")
+	if authHeader != "" {
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
+			accessToken = parts[1]
+		}
+	}
+
+	// Minimal harus ada salah satu: access token atau refresh token
+	if accessToken == "" && req.RefreshToken == "" {
+		response.BadRequest(w, "Kirim Authorization header atau refresh_token di body")
 		return
 	}
 
-	if err := h.Service.Logout(req.RefreshToken); err != nil {
+	if err := h.Service.Logout(req.RefreshToken, accessToken); err != nil {
 		response.BadRequest(w, err.Error())
 		return
 	}

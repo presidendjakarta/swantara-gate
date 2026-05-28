@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -18,15 +19,40 @@ type AuthService struct {
 	JWTSecret            string
 	AccessExpireMinutes  int
 	RefreshExpireDays    int
+
+	// Token blacklist untuk invalidasi access token saat logout
+	blacklist     map[string]time.Time // token -> expiry time
+	blacklistLock sync.RWMutex
 }
 
 // NewAuthService membuat instance baru AuthService
 func NewAuthService(authRepo *repository.AuthRepository, jwtSecret string, accessExpMin, refreshExpDays int) *AuthService {
-	return &AuthService{
+	svc := &AuthService{
 		AuthRepo:            authRepo,
 		JWTSecret:           jwtSecret,
 		AccessExpireMinutes: accessExpMin,
 		RefreshExpireDays:   refreshExpDays,
+		blacklist:           make(map[string]time.Time),
+	}
+
+	// Goroutine untuk membersihkan token expired dari blacklist setiap 5 menit
+	go svc.cleanupBlacklist()
+
+	return svc
+}
+
+// cleanupBlacklist membersihkan token yang sudah expired dari blacklist
+func (s *AuthService) cleanupBlacklist() {
+	ticker := time.NewTicker(5 * time.Minute)
+	for range ticker.C {
+		now := time.Now()
+		s.blacklistLock.Lock()
+		for token, expiry := range s.blacklist {
+			if now.After(expiry) {
+				delete(s.blacklist, token)
+			}
+		}
+		s.blacklistLock.Unlock()
 	}
 }
 
@@ -149,16 +175,57 @@ func (s *AuthService) RefreshToken(refreshTokenStr string) (*model.TokenResponse
 	}, nil
 }
 
-// Logout mencabut refresh token
-func (s *AuthService) Logout(refreshTokenStr string) error {
-	if refreshTokenStr == "" {
-		return fmt.Errorf("refresh_token wajib diisi")
+// Logout mencabut refresh token dan blacklist access token
+func (s *AuthService) Logout(refreshTokenStr string, accessTokenStr string) error {
+	// Blacklist access token agar tidak bisa dipakai lagi
+	if accessTokenStr != "" {
+		s.BlacklistAccessToken(accessTokenStr)
 	}
-	return s.AuthRepo.RevokeRefreshToken(refreshTokenStr)
+
+	// Revoke refresh token jika diberikan
+	if refreshTokenStr != "" {
+		return s.AuthRepo.RevokeRefreshToken(refreshTokenStr)
+	}
+
+	return nil
+}
+
+// BlacklistAccessToken menambahkan access token ke blacklist
+func (s *AuthService) BlacklistAccessToken(tokenStr string) {
+	// Parse token untuk mendapatkan expiry time
+	expiry := time.Now().Add(time.Duration(s.AccessExpireMinutes) * time.Minute)
+
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(s.JWTSecret), nil
+	})
+	if err == nil && token.Valid {
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			if exp, ok := claims["exp"].(float64); ok {
+				expiry = time.Unix(int64(exp), 0)
+			}
+		}
+	}
+
+	s.blacklistLock.Lock()
+	s.blacklist[tokenStr] = expiry
+	s.blacklistLock.Unlock()
+}
+
+// IsTokenBlacklisted mengecek apakah token ada di blacklist
+func (s *AuthService) IsTokenBlacklisted(tokenStr string) bool {
+	s.blacklistLock.RLock()
+	defer s.blacklistLock.RUnlock()
+	_, exists := s.blacklist[tokenStr]
+	return exists
 }
 
 // ValidateAccessToken memvalidasi access token dan mengembalikan claims
 func (s *AuthService) ValidateAccessToken(tokenString string) (*model.JWTClaims, error) {
+	// Cek apakah token sudah di-blacklist (sudah logout)
+	if s.IsTokenBlacklisted(tokenString) {
+		return nil, fmt.Errorf("token sudah dicabut")
+	}
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("metode signing tidak valid")
