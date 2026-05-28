@@ -316,59 +316,39 @@ func (ps *ProxyServer) selectUpstream(vhost *VHostConfig, r *http.Request) *Upst
 }
 
 // getUpstreamsOrdered returns all upstream servers for a vhost, ordered by load balancer preference.
-// Healthy servers come first, then unhealthy ones as fallback.
+// The LB determines the order for ALL servers (for proper distribution like round-robin).
+// If a server fails during the request, the failover loop tries the next one.
 func (ps *ProxyServer) getUpstreamsOrdered(vhost *VHostConfig, r *http.Request) []*UpstreamConfig {
 	allUpstreams := ps.router.GetUpstreams(vhost.ID)
 	if len(allUpstreams) == 0 {
 		return nil
 	}
 
-	// Separate healthy and unhealthy
-	var healthy, unhealthy []*UpstreamConfig
-	for _, u := range allUpstreams {
-		if ps.healthChecker.IsHealthy(u.ID) {
-			healthy = append(healthy, u)
-		} else {
-			unhealthy = append(unhealthy, u)
-		}
-	}
-
-	// If no healthy, use all as fallback
-	if len(healthy) == 0 {
-		healthy = allUpstreams
-		unhealthy = nil
-	}
-
-	// Use load balancer to determine starting order for healthy servers
+	// Use load balancer to pick the starting server from ALL upstreams
+	// (not just healthy ones) so round-robin distributes properly.
 	lb := ps.getLoadBalancer(vhost)
+	var preferred *UpstreamConfig
+
 	if vhost.StickySession {
 		sw := NewStickyWrapper(lb)
-		preferred, _ := sw.Select(healthy, r)
-		if preferred != nil {
-			// Put preferred first, then the rest
-			ordered := []*UpstreamConfig{preferred}
-			for _, u := range healthy {
-				if u.ID != preferred.ID {
-					ordered = append(ordered, u)
-				}
-			}
-			return append(ordered, unhealthy...)
-		}
+		preferred, _ = sw.Select(allUpstreams, r)
 	} else {
-		preferred := lb.Select(healthy, r)
-		if preferred != nil {
-			ordered := []*UpstreamConfig{preferred}
-			for _, u := range healthy {
-				if u.ID != preferred.ID {
-					ordered = append(ordered, u)
-				}
-			}
-			return append(ordered, unhealthy...)
-		}
+		preferred = lb.Select(allUpstreams, r)
 	}
 
-	// Fallback: healthy first, then unhealthy
-	return append(healthy, unhealthy...)
+	if preferred != nil {
+		// Put preferred first, then the rest in original order
+		ordered := make([]*UpstreamConfig, 0, len(allUpstreams))
+		ordered = append(ordered, preferred)
+		for _, u := range allUpstreams {
+			if u.ID != preferred.ID {
+				ordered = append(ordered, u)
+			}
+		}
+		return ordered
+	}
+
+	return allUpstreams
 }
 
 // getLoadBalancer returns the load balancer for a vhost, creating if needed
