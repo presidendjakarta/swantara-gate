@@ -9,6 +9,7 @@ import (
 	"github.com/presidendjakarta/swantara-gate/internal/database"
 	"github.com/presidendjakarta/swantara-gate/internal/handler"
 	"github.com/presidendjakarta/swantara-gate/internal/middleware"
+	"github.com/presidendjakarta/swantara-gate/internal/proxy"
 	"github.com/presidendjakarta/swantara-gate/internal/repository"
 	"github.com/presidendjakarta/swantara-gate/internal/service"
 	"github.com/joho/godotenv"
@@ -160,11 +161,25 @@ func main() {
 	// 	}
 	// }()
 
-	// TODO: Jalankan Proxy HTTP & HTTPS Servers
-	// Ini akan diimplementasikan setelah admin API selesai
+	// Inisialisasi Proxy Server
+	proxyServer := proxy.NewProxyServer(db)
+	proxyServer.Start()
+	defer proxyServer.Stop()
+
+	// Menjalankan Proxy HTTP Server
+	go func() {
+		addr := ":" + toString(cfg.ProxyHTTPPort)
+		log.Printf("🔀 Proxy HTTP Server berjalan di %s", addr)
+		if err := http.ListenAndServe(addr, proxyServer); err != nil {
+			log.Fatalf("❌ Proxy HTTP Server error: %v", err)
+		}
+	}()
+
+	// TODO: Jalankan Proxy HTTPS Server (perlu sertifikat SSL - Phase 9)
 
 	log.Println("✅ Swantara Gate API Gateway siap digunakan!")
 	log.Println("📍 Admin Panel: http://localhost:" + toString(cfg.AdminHTTPPort))
+	log.Println("📍 Proxy Gateway: http://localhost:" + toString(cfg.ProxyHTTPPort))
 	
 	// Blocking agar program tidak selesai
 	select {}
