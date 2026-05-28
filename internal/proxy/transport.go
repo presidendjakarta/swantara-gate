@@ -34,41 +34,16 @@ func NewTransport() *Transport {
 	}
 }
 
-// Forward sends the request to the selected upstream server
+// Forward sends the request to the selected upstream server with retries to the SAME server.
+// Deprecated: Use ForwardOnce + failover logic in proxy.go instead.
 func (t *Transport) Forward(r *http.Request, upstream *UpstreamConfig, route *VDirConfig) (*ProxyResponse, error) {
-	var lastErr error
+	return t.ForwardOnce(r, upstream, route)
+}
 
-	maxAttempts := route.RetryCount + 1
-	if maxAttempts < 1 {
-		maxAttempts = 1
-	}
-
-	for attempt := 0; attempt < maxAttempts; attempt++ {
-		if attempt > 0 {
-			// Delay between retries
-			delay := time.Duration(route.RetryDelayMs) * time.Millisecond
-			if delay <= 0 {
-				delay = 100 * time.Millisecond
-			}
-			time.Sleep(delay)
-		}
-
-		resp, err := t.doForward(r, upstream, route)
-		if err != nil {
-			lastErr = err
-			continue
-		}
-
-		// If server error and we have retries left, retry
-		if resp.StatusCode >= 502 && resp.StatusCode <= 504 && attempt < maxAttempts-1 {
-			lastErr = fmt.Errorf("upstream returned %d", resp.StatusCode)
-			continue
-		}
-
-		return resp, nil
-	}
-
-	return nil, fmt.Errorf("all %d attempts failed: %w", maxAttempts, lastErr)
+// ForwardOnce sends a single request attempt to the upstream server (no retries).
+// Failover to different upstreams is handled by the caller (proxy.go).
+func (t *Transport) ForwardOnce(r *http.Request, upstream *UpstreamConfig, route *VDirConfig) (*ProxyResponse, error) {
+	return t.doForward(r, upstream, route)
 }
 
 // doForward performs a single proxy request to the upstream

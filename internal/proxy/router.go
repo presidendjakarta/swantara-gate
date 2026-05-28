@@ -2,7 +2,9 @@ package proxy
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -72,18 +74,20 @@ type UpstreamConfig struct {
 type Router struct {
 	mu        sync.RWMutex
 	db        *sql.DB
-	hostMap   map[string]*VHostConfig   // hostname -> vhost
-	routeMap  map[int64][]*VDirConfig   // vhost_id -> sorted routes
+	hostMap   map[string][]*VHostConfig  // hostname -> list of vhosts (supports multi-vhost per host)
+	routeMap  map[int64][]*VDirConfig    // vhost_id -> sorted routes
 	upstreams map[int64][]*UpstreamConfig // vhost_id -> upstream servers
+	debug     bool
 }
 
 // NewRouter creates a new Router and loads configuration from the database
 func NewRouter(db *sql.DB) *Router {
 	r := &Router{
 		db:        db,
-		hostMap:   make(map[string]*VHostConfig),
+		hostMap:   make(map[string][]*VHostConfig),
 		routeMap:  make(map[int64][]*VDirConfig),
 		upstreams: make(map[int64][]*UpstreamConfig),
+		debug:     os.Getenv("PROXY_DEBUG") == "1" || os.Getenv("PROXY_DEBUG") == "true",
 	}
 	r.Reload()
 	return r
@@ -91,7 +95,7 @@ func NewRouter(db *sql.DB) *Router {
 
 // Reload reloads all route configuration from the database
 func (r *Router) Reload() {
-	hostMap := make(map[string]*VHostConfig)
+	hostMap := make(map[string][]*VHostConfig)
 	routeMap := make(map[int64][]*VDirConfig)
 	upstreams := make(map[int64][]*UpstreamConfig)
 
@@ -121,9 +125,10 @@ func (r *Router) Reload() {
 		vh.VHostName = vhostName
 		vh.StickySession = stickySession == 1
 
-		// Map both host_name and vhost_name to this vhost config
-		hostMap[strings.ToLower(hostName)] = &vh
-		hostMap[strings.ToLower(vhostName)] = &vh
+		vhPtr := &vh
+		// Map both host_name and vhost_name to this vhost config (append, not overwrite)
+		hostMap[strings.ToLower(hostName)] = appendUniqueVHost(hostMap[strings.ToLower(hostName)], vhPtr)
+		hostMap[strings.ToLower(vhostName)] = appendUniqueVHost(hostMap[strings.ToLower(vhostName)], vhPtr)
 	}
 
 	// Load active virtual directories
@@ -244,14 +249,48 @@ func (r *Router) Reload() {
 	r.upstreams = upstreams
 	r.mu.Unlock()
 
-	log.Printf("[Proxy] Config loaded: %d hosts, %d route groups, %d upstream groups",
-		len(hostMap), len(routeMap), len(upstreams))
+	// Count total vhost entries
+	vhostCount := 0
+	for _, vhosts := range hostMap {
+		vhostCount += len(vhosts)
+	}
+	log.Printf("[Proxy] Config loaded: %d host keys, %d vhost entries, %d route groups, %d upstream groups",
+		len(hostMap), vhostCount, len(routeMap), len(upstreams))
+
+	if r.debug {
+		log.Println("[Proxy:DEBUG] === Host Map ===")
+		for hostname, vhosts := range hostMap {
+			for _, vh := range vhosts {
+				log.Printf("[Proxy:DEBUG]   %q → VHost ID=%d (%s)", hostname, vh.ID, vh.VHostName)
+			}
+		}
+		log.Println("[Proxy:DEBUG] === Route Map ===")
+		for vhostID, routes := range routeMap {
+			for _, rt := range routes {
+				log.Printf("[Proxy:DEBUG]   VHost=%d → Route ID=%d [%s] %s → %s",
+					vhostID, rt.ID, rt.MatchType, rt.SourcePath, rt.TargetPath)
+			}
+		}
+		log.Println("[Proxy:DEBUG] === Upstreams ===")
+		for vhostID, ups := range upstreams {
+			for _, u := range ups {
+				log.Printf("[Proxy:DEBUG]   VHost=%d → Upstream ID=%d %s:%d (active=%v)",
+					vhostID, u.ID, u.TargetHost, u.TargetPort, u.IsActive)
+			}
+		}
+	}
 }
 
-// Match finds the matching virtual host and route for a given hostname and path
+// Match finds the matching virtual host and route for a given hostname and path.
+// It iterates through ALL vhosts registered for this hostname and checks routes
+// across all of them. This supports the pattern:
+//   Host "api.example.com" → VHost1 has route /api, VHost2 has route /admin
+//   Each vhost has its own upstream servers.
 func (r *Router) Match(hostname, path string) *RouteMatch {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
+
+	origHost := hostname
 
 	// Strip port from hostname
 	if idx := strings.LastIndex(hostname, ":"); idx != -1 {
@@ -259,27 +298,69 @@ func (r *Router) Match(hostname, path string) *RouteMatch {
 	}
 	hostname = strings.ToLower(hostname)
 
-	vhost, ok := r.hostMap[hostname]
+	vhosts, ok := r.hostMap[hostname]
 	if !ok {
+		if r.debug {
+			available := make([]string, 0, len(r.hostMap))
+			for h := range r.hostMap {
+				available = append(available, h)
+			}
+			log.Printf("[Proxy:DEBUG] NO HOST MATCH | incoming=%q (raw=%q) | registered=%v",
+				hostname, origHost, available)
+		}
 		return nil
 	}
 
-	routes, ok := r.routeMap[vhost.ID]
-	if !ok {
-		return nil
-	}
+	// Iterate through all vhosts for this hostname, find matching route
+	for _, vhost := range vhosts {
+		routes, ok := r.routeMap[vhost.ID]
+		if !ok {
+			continue
+		}
 
-	for _, route := range routes {
-		if params, matched := matchRoute(route, path); matched {
-			return &RouteMatch{
-				VirtualHost:      vhost,
-				VirtualDirectory: route,
-				PathParams:       params,
+		for _, route := range routes {
+			if params, matched := matchRoute(route, path); matched {
+				if r.debug {
+					log.Printf("[Proxy:DEBUG] MATCHED | host=%q path=%q → VHost=%d (%s) Route=%d (%s %s)",
+						hostname, path, vhost.ID, vhost.VHostName, route.ID, route.MatchType, route.SourcePath)
+				}
+				return &RouteMatch{
+					VirtualHost:      vhost,
+					VirtualDirectory: route,
+					PathParams:       params,
+				}
 			}
 		}
 	}
 
+	if r.debug {
+		var debugInfo []string
+		for _, vhost := range vhosts {
+			routes := r.routeMap[vhost.ID]
+			for _, rt := range routes {
+				debugInfo = append(debugInfo, fmt.Sprintf("VHost=%d[%s]%s", vhost.ID, rt.MatchType, rt.SourcePath))
+			}
+		}
+		if len(debugInfo) == 0 {
+			log.Printf("[Proxy:DEBUG] HOST MATCHED but NO ROUTES in any VHost | host=%q path=%q | vhosts=%d",
+				hostname, path, len(vhosts))
+		} else {
+			log.Printf("[Proxy:DEBUG] HOST MATCHED but NO PATH MATCH | host=%q path=%q | available=%v",
+				hostname, path, debugInfo)
+		}
+	}
+
 	return nil
+}
+
+// appendUniqueVHost appends a vhost to the slice if not already present (by ID)
+func appendUniqueVHost(slice []*VHostConfig, vh *VHostConfig) []*VHostConfig {
+	for _, existing := range slice {
+		if existing.ID == vh.ID {
+			return slice
+		}
+	}
+	return append(slice, vh)
 }
 
 // GetUpstreams returns upstream servers for a virtual host

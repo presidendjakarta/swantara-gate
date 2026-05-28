@@ -204,28 +204,54 @@ func (ps *ProxyServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ps.headerProcessor.ApplyRequestHeaders(route.ID, r)
 	ps.queryRewriter.Apply(route.ID, r)
 
-	// Step 13: Select upstream via load balancer
-	upstream := ps.selectUpstream(vhost, r)
-	if upstream == nil {
-		http.Error(w, `{"error":"no healthy upstream servers available"}`, http.StatusServiceUnavailable)
+	// Step 13: Select upstream and forward with failover
+	// Try each upstream one by one. If one fails, move to the next.
+	upstreamList := ps.getUpstreamsOrdered(vhost, r)
+	if len(upstreamList) == 0 {
+		http.Error(w, `{"error":"no upstream servers available"}`, http.StatusServiceUnavailable)
 		ps.accessLogger.LogRequest(r, http.StatusServiceUnavailable, 0, time.Since(start), vhost.ID, route.ID, nil)
 		return
 	}
 
-	// Step 14: Forward request via transport (with retries)
-	resp, err := ps.transport.Forward(r, upstream, route)
-	if err != nil {
-		ps.healthChecker.MarkFailed(upstream)
+	var resp *ProxyResponse
+	var upstream *UpstreamConfig
+	var lastErr error
+
+	for i, candidate := range upstreamList {
+		resp, lastErr = ps.transport.ForwardOnce(r, candidate, route)
+		if lastErr == nil && resp.StatusCode < 502 {
+			// Success
+			upstream = candidate
+			ps.healthChecker.MarkSuccess(candidate)
+			ps.circuitBreaker.RecordSuccess(route.ID)
+			break
+		}
+
+		// Failure — mark and try next upstream
+		ps.healthChecker.MarkFailed(candidate)
+		if lastErr == nil {
+			lastErr = fmt.Errorf("upstream returned %d", resp.StatusCode)
+		}
+		log.Printf("[Proxy] Upstream %s:%d failed (%d/%d): %v",
+			candidate.TargetHost, candidate.TargetPort, i+1, len(upstreamList), lastErr)
+		resp = nil
+
+		// Brief delay before trying next
+		if i < len(upstreamList)-1 && route.RetryDelayMs > 0 {
+			time.Sleep(time.Duration(route.RetryDelayMs) * time.Millisecond)
+		}
+	}
+
+	if resp == nil {
 		ps.circuitBreaker.RecordFailure(route.ID)
-		log.Printf("[Proxy] Forward error to %s:%d: %v", upstream.TargetHost, upstream.TargetPort, err)
-		http.Error(w, fmt.Sprintf(`{"error":"upstream error: %s"}`, err.Error()), http.StatusBadGateway)
+		errMsg := "all upstream servers failed"
+		if lastErr != nil {
+			errMsg = fmt.Sprintf("all %d upstreams failed: %s", len(upstreamList), lastErr.Error())
+		}
+		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, errMsg), http.StatusBadGateway)
 		ps.accessLogger.LogRequest(r, http.StatusBadGateway, 0, time.Since(start), vhost.ID, route.ID, upstream)
 		return
 	}
-
-	// Mark upstream as successful
-	ps.healthChecker.MarkSuccess(upstream)
-	ps.circuitBreaker.RecordSuccess(route.ID)
 
 	// Step 15: Apply response header rules
 	ps.headerProcessor.ApplyResponseHeaders(route.ID, resp.Header)
@@ -282,30 +308,67 @@ func (ps *ProxyServer) handleWebSocket(w http.ResponseWriter, r *http.Request, v
 
 // selectUpstream selects an upstream server using load balancing
 func (ps *ProxyServer) selectUpstream(vhost *VHostConfig, r *http.Request) *UpstreamConfig {
+	upstreams := ps.getUpstreamsOrdered(vhost, r)
+	if len(upstreams) == 0 {
+		return nil
+	}
+	return upstreams[0]
+}
+
+// getUpstreamsOrdered returns all upstream servers for a vhost, ordered by load balancer preference.
+// Healthy servers come first, then unhealthy ones as fallback.
+func (ps *ProxyServer) getUpstreamsOrdered(vhost *VHostConfig, r *http.Request) []*UpstreamConfig {
 	allUpstreams := ps.router.GetUpstreams(vhost.ID)
 	if len(allUpstreams) == 0 {
 		return nil
 	}
 
-	// Filter to healthy servers
-	healthy := ps.healthChecker.GetHealthyServers(allUpstreams)
-	if len(healthy) == 0 {
-		// If all servers are unhealthy, try all as a fallback
-		healthy = allUpstreams
+	// Separate healthy and unhealthy
+	var healthy, unhealthy []*UpstreamConfig
+	for _, u := range allUpstreams {
+		if ps.healthChecker.IsHealthy(u.ID) {
+			healthy = append(healthy, u)
+		} else {
+			unhealthy = append(unhealthy, u)
+		}
 	}
 
-	// Get or create load balancer for this vhost
-	lb := ps.getLoadBalancer(vhost)
+	// If no healthy, use all as fallback
+	if len(healthy) == 0 {
+		healthy = allUpstreams
+		unhealthy = nil
+	}
 
-	// Handle sticky sessions
+	// Use load balancer to determine starting order for healthy servers
+	lb := ps.getLoadBalancer(vhost)
 	if vhost.StickySession {
 		sw := NewStickyWrapper(lb)
-		selected, needsCookie := sw.Select(healthy, r)
-		_ = needsCookie // cookie is set in ServeHTTP
-		return selected
+		preferred, _ := sw.Select(healthy, r)
+		if preferred != nil {
+			// Put preferred first, then the rest
+			ordered := []*UpstreamConfig{preferred}
+			for _, u := range healthy {
+				if u.ID != preferred.ID {
+					ordered = append(ordered, u)
+				}
+			}
+			return append(ordered, unhealthy...)
+		}
+	} else {
+		preferred := lb.Select(healthy, r)
+		if preferred != nil {
+			ordered := []*UpstreamConfig{preferred}
+			for _, u := range healthy {
+				if u.ID != preferred.ID {
+					ordered = append(ordered, u)
+				}
+			}
+			return append(ordered, unhealthy...)
+		}
 	}
 
-	return lb.Select(healthy, r)
+	// Fallback: healthy first, then unhealthy
+	return append(healthy, unhealthy...)
 }
 
 // getLoadBalancer returns the load balancer for a vhost, creating if needed
