@@ -1,0 +1,503 @@
+{
+	"info": {
+		"_postman_id": "swantara-gate-api-collection",
+		"name": "Swantara Gate API Gateway",
+		"description": "Complete API documentation for Swantara Gate - API Gateway Admin Panel.\n\nBase URL: http://localhost:9090\nProxy URL: http://localhost:8000",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:9090",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/health",
+							"host": ["{{base_url}}"],
+							"path": ["api", "health"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.access_token) {",
+									"    pm.collectionVariables.set('access_token', jsonData.data.access_token);",
+									"    pm.collectionVariables.set('refresh_token', jsonData.data.refresh_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.access_token) {",
+									"    pm.collectionVariables.set('access_token', jsonData.data.access_token);",
+									"    pm.collectionVariables.set('refresh_token', jsonData.data.refresh_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/auth/refresh",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "auth", "refresh"]
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"auth": { "type": "noauth" },
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "auth", "logout"]
+						}
+					}
+				},
+				{
+					"name": "Get Current User (Me)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "auth", "me"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"newuser\",\n    \"password\": \"password123\",\n    \"full_name\": \"New User\",\n    \"email\": \"newuser@example.com\",\n    \"role\": \"admin\",\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users"]
+						}
+					}
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/admin/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users"]
+						}
+					}
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", "1"]
+						}
+					}
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"full_name\": \"Updated Name\",\n    \"email\": \"updated@example.com\",\n    \"role\": \"admin\",\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "API Consumers",
+			"item": [
+				{
+					"name": "Create Consumer",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": { "mode": "raw", "raw": "{\n    \"consumer_name\": \"my-app\",\n    \"description\": \"My Application\",\n    \"contact_email\": \"dev@myapp.com\",\n    \"is_active\": true\n}" },
+						"url": { "raw": "{{base_url}}/api/admin/consumers", "host": ["{{base_url}}"], "path": ["api", "admin", "consumers"] }
+					}
+				},
+				{ "name": "Get All Consumers", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/consumers", "host": ["{{base_url}}"], "path": ["api", "admin", "consumers"] } } },
+				{ "name": "Get Consumer by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/consumers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "consumers", "1"] } } },
+				{ "name": "Update Consumer", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"description\": \"Updated desc\",\n    \"contact_email\": \"new@email.com\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/consumers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "consumers", "1"] } } },
+				{ "name": "Delete Consumer", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/consumers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "consumers", "1"] } } }
+			]
+		},
+		{
+			"name": "Hosts",
+			"item": [
+				{ "name": "Create Host", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"host_name\": \"api.example.com\",\n    \"description\": \"Main API Host\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/hosts", "host": ["{{base_url}}"], "path": ["api", "admin", "hosts"] } } },
+				{ "name": "Get All Hosts", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/hosts", "host": ["{{base_url}}"], "path": ["api", "admin", "hosts"] } } },
+				{ "name": "Get Host by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/hosts/1", "host": ["{{base_url}}"], "path": ["api", "admin", "hosts", "1"] } } },
+				{ "name": "Update Host", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"description\": \"Updated Host\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/hosts/1", "host": ["{{base_url}}"], "path": ["api", "admin", "hosts", "1"] } } },
+				{ "name": "Delete Host", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/hosts/1", "host": ["{{base_url}}"], "path": ["api", "admin", "hosts", "1"] } } }
+			]
+		},
+		{
+			"name": "Virtual Hosts",
+			"item": [
+				{ "name": "Create Virtual Host", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"host_id\": 1,\n    \"vhost_name\": \"api.example.com\",\n    \"lb_algorithm\": \"round_robin\",\n    \"sticky_session\": false,\n    \"failover_mode\": \"active-active\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/virtual-hosts", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-hosts"] } } },
+				{ "name": "Get All Virtual Hosts", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-hosts", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-hosts"] } } },
+				{ "name": "Get Virtual Host by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-hosts/1", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-hosts", "1"] } } },
+				{ "name": "Update Virtual Host", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"lb_algorithm\": \"weighted_round_robin\",\n    \"sticky_session\": true,\n    \"failover_mode\": \"active-passive\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/virtual-hosts/1", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-hosts", "1"] } } },
+				{ "name": "Delete Virtual Host", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/virtual-hosts/1", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-hosts", "1"] } } }
+			]
+		},
+		{
+			"name": "Upstream Servers",
+			"item": [
+				{ "name": "Create Upstream Server", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_host_id\": 1,\n    \"target_host\": \"192.168.1.10\",\n    \"target_port\": 8080,\n    \"protocol\": \"http\",\n    \"priority\": 1,\n    \"weight\": 1,\n    \"is_backup\": false,\n    \"is_active\": true,\n    \"health_check_enabled\": true,\n    \"health_check_path\": \"/health\",\n    \"health_check_interval_seconds\": 10,\n    \"health_check_timeout_seconds\": 3,\n    \"max_fails\": 3,\n    \"fail_timeout_seconds\": 30\n}" }, "url": { "raw": "{{base_url}}/api/admin/upstream-servers", "host": ["{{base_url}}"], "path": ["api", "admin", "upstream-servers"] } } },
+				{ "name": "Get All Upstream Servers", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/upstream-servers", "host": ["{{base_url}}"], "path": ["api", "admin", "upstream-servers"] } } },
+				{ "name": "Get Upstream Server by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/upstream-servers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "upstream-servers", "1"] } } },
+				{ "name": "Get Upstream Servers by VHost", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-hosts/1/upstream-servers", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-hosts", "1", "upstream-servers"] } } },
+				{ "name": "Update Upstream Server", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"target_host\": \"192.168.1.11\",\n    \"target_port\": 8081,\n    \"protocol\": \"http\",\n    \"priority\": 1,\n    \"weight\": 2,\n    \"is_backup\": false,\n    \"is_active\": true,\n    \"health_check_enabled\": true,\n    \"health_check_path\": \"/health\",\n    \"health_check_interval_seconds\": 15,\n    \"health_check_timeout_seconds\": 5,\n    \"max_fails\": 5,\n    \"fail_timeout_seconds\": 60\n}" }, "url": { "raw": "{{base_url}}/api/admin/upstream-servers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "upstream-servers", "1"] } } },
+				{ "name": "Delete Upstream Server", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/upstream-servers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "upstream-servers", "1"] } } }
+			]
+		},
+		{
+			"name": "Virtual Directories (Routes)",
+			"item": [
+				{ "name": "Create Virtual Directory", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_host_id\": 1,\n    \"source_path\": \"/api/v1\",\n    \"target_path\": \"/\",\n    \"match_type\": \"prefix\",\n    \"strip_prefix\": true,\n    \"preserve_host_header\": false,\n    \"auth_type\": \"none\",\n    \"is_active\": true,\n    \"proxy_timeout_seconds\": 30,\n    \"retry_count\": 2,\n    \"retry_delay_ms\": 100,\n    \"max_request_size_mb\": 10,\n    \"websocket_enabled\": false,\n    \"cache_enabled\": false,\n    \"cache_ttl_seconds\": 0\n}" }, "url": { "raw": "{{base_url}}/api/admin/virtual-directories", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories"] } } },
+				{ "name": "Get All Virtual Directories", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-directories", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories"] } } },
+				{ "name": "Get Virtual Directory by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-directories/1", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories", "1"] } } },
+				{ "name": "Get Virtual Directories by VHost", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-hosts/1/virtual-directories", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-hosts", "1", "virtual-directories"] } } },
+				{ "name": "Update Virtual Directory", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"source_path\": \"/api/v2\",\n    \"target_path\": \"/v2\",\n    \"match_type\": \"prefix\",\n    \"strip_prefix\": true,\n    \"preserve_host_header\": false,\n    \"auth_type\": \"api_key\",\n    \"is_active\": true,\n    \"proxy_timeout_seconds\": 60,\n    \"retry_count\": 3,\n    \"retry_delay_ms\": 200,\n    \"max_request_size_mb\": 20,\n    \"websocket_enabled\": true,\n    \"cache_enabled\": true,\n    \"cache_ttl_seconds\": 300\n}" }, "url": { "raw": "{{base_url}}/api/admin/virtual-directories/1", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories", "1"] } } },
+				{ "name": "Delete Virtual Directory", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/virtual-directories/1", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories", "1"] } } },
+				{ "name": "Get Methods", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-directories/1/methods", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories", "1", "methods"] } } },
+				{ "name": "Set Methods", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"methods\": [\"GET\", \"POST\", \"PUT\", \"DELETE\"]\n}" }, "url": { "raw": "{{base_url}}/api/admin/virtual-directories/1/methods", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories", "1", "methods"] } } }
+			]
+		},
+		{
+			"name": "Consumer Credentials",
+			"item": [
+				{ "name": "Create Credential", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"consumer_id\": 1,\n    \"auth_type\": \"basic\",\n    \"username\": \"api-user\",\n    \"password\": \"secret123\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/consumer-credentials", "host": ["{{base_url}}"], "path": ["api", "admin", "consumer-credentials"] } } },
+				{ "name": "Get All Credentials", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/consumer-credentials", "host": ["{{base_url}}"], "path": ["api", "admin", "consumer-credentials"] } } },
+				{ "name": "Get Credential by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/consumer-credentials/1", "host": ["{{base_url}}"], "path": ["api", "admin", "consumer-credentials", "1"] } } },
+				{ "name": "Get Credentials by Consumer", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/consumers/1/credentials", "host": ["{{base_url}}"], "path": ["api", "admin", "consumers", "1", "credentials"] } } },
+				{ "name": "Update Credential", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"username\": \"new-user\",\n    \"password\": \"new-secret\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/consumer-credentials/1", "host": ["{{base_url}}"], "path": ["api", "admin", "consumer-credentials", "1"] } } },
+				{ "name": "Delete Credential", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/consumer-credentials/1", "host": ["{{base_url}}"], "path": ["api", "admin", "consumer-credentials", "1"] } } }
+			]
+		},
+		{
+			"name": "API Keys",
+			"item": [
+				{ "name": "Create API Key", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"consumer_id\": 1,\n    \"description\": \"Production API Key\",\n    \"expired_at\": \"2027-12-31 23:59:59\",\n    \"rate_limit_override\": 1000,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/api-keys", "host": ["{{base_url}}"], "path": ["api", "admin", "api-keys"] } } },
+				{ "name": "Get All API Keys", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/api-keys", "host": ["{{base_url}}"], "path": ["api", "admin", "api-keys"] } } },
+				{ "name": "Get API Key by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/api-keys/1", "host": ["{{base_url}}"], "path": ["api", "admin", "api-keys", "1"] } } },
+				{ "name": "Get API Keys by Consumer", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/consumers/1/api-keys", "host": ["{{base_url}}"], "path": ["api", "admin", "consumers", "1", "api-keys"] } } },
+				{ "name": "Update API Key", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"description\": \"Updated Key\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/api-keys/1", "host": ["{{base_url}}"], "path": ["api", "admin", "api-keys", "1"] } } },
+				{ "name": "Delete API Key", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/api-keys/1", "host": ["{{base_url}}"], "path": ["api", "admin", "api-keys", "1"] } } }
+			]
+		},
+		{
+			"name": "Route Consumer Access (ACL)",
+			"item": [
+				{ "name": "Create Access", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_directory_id\": 1,\n    \"consumer_id\": 1,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/route-access", "host": ["{{base_url}}"], "path": ["api", "admin", "route-access"] } } },
+				{ "name": "Get All Access", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/route-access", "host": ["{{base_url}}"], "path": ["api", "admin", "route-access"] } } },
+				{ "name": "Get Access by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/route-access/1", "host": ["{{base_url}}"], "path": ["api", "admin", "route-access", "1"] } } },
+				{ "name": "Get Access by Directory", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-directories/1/access", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories", "1", "access"] } } },
+				{ "name": "Update Access", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"is_active\": false\n}" }, "url": { "raw": "{{base_url}}/api/admin/route-access/1", "host": ["{{base_url}}"], "path": ["api", "admin", "route-access", "1"] } } },
+				{ "name": "Delete Access", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/route-access/1", "host": ["{{base_url}}"], "path": ["api", "admin", "route-access", "1"] } } }
+			]
+		},
+		{
+			"name": "JWT Configs",
+			"item": [
+				{ "name": "Create JWT Config", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_directory_id\": 1,\n    \"algorithm\": \"HS256\",\n    \"jwt_secret\": \"my-secret-key-at-least-32-chars-long\",\n    \"issuer\": \"my-app\",\n    \"audience\": \"api-gateway\",\n    \"expired_in_seconds\": 3600,\n    \"clock_skew_seconds\": 30,\n    \"require_exp\": true,\n    \"require_iat\": true,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/jwt-configs", "host": ["{{base_url}}"], "path": ["api", "admin", "jwt-configs"] } } },
+				{ "name": "Get All JWT Configs", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/jwt-configs", "host": ["{{base_url}}"], "path": ["api", "admin", "jwt-configs"] } } },
+				{ "name": "Get JWT Config by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/jwt-configs/1", "host": ["{{base_url}}"], "path": ["api", "admin", "jwt-configs", "1"] } } },
+				{ "name": "Update JWT Config", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"algorithm\": \"HS256\",\n    \"jwt_secret\": \"updated-secret-key\",\n    \"issuer\": \"updated-issuer\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/jwt-configs/1", "host": ["{{base_url}}"], "path": ["api", "admin", "jwt-configs", "1"] } } },
+				{ "name": "Delete JWT Config", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/jwt-configs/1", "host": ["{{base_url}}"], "path": ["api", "admin", "jwt-configs", "1"] } } }
+			]
+		},
+		{
+			"name": "External Auth",
+			"item": [
+				{ "name": "Create External Auth", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_directory_id\": 1,\n    \"auth_url\": \"https://auth.example.com/verify\",\n    \"http_method\": \"POST\",\n    \"request_timeout_seconds\": 5,\n    \"send_headers\": true,\n    \"send_body\": false,\n    \"success_key\": \"status\",\n    \"success_value\": \"true\",\n    \"message_key\": \"message\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/external-auth", "host": ["{{base_url}}"], "path": ["api", "admin", "external-auth"] } } },
+				{ "name": "Get All External Auth", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/external-auth", "host": ["{{base_url}}"], "path": ["api", "admin", "external-auth"] } } },
+				{ "name": "Get External Auth by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/external-auth/1", "host": ["{{base_url}}"], "path": ["api", "admin", "external-auth", "1"] } } },
+				{ "name": "Update External Auth", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"auth_url\": \"https://auth.example.com/v2/verify\",\n    \"request_timeout_seconds\": 10,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/external-auth/1", "host": ["{{base_url}}"], "path": ["api", "admin", "external-auth", "1"] } } },
+				{ "name": "Delete External Auth", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/external-auth/1", "host": ["{{base_url}}"], "path": ["api", "admin", "external-auth", "1"] } } }
+			]
+		},
+		{
+			"name": "Rate Limits",
+			"item": [
+				{ "name": "Create Rate Limit", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_directory_id\": 1,\n    \"limit_by\": \"ip\",\n    \"requests_per_minute\": 60,\n    \"burst\": 10,\n    \"block_duration_seconds\": 60,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/rate-limits", "host": ["{{base_url}}"], "path": ["api", "admin", "rate-limits"] } } },
+				{ "name": "Get All Rate Limits", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/rate-limits", "host": ["{{base_url}}"], "path": ["api", "admin", "rate-limits"] } } },
+				{ "name": "Get Rate Limit by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/rate-limits/1", "host": ["{{base_url}}"], "path": ["api", "admin", "rate-limits", "1"] } } },
+				{ "name": "Update Rate Limit", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"requests_per_minute\": 120,\n    \"burst\": 20,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/rate-limits/1", "host": ["{{base_url}}"], "path": ["api", "admin", "rate-limits", "1"] } } },
+				{ "name": "Delete Rate Limit", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/rate-limits/1", "host": ["{{base_url}}"], "path": ["api", "admin", "rate-limits", "1"] } } }
+			]
+		},
+		{
+			"name": "CORS Configs",
+			"item": [
+				{ "name": "Create CORS Config", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_directory_id\": 1,\n    \"allowed_origins\": \"https://app.example.com,https://admin.example.com\",\n    \"allowed_methods\": \"GET,POST,PUT,DELETE,OPTIONS\",\n    \"allowed_headers\": \"Content-Type,Authorization,X-API-Key\",\n    \"exposed_headers\": \"X-Request-Id\",\n    \"allow_credentials\": true,\n    \"max_age_seconds\": 3600,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/cors-configs", "host": ["{{base_url}}"], "path": ["api", "admin", "cors-configs"] } } },
+				{ "name": "Get All CORS Configs", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/cors-configs", "host": ["{{base_url}}"], "path": ["api", "admin", "cors-configs"] } } },
+				{ "name": "Get CORS Config by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/cors-configs/1", "host": ["{{base_url}}"], "path": ["api", "admin", "cors-configs", "1"] } } },
+				{ "name": "Update CORS Config", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"allowed_origins\": \"*\",\n    \"allow_credentials\": false,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/cors-configs/1", "host": ["{{base_url}}"], "path": ["api", "admin", "cors-configs", "1"] } } },
+				{ "name": "Delete CORS Config", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/cors-configs/1", "host": ["{{base_url}}"], "path": ["api", "admin", "cors-configs", "1"] } } }
+			]
+		},
+		{
+			"name": "Circuit Breakers",
+			"item": [
+				{ "name": "Create Circuit Breaker", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_directory_id\": 1,\n    \"enabled\": true,\n    \"failure_threshold\": 5,\n    \"recovery_timeout_seconds\": 30,\n    \"half_open_max_requests\": 3\n}" }, "url": { "raw": "{{base_url}}/api/admin/circuit-breakers", "host": ["{{base_url}}"], "path": ["api", "admin", "circuit-breakers"] } } },
+				{ "name": "Get All Circuit Breakers", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/circuit-breakers", "host": ["{{base_url}}"], "path": ["api", "admin", "circuit-breakers"] } } },
+				{ "name": "Get Circuit Breaker by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/circuit-breakers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "circuit-breakers", "1"] } } },
+				{ "name": "Update Circuit Breaker", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"enabled\": true,\n    \"failure_threshold\": 10,\n    \"recovery_timeout_seconds\": 60,\n    \"half_open_max_requests\": 5\n}" }, "url": { "raw": "{{base_url}}/api/admin/circuit-breakers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "circuit-breakers", "1"] } } },
+				{ "name": "Delete Circuit Breaker", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/circuit-breakers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "circuit-breakers", "1"] } } }
+			]
+		},
+		{
+			"name": "IP Whitelists",
+			"item": [
+				{ "name": "Create IP Whitelist", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_directory_id\": 1,\n    \"ip_address\": \"192.168.1.0/24\",\n    \"description\": \"Office network\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/ip-whitelists", "host": ["{{base_url}}"], "path": ["api", "admin", "ip-whitelists"] } } },
+				{ "name": "Get All IP Whitelists", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/ip-whitelists", "host": ["{{base_url}}"], "path": ["api", "admin", "ip-whitelists"] } } },
+				{ "name": "Get IP Whitelist by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/ip-whitelists/1", "host": ["{{base_url}}"], "path": ["api", "admin", "ip-whitelists", "1"] } } },
+				{ "name": "Get IP Whitelists by Directory", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-directories/1/ip-whitelists", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories", "1", "ip-whitelists"] } } },
+				{ "name": "Update IP Whitelist", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"ip_address\": \"10.0.0.0/8\",\n    \"description\": \"VPN network\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/ip-whitelists/1", "host": ["{{base_url}}"], "path": ["api", "admin", "ip-whitelists", "1"] } } },
+				{ "name": "Delete IP Whitelist", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/ip-whitelists/1", "host": ["{{base_url}}"], "path": ["api", "admin", "ip-whitelists", "1"] } } }
+			]
+		},
+		{
+			"name": "IP Blacklists",
+			"item": [
+				{ "name": "Create IP Blacklist", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_directory_id\": 1,\n    \"ip_address\": \"203.0.113.50\",\n    \"reason\": \"Suspicious activity\",\n    \"expired_at\": \"2027-01-01 00:00:00\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/ip-blacklists", "host": ["{{base_url}}"], "path": ["api", "admin", "ip-blacklists"] } } },
+				{ "name": "Get All IP Blacklists", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/ip-blacklists", "host": ["{{base_url}}"], "path": ["api", "admin", "ip-blacklists"] } } },
+				{ "name": "Get IP Blacklist by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/ip-blacklists/1", "host": ["{{base_url}}"], "path": ["api", "admin", "ip-blacklists", "1"] } } },
+				{ "name": "Get IP Blacklists by Directory", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-directories/1/ip-blacklists", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories", "1", "ip-blacklists"] } } },
+				{ "name": "Update IP Blacklist", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"ip_address\": \"203.0.113.50\",\n    \"reason\": \"Confirmed attacker\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/ip-blacklists/1", "host": ["{{base_url}}"], "path": ["api", "admin", "ip-blacklists", "1"] } } },
+				{ "name": "Delete IP Blacklist", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/ip-blacklists/1", "host": ["{{base_url}}"], "path": ["api", "admin", "ip-blacklists", "1"] } } }
+			]
+		},
+		{
+			"name": "Request Header Rules",
+			"item": [
+				{ "name": "Create Request Header Rule", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_directory_id\": 1,\n    \"header_name\": \"X-Request-ID\",\n    \"operation\": \"set\",\n    \"value_source\": \"static\",\n    \"header_value\": \"gateway-request\",\n    \"execution_order\": 1,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/request-headers", "host": ["{{base_url}}"], "path": ["api", "admin", "request-headers"] } } },
+				{ "name": "Get All Request Header Rules", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/request-headers", "host": ["{{base_url}}"], "path": ["api", "admin", "request-headers"] } } },
+				{ "name": "Get Request Header Rule by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/request-headers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "request-headers", "1"] } } },
+				{ "name": "Get Request Headers by Directory", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-directories/1/request-headers", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories", "1", "request-headers"] } } },
+				{ "name": "Update Request Header Rule", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"header_name\": \"X-Forwarded-For\",\n    \"operation\": \"add\",\n    \"value_source\": \"variable\",\n    \"variable_name\": \"client_ip\",\n    \"execution_order\": 2,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/request-headers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "request-headers", "1"] } } },
+				{ "name": "Delete Request Header Rule", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/request-headers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "request-headers", "1"] } } }
+			]
+		},
+		{
+			"name": "Response Header Rules",
+			"item": [
+				{ "name": "Create Response Header Rule", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_directory_id\": 1,\n    \"header_name\": \"X-Powered-By\",\n    \"operation\": \"delete\",\n    \"header_value\": \"\",\n    \"execution_order\": 1,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/response-headers", "host": ["{{base_url}}"], "path": ["api", "admin", "response-headers"] } } },
+				{ "name": "Get All Response Header Rules", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/response-headers", "host": ["{{base_url}}"], "path": ["api", "admin", "response-headers"] } } },
+				{ "name": "Get Response Header Rule by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/response-headers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "response-headers", "1"] } } },
+				{ "name": "Get Response Headers by Directory", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-directories/1/response-headers", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories", "1", "response-headers"] } } },
+				{ "name": "Update Response Header Rule", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"header_name\": \"X-Gateway\",\n    \"operation\": \"set\",\n    \"header_value\": \"swantara-gate\",\n    \"execution_order\": 1,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/response-headers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "response-headers", "1"] } } },
+				{ "name": "Delete Response Header Rule", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/response-headers/1", "host": ["{{base_url}}"], "path": ["api", "admin", "response-headers", "1"] } } }
+			]
+		},
+		{
+			"name": "Query Rewrites",
+			"item": [
+				{ "name": "Create Query Rewrite", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_directory_id\": 1,\n    \"param_name\": \"version\",\n    \"param_value\": \"v2\",\n    \"operation\": \"set\"\n}" }, "url": { "raw": "{{base_url}}/api/admin/query-rewrites", "host": ["{{base_url}}"], "path": ["api", "admin", "query-rewrites"] } } },
+				{ "name": "Get All Query Rewrites", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/query-rewrites", "host": ["{{base_url}}"], "path": ["api", "admin", "query-rewrites"] } } },
+				{ "name": "Get Query Rewrite by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/query-rewrites/1", "host": ["{{base_url}}"], "path": ["api", "admin", "query-rewrites", "1"] } } },
+				{ "name": "Get Query Rewrites by Directory", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/virtual-directories/1/query-rewrites", "host": ["{{base_url}}"], "path": ["api", "admin", "virtual-directories", "1", "query-rewrites"] } } },
+				{ "name": "Update Query Rewrite", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"param_name\": \"api_version\",\n    \"param_value\": \"v3\",\n    \"operation\": \"set\"\n}" }, "url": { "raw": "{{base_url}}/api/admin/query-rewrites/1", "host": ["{{base_url}}"], "path": ["api", "admin", "query-rewrites", "1"] } } },
+				{ "name": "Delete Query Rewrite", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/query-rewrites/1", "host": ["{{base_url}}"], "path": ["api", "admin", "query-rewrites", "1"] } } }
+			]
+		},
+		{
+			"name": "ACME Accounts",
+			"item": [
+				{ "name": "Create ACME Account", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"email\": \"admin@example.com\",\n    \"provider_url\": \"https://acme-v02.api.letsencrypt.org/directory\",\n    \"account_key_path\": \"/etc/ssl/acme/account.key\",\n    \"is_default\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/acme-accounts", "host": ["{{base_url}}"], "path": ["api", "admin", "acme-accounts"] } } },
+				{ "name": "Get All ACME Accounts", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/acme-accounts", "host": ["{{base_url}}"], "path": ["api", "admin", "acme-accounts"] } } },
+				{ "name": "Get ACME Account by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/acme-accounts/1", "host": ["{{base_url}}"], "path": ["api", "admin", "acme-accounts", "1"] } } },
+				{ "name": "Update ACME Account", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"email\": \"newemail@example.com\",\n    \"is_default\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/acme-accounts/1", "host": ["{{base_url}}"], "path": ["api", "admin", "acme-accounts", "1"] } } },
+				{ "name": "Delete ACME Account", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/acme-accounts/1", "host": ["{{base_url}}"], "path": ["api", "admin", "acme-accounts", "1"] } } }
+			]
+		},
+		{
+			"name": "SSL Certificates",
+			"item": [
+				{ "name": "Create SSL Certificate", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"acme_account_id\": 1,\n    \"provider\": \"letsencrypt\",\n    \"challenge_type\": \"http-01\",\n    \"certificate_path\": \"/etc/ssl/certs/example.crt\",\n    \"private_key_path\": \"/etc/ssl/private/example.key\",\n    \"chain_path\": \"/etc/ssl/certs/chain.pem\",\n    \"auto_renew\": true,\n    \"renew_before_days\": 30,\n    \"expired_at\": \"2027-12-31 23:59:59\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/ssl-certificates", "host": ["{{base_url}}"], "path": ["api", "admin", "ssl-certificates"] } } },
+				{ "name": "Get All SSL Certificates", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/ssl-certificates", "host": ["{{base_url}}"], "path": ["api", "admin", "ssl-certificates"] } } },
+				{ "name": "Get SSL Certificate by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/ssl-certificates/1", "host": ["{{base_url}}"], "path": ["api", "admin", "ssl-certificates", "1"] } } },
+				{ "name": "Update SSL Certificate", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"auto_renew\": true,\n    \"renew_before_days\": 14,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/ssl-certificates/1", "host": ["{{base_url}}"], "path": ["api", "admin", "ssl-certificates", "1"] } } },
+				{ "name": "Delete SSL Certificate", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/ssl-certificates/1", "host": ["{{base_url}}"], "path": ["api", "admin", "ssl-certificates", "1"] } } }
+			]
+		},
+		{
+			"name": "Certificate Domains",
+			"item": [
+				{ "name": "Create Certificate Domain", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"ssl_certificate_id\": 1,\n    \"domain_name\": \"example.com\",\n    \"is_wildcard\": false\n}" }, "url": { "raw": "{{base_url}}/api/admin/certificate-domains", "host": ["{{base_url}}"], "path": ["api", "admin", "certificate-domains"] } } },
+				{ "name": "Get All Certificate Domains", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/certificate-domains", "host": ["{{base_url}}"], "path": ["api", "admin", "certificate-domains"] } } },
+				{ "name": "Get Certificate Domain by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/certificate-domains/1", "host": ["{{base_url}}"], "path": ["api", "admin", "certificate-domains", "1"] } } },
+				{ "name": "Get Domains by Certificate", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/ssl-certificates/1/domains", "host": ["{{base_url}}"], "path": ["api", "admin", "ssl-certificates", "1", "domains"] } } },
+				{ "name": "Update Certificate Domain", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"domain_name\": \"*.example.com\",\n    \"is_wildcard\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/certificate-domains/1", "host": ["{{base_url}}"], "path": ["api", "admin", "certificate-domains", "1"] } } },
+				{ "name": "Delete Certificate Domain", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/certificate-domains/1", "host": ["{{base_url}}"], "path": ["api", "admin", "certificate-domains", "1"] } } }
+			]
+		},
+		{
+			"name": "SSL Bindings",
+			"item": [
+				{ "name": "Create SSL Binding", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"ssl_certificate_id\": 1,\n    \"binding_type\": \"host\",\n    \"host_id\": 1,\n    \"is_default\": true,\n    \"priority\": 1\n}" }, "url": { "raw": "{{base_url}}/api/admin/ssl-bindings", "host": ["{{base_url}}"], "path": ["api", "admin", "ssl-bindings"] } } },
+				{ "name": "Get All SSL Bindings", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/ssl-bindings", "host": ["{{base_url}}"], "path": ["api", "admin", "ssl-bindings"] } } },
+				{ "name": "Get SSL Binding by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/ssl-bindings/1", "host": ["{{base_url}}"], "path": ["api", "admin", "ssl-bindings", "1"] } } },
+				{ "name": "Update SSL Binding", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"binding_type\": \"virtual_host\",\n    \"virtual_host_id\": 1,\n    \"is_default\": false,\n    \"priority\": 2\n}" }, "url": { "raw": "{{base_url}}/api/admin/ssl-bindings/1", "host": ["{{base_url}}"], "path": ["api", "admin", "ssl-bindings", "1"] } } },
+				{ "name": "Delete SSL Binding", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/ssl-bindings/1", "host": ["{{base_url}}"], "path": ["api", "admin", "ssl-bindings", "1"] } } }
+			]
+		},
+		{
+			"name": "TLS Options",
+			"item": [
+				{ "name": "Create TLS Option", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"binding_type\": \"host\",\n    \"host_id\": 1,\n    \"min_tls_version\": \"1.2\",\n    \"http2_enabled\": true,\n    \"hsts_enabled\": true,\n    \"hsts_max_age\": 31536000\n}" }, "url": { "raw": "{{base_url}}/api/admin/tls-options", "host": ["{{base_url}}"], "path": ["api", "admin", "tls-options"] } } },
+				{ "name": "Get All TLS Options", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/tls-options", "host": ["{{base_url}}"], "path": ["api", "admin", "tls-options"] } } },
+				{ "name": "Get TLS Option by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/tls-options/1", "host": ["{{base_url}}"], "path": ["api", "admin", "tls-options", "1"] } } },
+				{ "name": "Update TLS Option", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"min_tls_version\": \"1.3\",\n    \"http2_enabled\": true,\n    \"hsts_enabled\": true,\n    \"hsts_max_age\": 63072000\n}" }, "url": { "raw": "{{base_url}}/api/admin/tls-options/1", "host": ["{{base_url}}"], "path": ["api", "admin", "tls-options", "1"] } } },
+				{ "name": "Delete TLS Option", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/tls-options/1", "host": ["{{base_url}}"], "path": ["api", "admin", "tls-options", "1"] } } }
+			]
+		},
+		{
+			"name": "Service Discovery",
+			"item": [
+				{ "name": "Create Service Discovery", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_host_id\": 1,\n    \"provider\": \"consul\",\n    \"endpoint_url\": \"http://consul:8500/v1/catalog/service/my-api\",\n    \"refresh_interval_seconds\": 30,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/service-discovery", "host": ["{{base_url}}"], "path": ["api", "admin", "service-discovery"] } } },
+				{ "name": "Get All Service Discovery", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/service-discovery", "host": ["{{base_url}}"], "path": ["api", "admin", "service-discovery"] } } },
+				{ "name": "Get Service Discovery by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/service-discovery/1", "host": ["{{base_url}}"], "path": ["api", "admin", "service-discovery", "1"] } } },
+				{ "name": "Update Service Discovery", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"provider\": \"consul\",\n    \"endpoint_url\": \"http://consul:8500/v1/catalog/service/updated\",\n    \"refresh_interval_seconds\": 60,\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/service-discovery/1", "host": ["{{base_url}}"], "path": ["api", "admin", "service-discovery", "1"] } } },
+				{ "name": "Delete Service Discovery", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/service-discovery/1", "host": ["{{base_url}}"], "path": ["api", "admin", "service-discovery", "1"] } } }
+			]
+		},
+		{
+			"name": "Config Versions",
+			"item": [
+				{ "name": "Create Config Version", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"config_name\": \"proxy-routes\",\n    \"version_number\": 1,\n    \"changed_by\": \"admin\",\n    \"notes\": \"Initial configuration\"\n}" }, "url": { "raw": "{{base_url}}/api/admin/config-versions", "host": ["{{base_url}}"], "path": ["api", "admin", "config-versions"] } } },
+				{ "name": "Get All Config Versions", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/config-versions", "host": ["{{base_url}}"], "path": ["api", "admin", "config-versions"] } } },
+				{ "name": "Get Config Version by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/config-versions/1", "host": ["{{base_url}}"], "path": ["api", "admin", "config-versions", "1"] } } },
+				{ "name": "Update Config Version", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"config_name\": \"proxy-routes\",\n    \"version_number\": 2,\n    \"changed_by\": \"admin\",\n    \"notes\": \"Added new routes\"\n}" }, "url": { "raw": "{{base_url}}/api/admin/config-versions/1", "host": ["{{base_url}}"], "path": ["api", "admin", "config-versions", "1"] } } },
+				{ "name": "Delete Config Version", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/config-versions/1", "host": ["{{base_url}}"], "path": ["api", "admin", "config-versions", "1"] } } }
+			]
+		},
+		{
+			"name": "Maintenance Windows",
+			"item": [
+				{ "name": "Create Maintenance Window", "request": { "method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"virtual_host_id\": 1,\n    \"title\": \"Scheduled Maintenance\",\n    \"start_at\": \"2026-06-01 00:00:00\",\n    \"end_at\": \"2026-06-01 04:00:00\",\n    \"maintenance_response_code\": 503,\n    \"maintenance_message\": \"Service is under scheduled maintenance. Please try again later.\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/maintenance-windows", "host": ["{{base_url}}"], "path": ["api", "admin", "maintenance-windows"] } } },
+				{ "name": "Get All Maintenance Windows", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/maintenance-windows", "host": ["{{base_url}}"], "path": ["api", "admin", "maintenance-windows"] } } },
+				{ "name": "Get Maintenance Window by ID", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/admin/maintenance-windows/1", "host": ["{{base_url}}"], "path": ["api", "admin", "maintenance-windows", "1"] } } },
+				{ "name": "Update Maintenance Window", "request": { "method": "PUT", "header": [{"key": "Content-Type", "value": "application/json"}], "body": { "mode": "raw", "raw": "{\n    \"title\": \"Extended Maintenance\",\n    \"end_at\": \"2026-06-01 06:00:00\",\n    \"maintenance_message\": \"Extended maintenance in progress\",\n    \"is_active\": true\n}" }, "url": { "raw": "{{base_url}}/api/admin/maintenance-windows/1", "host": ["{{base_url}}"], "path": ["api", "admin", "maintenance-windows", "1"] } } },
+				{ "name": "Delete Maintenance Window", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/admin/maintenance-windows/1", "host": ["{{base_url}}"], "path": ["api", "admin", "maintenance-windows", "1"] } } }
+			]
+		}
+	]
+}

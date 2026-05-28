@@ -224,3 +224,45 @@ func (r *UserRepository) Count() (int64, error) {
 
 	return count, nil
 }
+
+// UpdatePassword memperbarui password hash user berdasarkan ID
+func (r *UserRepository) UpdatePassword(id int64, passwordHash string) error {
+	query := `UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?`
+
+	result, err := r.DB.Exec(query, passwordHash, time.Now(), id)
+	if err != nil {
+		return fmt.Errorf("gagal mengupdate password: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("gagal mendapatkan rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("user tidak ditemukan")
+	}
+
+	return nil
+}
+
+// UpdatePasswordByUsername memperbarui password hash user berdasarkan username
+func (r *UserRepository) UpdatePasswordByUsername(username string, passwordHash string) error {
+	query := `UPDATE users SET password_hash = ?, updated_at = ? WHERE username = ?`
+
+	result, err := r.DB.Exec(query, passwordHash, time.Now(), username)
+	if err != nil {
+		return fmt.Errorf("gagal mengupdate password: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("gagal mendapatkan rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("user dengan username '%s' tidak ditemukan", username)
+	}
+
+	return nil
+}

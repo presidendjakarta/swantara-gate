@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 // ProxyServer is the main reverse proxy handler
@@ -19,6 +20,15 @@ type ProxyServer struct {
 	cache           *ResponseCache
 	transport       *Transport
 	wsProxy         *WebSocketProxy
+
+	// Phase 8: Security components
+	authenticator   *Authenticator
+	rateLimiter     *ProxyRateLimiter
+	circuitBreaker  *ProxyCircuitBreaker
+	ipFilter        *IPFilter
+	cors            *ProxyCORS
+	maintenance     *MaintenanceChecker
+	accessLogger    *AccessLogger
 
 	// Load balancers per vhost (lazy initialized)
 	lbMu          sync.RWMutex
@@ -36,6 +46,13 @@ func NewProxyServer(db *sql.DB) *ProxyServer {
 		cache:           NewResponseCache(),
 		transport:       NewTransport(),
 		wsProxy:         NewWebSocketProxy(),
+		authenticator:   NewAuthenticator(db),
+		rateLimiter:     NewProxyRateLimiter(db),
+		circuitBreaker:  NewProxyCircuitBreaker(db),
+		ipFilter:        NewIPFilter(db),
+		cors:            NewProxyCORS(db),
+		maintenance:     NewMaintenanceChecker(db),
+		accessLogger:    NewAccessLogger(db),
 		loadBalancers:   make(map[int64]LoadBalancer),
 	}
 	return ps
@@ -53,6 +70,7 @@ func (ps *ProxyServer) Start() {
 // Stop gracefully stops the proxy server
 func (ps *ProxyServer) Stop() {
 	ps.healthChecker.Stop()
+	ps.accessLogger.Stop()
 }
 
 // ReloadConfig reloads all configuration from the database
@@ -61,6 +79,14 @@ func (ps *ProxyServer) ReloadConfig() {
 	ps.headerProcessor.Reload()
 	ps.queryRewriter.Reload()
 	ps.cache.Clear()
+
+	// Reload security components
+	ps.authenticator.Reload()
+	ps.rateLimiter.Reload()
+	ps.circuitBreaker.Reload()
+	ps.ipFilter.Reload()
+	ps.cors.Reload()
+	ps.maintenance.Reload()
 
 	// Restart health checks
 	ps.healthChecker.Stop()
@@ -79,6 +105,8 @@ func (ps *ProxyServer) ReloadConfig() {
 
 // ServeHTTP implements the http.Handler interface - main proxy pipeline
 func (ps *ProxyServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+
 	// Step 1: Match host + route
 	match := ps.router.Match(r.Host, r.URL.Path)
 	if match == nil {
@@ -89,29 +117,72 @@ func (ps *ProxyServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vhost := match.VirtualHost
 	route := match.VirtualDirectory
 
-	// Step 2: Check method allowed
-	if !ps.isMethodAllowed(route, r.Method) {
-		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+	// Step 2: Maintenance mode check
+	if inMaint, cfg := ps.maintenance.IsInMaintenance(vhost.ID); inMaint {
+		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, cfg.Message), cfg.ResponseCode)
+		ps.accessLogger.LogRequest(r, cfg.ResponseCode, 0, time.Since(start), vhost.ID, route.ID, nil)
 		return
 	}
 
-	// Step 3: Enforce max request size
+	// Step 3: CORS preflight handling
+	if ps.cors.HandlePreflight(w, r, route) {
+		ps.accessLogger.LogRequest(r, http.StatusNoContent, 0, time.Since(start), vhost.ID, route.ID, nil)
+		return
+	}
+
+	// Step 4: IP filter
+	if allowed, msg := ps.ipFilter.Allow(r, route); !allowed {
+		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, msg), http.StatusForbidden)
+		ps.accessLogger.LogRequest(r, http.StatusForbidden, 0, time.Since(start), vhost.ID, route.ID, nil)
+		return
+	}
+
+	// Step 5: Rate limiting
+	if allowed, msg := ps.rateLimiter.Allow(r, route); !allowed {
+		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, msg), http.StatusTooManyRequests)
+		ps.accessLogger.LogRequest(r, http.StatusTooManyRequests, 0, time.Since(start), vhost.ID, route.ID, nil)
+		return
+	}
+
+	// Step 6: Authentication
+	if ok, msg := ps.authenticator.Authenticate(r, route); !ok {
+		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, msg), http.StatusUnauthorized)
+		ps.accessLogger.LogRequest(r, http.StatusUnauthorized, 0, time.Since(start), vhost.ID, route.ID, nil)
+		return
+	}
+
+	// Step 7: Circuit breaker
+	if allowed, msg := ps.circuitBreaker.Allow(route.ID); !allowed {
+		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, msg), http.StatusServiceUnavailable)
+		ps.accessLogger.LogRequest(r, http.StatusServiceUnavailable, 0, time.Since(start), vhost.ID, route.ID, nil)
+		return
+	}
+
+	// Step 8: Check method allowed
+	if !ps.isMethodAllowed(route, r.Method) {
+		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+		ps.accessLogger.LogRequest(r, http.StatusMethodNotAllowed, 0, time.Since(start), vhost.ID, route.ID, nil)
+		return
+	}
+
+	// Step 9: Enforce max request size
 	if route.MaxRequestSizeMB > 0 {
 		maxBytes := int64(route.MaxRequestSizeMB) * 1024 * 1024
 		if r.ContentLength > maxBytes {
 			http.Error(w, `{"error":"request entity too large"}`, http.StatusRequestEntityTooLarge)
+			ps.accessLogger.LogRequest(r, http.StatusRequestEntityTooLarge, 0, time.Since(start), vhost.ID, route.ID, nil)
 			return
 		}
 		r.Body = http.MaxBytesReader(w, r.Body, maxBytes)
 	}
 
-	// Step 4: Check WebSocket upgrade
+	// Step 10: Check WebSocket upgrade
 	if route.WebsocketEnabled && ps.wsProxy.IsWebSocketUpgrade(r) {
 		ps.handleWebSocket(w, r, vhost, route)
 		return
 	}
 
-	// Step 5: Check cache
+	// Step 11: Check cache
 	if route.CacheEnabled && r.Method == http.MethodGet {
 		if cached := ps.cache.Get(r); cached != nil {
 			// Serve from cache
@@ -121,44 +192,50 @@ func (ps *ProxyServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			w.Header().Set("X-Cache", "HIT")
+			ps.cors.ApplyCORSHeaders(w, r, route)
 			w.WriteHeader(cached.StatusCode)
 			w.Write(cached.Body)
+			ps.accessLogger.LogRequest(r, cached.StatusCode, len(cached.Body), time.Since(start), vhost.ID, route.ID, nil)
 			return
 		}
 	}
 
-	// Step 6: Apply request header rules + query rewrites
+	// Step 12: Apply request header rules + query rewrites
 	ps.headerProcessor.ApplyRequestHeaders(route.ID, r)
 	ps.queryRewriter.Apply(route.ID, r)
 
-	// Step 7: Select upstream via load balancer
+	// Step 13: Select upstream via load balancer
 	upstream := ps.selectUpstream(vhost, r)
 	if upstream == nil {
 		http.Error(w, `{"error":"no healthy upstream servers available"}`, http.StatusServiceUnavailable)
+		ps.accessLogger.LogRequest(r, http.StatusServiceUnavailable, 0, time.Since(start), vhost.ID, route.ID, nil)
 		return
 	}
 
-	// Step 8: Forward request via transport (with retries)
+	// Step 14: Forward request via transport (with retries)
 	resp, err := ps.transport.Forward(r, upstream, route)
 	if err != nil {
 		ps.healthChecker.MarkFailed(upstream)
+		ps.circuitBreaker.RecordFailure(route.ID)
 		log.Printf("[Proxy] Forward error to %s:%d: %v", upstream.TargetHost, upstream.TargetPort, err)
 		http.Error(w, fmt.Sprintf(`{"error":"upstream error: %s"}`, err.Error()), http.StatusBadGateway)
+		ps.accessLogger.LogRequest(r, http.StatusBadGateway, 0, time.Since(start), vhost.ID, route.ID, upstream)
 		return
 	}
 
 	// Mark upstream as successful
 	ps.healthChecker.MarkSuccess(upstream)
+	ps.circuitBreaker.RecordSuccess(route.ID)
 
-	// Step 9: Apply response header rules
+	// Step 15: Apply response header rules
 	ps.headerProcessor.ApplyResponseHeaders(route.ID, resp.Header)
 
-	// Step 10: Cache response if enabled
+	// Step 16: Cache response if enabled
 	if route.CacheEnabled {
 		ps.cache.Set(r, resp, route.CacheTTLSeconds)
 	}
 
-	// Step 11: Write response to client
+	// Step 17: Write response to client
 	for k, vv := range resp.Header {
 		for _, v := range vv {
 			w.Header().Add(k, v)
@@ -167,6 +244,9 @@ func (ps *ProxyServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if route.CacheEnabled && r.Method == http.MethodGet {
 		w.Header().Set("X-Cache", "MISS")
 	}
+
+	// Apply CORS headers to response
+	ps.cors.ApplyCORSHeaders(w, r, route)
 
 	// Set sticky session cookie if needed
 	if vhost.StickySession {
@@ -180,6 +260,9 @@ func (ps *ProxyServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(resp.StatusCode)
 	w.Write(resp.Body)
+
+	// Step 18: Access log
+	ps.accessLogger.LogRequest(r, resp.StatusCode, len(resp.Body), time.Since(start), vhost.ID, route.ID, upstream)
 }
 
 // handleWebSocket handles WebSocket upgrade requests
