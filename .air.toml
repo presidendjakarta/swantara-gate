@@ -1,0 +1,62 @@
+# Air configuration untuk Swantara Gate
+# https://github.com/air-verse/air
+
+[build]
+# Command untuk build
+cmd = "go build -o ./tmp/main.exe ./cmd/server/main.go"
+
+# Binary yang dihasilkan
+bin = "./tmp/main.exe"
+
+# Delay setelah build (ms)
+delay = 1000
+
+# Log build
+log = "air_build.log"
+
+# Arguments untuk binary
+args_bin = []
+
+# Exclude folder yang tidak perlu di-watch
+exclude_dir = ["data", "tmp", "vendor", "docs"]
+
+# Exclude file extensions
+exclude_file = []
+
+# Exclude specific files
+exclude_regex = ["_test.go", "_mock.go"]
+
+# Include folder tertentu saja
+include_dir = ["cmd", "internal"]
+
+# Include file extensions
+include_ext = ["go", "env"]
+
+# Include file (empty = all)
+include_file = []
+
+# Kill delay (ms)
+kill_delay = 500
+
+# Send interrupt signal
+send_interrupt = false
+
+# Stop on error
+stop_on_error = false
+
+[log]
+# Show log time
+time = true
+# Log level: debug, info, warn, error, fatal, panic
+level = "info"
+
+[color]
+# Customize each part's color
+main = "magenta"
+watcher = "cyan"
+build = "yellow"
+runner = "green"
+
+[misc]
+# Delete tmp directory on exit
+clean_on_exit = true

@@ -66,3 +66,18 @@ func InternalServerError(w http.ResponseWriter, message string) {
 func Conflict(w http.ResponseWriter, message string) {
 	Error(w, http.StatusConflict, message)
 }
+
+// Unauthorized mengirim response error 401
+func Unauthorized(w http.ResponseWriter, message string) {
+	Error(w, http.StatusUnauthorized, message)
+}
+
+// Forbidden mengirim response error 403
+func Forbidden(w http.ResponseWriter, message string) {
+	Error(w, http.StatusForbidden, message)
+}
+
+// TooManyRequests mengirim response error 429
+func TooManyRequests(w http.ResponseWriter, message string) {
+	Error(w, http.StatusTooManyRequests, message)
+}

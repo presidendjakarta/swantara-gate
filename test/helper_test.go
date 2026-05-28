@@ -1,41 +1,61 @@
-package main
+package test
 
 import (
-	"log"
+	"bytes"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
-	"strconv"
+	"net/http/httptest"
+	"os"
+	"testing"
 
-	"github.com/presidendjakarta/swantara-gate/internal/config"
-	"github.com/presidendjakarta/swantara-gate/internal/database"
 	"github.com/presidendjakarta/swantara-gate/internal/handler"
 	"github.com/presidendjakarta/swantara-gate/internal/middleware"
 	"github.com/presidendjakarta/swantara-gate/internal/repository"
 	"github.com/presidendjakarta/swantara-gate/internal/service"
-	"github.com/joho/godotenv"
+
+	_ "modernc.org/sqlite"
 )
 
-func main() {
-	// Memuat environment variables dari file .env
-	if err := godotenv.Load(); err != nil {
-		log.Println("⚠ File .env tidak ditemukan, menggunakan environment default")
+// TestServer menyimpan instance test server dan dependensinya
+type TestServer struct {
+	Server *httptest.Server
+	DB     *sql.DB
+}
+
+// APIResponse struktur response standar dari API
+type APIResponse struct {
+	Success bool                   `json:"success"`
+	Message string                 `json:"message"`
+	Data    map[string]interface{} `json:"data"`
+	Error   string                 `json:"error"`
+}
+
+// SetupTestServer menginisialisasi server test dengan database in-memory
+func SetupTestServer(t *testing.T) *TestServer {
+	t.Helper()
+
+	// Buka database SQLite in-memory
+	db, err := sql.Open("sqlite", ":memory:")
+	if err != nil {
+		t.Fatalf("Gagal membuka database test: %v", err)
 	}
 
-	// Memuat konfigurasi
-	cfg := config.LoadConfig()
-
-	log.Println("🚀 Memulai Swantara Gate API Gateway...")
-
-	// Inisialisasi database
-	if err := database.InitDatabase(cfg.DatabasePath, cfg.DatabaseSQLPath); err != nil {
-		log.Fatalf("❌ Gagal menginisialisasi database: %v", err)
+	// Jalankan migrasi dari file SQL
+	sqlPath := "../data/database.sql"
+	sqlBytes, err := os.ReadFile(sqlPath)
+	if err != nil {
+		t.Fatalf("Gagal membaca file SQL: %v", err)
 	}
 
-	// Memastikan database ditutup saat aplikasi berhenti
-	defer database.CloseDatabase()
+	if _, err := db.Exec(string(sqlBytes)); err != nil {
+		t.Fatalf("Gagal menjalankan migrasi: %v", err)
+	}
 
-	db := database.GetDB()
-
-	// Inisialisasi repositories
+	// Inisialisasi semua layer
+	// Repositories
 	userRepo := repository.NewUserRepository(db)
 	consumerRepo := repository.NewAPIConsumerRepository(db)
 	hostRepo := repository.NewHostRepository(db)
@@ -66,7 +86,7 @@ func main() {
 	maintWindowRepo := repository.NewMaintenanceWindowRepository(db)
 	authRepo := repository.NewAuthRepository(db)
 
-	// Inisialisasi services
+	// Services
 	userService := service.NewUserService(userRepo)
 	consumerService := service.NewAPIConsumerService(consumerRepo)
 	hostService := service.NewHostService(hostRepo)
@@ -94,9 +114,9 @@ func main() {
 	svcDiscoveryService := service.NewServiceDiscoveryService(svcDiscoveryRepo)
 	configVersionService := service.NewConfigVersionService(configVersionRepo)
 	maintWindowService := service.NewMaintenanceWindowService(maintWindowRepo)
-	authService := service.NewAuthService(authRepo, cfg.JWTSecret, cfg.JWTAccessExpireMinutes, cfg.JWTRefreshExpireDays)
+	authService := service.NewAuthService(authRepo, "test-jwt-secret", 30, 7)
 
-	// Inisialisasi handlers
+	// Handlers
 	userHandler := handler.NewUserHandler(userService)
 	consumerHandler := handler.NewAPIConsumerHandler(consumerService)
 	hostHandler := handler.NewHostHandler(hostService)
@@ -125,122 +145,48 @@ func main() {
 	configVersionHandler := handler.NewConfigVersionHandler(configVersionService)
 	maintWindowHandler := handler.NewMaintenanceWindowHandler(maintWindowService)
 	authHandler := handler.NewAuthHandler(authService)
-
-	// Auth middleware & rate limiter
 	authMiddleware := middleware.NewAuthMiddleware(authService)
-	loginRateLimiter := middleware.NewLoginRateLimiter(5, 60) // 5 attempts per 60 seconds
+	loginRateLimiter := middleware.NewLoginRateLimiter(50, 60)
 
-	// Setup Admin Router
-	adminMux := setupAdminRouter(
-		userHandler, consumerHandler, hostHandler, vhostHandler,
-		upstreamHandler, vdirHandler, credHandler, apiKeyHandler, accessHandler,
-		jwtConfigHandler, extAuthHandler, rateLimitHandler, corsConfigHandler,
-		circuitBreakerHandler, ipWhitelistHandler, ipBlacklistHandler,
-		reqHeaderHandler, resHeaderHandler, queryRewriteHandler,
-		acmeHandler, sslCertHandler, certDomainHandler, sslBindingHandler,
-		tlsOptionHandler, svcDiscoveryHandler, configVersionHandler, maintWindowHandler,
-		authHandler, authMiddleware, loginRateLimiter,
-	)
-
-	// Menjalankan Admin HTTP Server
-	go func() {
-		addr := ":" + toString(cfg.AdminHTTPPort)
-		log.Printf("🌐 Admin HTTP Server berjalan di %s", addr)
-		if err := http.ListenAndServe(addr, adminMux); err != nil {
-			log.Fatalf("❌ Admin HTTP Server error: %v", err)
-		}
-	}()
-
-	// TODO: Jalankan Admin HTTPS Server (perlu sertifikat SSL)
-	// go func() {
-	// 	addr := ":" + toString(cfg.AdminHTTPSPort)
-	// 	log.Printf("🔒 Admin HTTPS Server berjalan di %s", addr)
-	// 	if err := http.ListenAndServeTLS(addr, cfg.AdminSSLCertPath, cfg.AdminSSLKeyPath, adminMux); err != nil {
-	// 		log.Fatalf("❌ Admin HTTPS Server error: %v", err)
-	// 	}
-	// }()
-
-	// TODO: Jalankan Proxy HTTP & HTTPS Servers
-	// Ini akan diimplementasikan setelah admin API selesai
-
-	log.Println("✅ Swantara Gate API Gateway siap digunakan!")
-	log.Println("📍 Admin Panel: http://localhost:" + toString(cfg.AdminHTTPPort))
-	
-	// Blocking agar program tidak selesai
-	select {}
-}
-
-// setupAdminRouter mengatur routes untuk Admin API
-func setupAdminRouter(
-	userHandler *handler.UserHandler,
-	consumerHandler *handler.APIConsumerHandler,
-	hostHandler *handler.HostHandler,
-	vhostHandler *handler.VirtualHostHandler,
-	upstreamHandler *handler.UpstreamServerHandler,
-	vdirHandler *handler.VirtualDirectoryHandler,
-	credHandler *handler.ConsumerCredentialHandler,
-	apiKeyHandler *handler.APIKeyHandler,
-	accessHandler *handler.RouteConsumerAccessHandler,
-	jwtConfigHandler *handler.JWTConfigHandler,
-	extAuthHandler *handler.ExternalAuthHandler,
-	rateLimitHandler *handler.RateLimitHandler,
-	corsConfigHandler *handler.CORSConfigHandler,
-	circuitBreakerHandler *handler.CircuitBreakerHandler,
-	ipWhitelistHandler *handler.IPWhitelistHandler,
-	ipBlacklistHandler *handler.IPBlacklistHandler,
-	reqHeaderHandler *handler.RequestHeaderRuleHandler,
-	resHeaderHandler *handler.ResponseHeaderRuleHandler,
-	queryRewriteHandler *handler.QueryRewriteHandler,
-	acmeHandler *handler.ACMEAccountHandler,
-	sslCertHandler *handler.SSLCertificateHandler,
-	certDomainHandler *handler.CertificateDomainHandler,
-	sslBindingHandler *handler.SSLCertificateBindingHandler,
-	tlsOptionHandler *handler.TLSOptionHandler,
-	svcDiscoveryHandler *handler.ServiceDiscoveryHandler,
-	configVersionHandler *handler.ConfigVersionHandler,
-	maintWindowHandler *handler.MaintenanceWindowHandler,
-	authHandler *handler.AuthHandler,
-	authMiddleware *middleware.AuthMiddleware,
-	loginRateLimiter *middleware.LoginRateLimiter,
-) http.Handler {
+	// Setup Router
 	mux := http.NewServeMux()
 
-	// Health check endpoint
+	// Health
 	mux.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok","message":"Swantara Gate Admin API is running"}`))
+		w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	// Routes untuk Users
+	// Users
 	mux.HandleFunc("POST /api/admin/users", userHandler.CreateUser)
 	mux.HandleFunc("GET /api/admin/users", userHandler.GetAllUsers)
 	mux.HandleFunc("GET /api/admin/users/{id}", userHandler.GetUserByID)
 	mux.HandleFunc("PUT /api/admin/users/{id}", userHandler.UpdateUser)
 	mux.HandleFunc("DELETE /api/admin/users/{id}", userHandler.DeleteUser)
 
-	// Routes untuk API Consumers
+	// Consumers
 	mux.HandleFunc("POST /api/admin/consumers", consumerHandler.CreateConsumer)
 	mux.HandleFunc("GET /api/admin/consumers", consumerHandler.GetAllConsumers)
 	mux.HandleFunc("GET /api/admin/consumers/{id}", consumerHandler.GetConsumerByID)
 	mux.HandleFunc("PUT /api/admin/consumers/{id}", consumerHandler.UpdateConsumer)
 	mux.HandleFunc("DELETE /api/admin/consumers/{id}", consumerHandler.DeleteConsumer)
 
-	// Routes untuk Hosts
+	// Hosts
 	mux.HandleFunc("POST /api/admin/hosts", hostHandler.CreateHost)
 	mux.HandleFunc("GET /api/admin/hosts", hostHandler.GetAllHosts)
 	mux.HandleFunc("GET /api/admin/hosts/{id}", hostHandler.GetHostByID)
 	mux.HandleFunc("PUT /api/admin/hosts/{id}", hostHandler.UpdateHost)
 	mux.HandleFunc("DELETE /api/admin/hosts/{id}", hostHandler.DeleteHost)
 
-	// Routes untuk Virtual Hosts
+	// Virtual Hosts
 	mux.HandleFunc("POST /api/admin/virtual-hosts", vhostHandler.CreateVirtualHost)
 	mux.HandleFunc("GET /api/admin/virtual-hosts", vhostHandler.GetAllVirtualHosts)
 	mux.HandleFunc("GET /api/admin/virtual-hosts/{id}", vhostHandler.GetVirtualHostByID)
 	mux.HandleFunc("PUT /api/admin/virtual-hosts/{id}", vhostHandler.UpdateVirtualHost)
 	mux.HandleFunc("DELETE /api/admin/virtual-hosts/{id}", vhostHandler.DeleteVirtualHost)
 
-	// Routes untuk Upstream Servers
+	// Upstream Servers
 	mux.HandleFunc("POST /api/admin/upstream-servers", upstreamHandler.CreateUpstreamServer)
 	mux.HandleFunc("GET /api/admin/upstream-servers", upstreamHandler.GetAllUpstreamServers)
 	mux.HandleFunc("GET /api/admin/upstream-servers/{id}", upstreamHandler.GetUpstreamServerByID)
@@ -248,19 +194,17 @@ func setupAdminRouter(
 	mux.HandleFunc("DELETE /api/admin/upstream-servers/{id}", upstreamHandler.DeleteUpstreamServer)
 	mux.HandleFunc("GET /api/admin/virtual-hosts/{vhost_id}/upstream-servers", upstreamHandler.GetUpstreamServersByVHost)
 
-	// Routes untuk Virtual Directories
+	// Virtual Directories
 	mux.HandleFunc("POST /api/admin/virtual-directories", vdirHandler.CreateVirtualDirectory)
 	mux.HandleFunc("GET /api/admin/virtual-directories", vdirHandler.GetAllVirtualDirectories)
 	mux.HandleFunc("GET /api/admin/virtual-directories/{id}", vdirHandler.GetVirtualDirectoryByID)
 	mux.HandleFunc("PUT /api/admin/virtual-directories/{id}", vdirHandler.UpdateVirtualDirectory)
 	mux.HandleFunc("DELETE /api/admin/virtual-directories/{id}", vdirHandler.DeleteVirtualDirectory)
 	mux.HandleFunc("GET /api/admin/virtual-hosts/{vhost_id}/virtual-directories", vdirHandler.GetVirtualDirectoriesByVHost)
-
-	// Routes untuk Virtual Directory Methods
 	mux.HandleFunc("GET /api/admin/virtual-directories/{id}/methods", vdirHandler.GetMethods)
 	mux.HandleFunc("PUT /api/admin/virtual-directories/{id}/methods", vdirHandler.SetMethods)
 
-	// Routes untuk Consumer Credentials
+	// Consumer Credentials
 	mux.HandleFunc("POST /api/admin/consumer-credentials", credHandler.CreateCredential)
 	mux.HandleFunc("GET /api/admin/consumer-credentials", credHandler.GetAllCredentials)
 	mux.HandleFunc("GET /api/admin/consumer-credentials/{id}", credHandler.GetCredentialByID)
@@ -268,7 +212,7 @@ func setupAdminRouter(
 	mux.HandleFunc("DELETE /api/admin/consumer-credentials/{id}", credHandler.DeleteCredential)
 	mux.HandleFunc("GET /api/admin/consumers/{consumer_id}/credentials", credHandler.GetCredentialsByConsumer)
 
-	// Routes untuk API Keys
+	// API Keys
 	mux.HandleFunc("POST /api/admin/api-keys", apiKeyHandler.CreateAPIKey)
 	mux.HandleFunc("GET /api/admin/api-keys", apiKeyHandler.GetAllAPIKeys)
 	mux.HandleFunc("GET /api/admin/api-keys/{id}", apiKeyHandler.GetAPIKeyByID)
@@ -276,7 +220,7 @@ func setupAdminRouter(
 	mux.HandleFunc("DELETE /api/admin/api-keys/{id}", apiKeyHandler.DeleteAPIKey)
 	mux.HandleFunc("GET /api/admin/consumers/{consumer_id}/api-keys", apiKeyHandler.GetAPIKeysByConsumer)
 
-	// Routes untuk Route Consumer Access (ACL)
+	// Route Consumer Access
 	mux.HandleFunc("POST /api/admin/route-access", accessHandler.CreateAccess)
 	mux.HandleFunc("GET /api/admin/route-access", accessHandler.GetAllAccess)
 	mux.HandleFunc("GET /api/admin/route-access/{id}", accessHandler.GetAccessByID)
@@ -284,42 +228,42 @@ func setupAdminRouter(
 	mux.HandleFunc("DELETE /api/admin/route-access/{id}", accessHandler.DeleteAccess)
 	mux.HandleFunc("GET /api/admin/virtual-directories/{dir_id}/access", accessHandler.GetAccessByDirectory)
 
-	// Routes untuk JWT Configs
+	// JWT Configs
 	mux.HandleFunc("POST /api/admin/jwt-configs", jwtConfigHandler.Create)
 	mux.HandleFunc("GET /api/admin/jwt-configs", jwtConfigHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/jwt-configs/{id}", jwtConfigHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/jwt-configs/{id}", jwtConfigHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/jwt-configs/{id}", jwtConfigHandler.Delete)
 
-	// Routes untuk External Auth
+	// External Auth
 	mux.HandleFunc("POST /api/admin/external-auth", extAuthHandler.Create)
 	mux.HandleFunc("GET /api/admin/external-auth", extAuthHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/external-auth/{id}", extAuthHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/external-auth/{id}", extAuthHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/external-auth/{id}", extAuthHandler.Delete)
 
-	// Routes untuk Rate Limits
+	// Rate Limits
 	mux.HandleFunc("POST /api/admin/rate-limits", rateLimitHandler.Create)
 	mux.HandleFunc("GET /api/admin/rate-limits", rateLimitHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/rate-limits/{id}", rateLimitHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/rate-limits/{id}", rateLimitHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/rate-limits/{id}", rateLimitHandler.Delete)
 
-	// Routes untuk CORS Configs
+	// CORS Configs
 	mux.HandleFunc("POST /api/admin/cors-configs", corsConfigHandler.Create)
 	mux.HandleFunc("GET /api/admin/cors-configs", corsConfigHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/cors-configs/{id}", corsConfigHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/cors-configs/{id}", corsConfigHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/cors-configs/{id}", corsConfigHandler.Delete)
 
-	// Routes untuk Circuit Breakers
+	// Circuit Breakers
 	mux.HandleFunc("POST /api/admin/circuit-breakers", circuitBreakerHandler.Create)
 	mux.HandleFunc("GET /api/admin/circuit-breakers", circuitBreakerHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/circuit-breakers/{id}", circuitBreakerHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/circuit-breakers/{id}", circuitBreakerHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/circuit-breakers/{id}", circuitBreakerHandler.Delete)
 
-	// Routes untuk IP Whitelists
+	// IP Whitelists
 	mux.HandleFunc("POST /api/admin/ip-whitelists", ipWhitelistHandler.Create)
 	mux.HandleFunc("GET /api/admin/ip-whitelists", ipWhitelistHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/ip-whitelists/{id}", ipWhitelistHandler.GetByID)
@@ -327,7 +271,7 @@ func setupAdminRouter(
 	mux.HandleFunc("DELETE /api/admin/ip-whitelists/{id}", ipWhitelistHandler.Delete)
 	mux.HandleFunc("GET /api/admin/virtual-directories/{dir_id}/ip-whitelists", ipWhitelistHandler.GetByDirectory)
 
-	// Routes untuk IP Blacklists
+	// IP Blacklists
 	mux.HandleFunc("POST /api/admin/ip-blacklists", ipBlacklistHandler.Create)
 	mux.HandleFunc("GET /api/admin/ip-blacklists", ipBlacklistHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/ip-blacklists/{id}", ipBlacklistHandler.GetByID)
@@ -335,7 +279,7 @@ func setupAdminRouter(
 	mux.HandleFunc("DELETE /api/admin/ip-blacklists/{id}", ipBlacklistHandler.Delete)
 	mux.HandleFunc("GET /api/admin/virtual-directories/{dir_id}/ip-blacklists", ipBlacklistHandler.GetByDirectory)
 
-	// Routes untuk Request Header Rules
+	// Request Header Rules
 	mux.HandleFunc("POST /api/admin/request-headers", reqHeaderHandler.Create)
 	mux.HandleFunc("GET /api/admin/request-headers", reqHeaderHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/request-headers/{id}", reqHeaderHandler.GetByID)
@@ -343,7 +287,7 @@ func setupAdminRouter(
 	mux.HandleFunc("DELETE /api/admin/request-headers/{id}", reqHeaderHandler.Delete)
 	mux.HandleFunc("GET /api/admin/virtual-directories/{dir_id}/request-headers", reqHeaderHandler.GetByDirectory)
 
-	// Routes untuk Response Header Rules
+	// Response Header Rules
 	mux.HandleFunc("POST /api/admin/response-headers", resHeaderHandler.Create)
 	mux.HandleFunc("GET /api/admin/response-headers", resHeaderHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/response-headers/{id}", resHeaderHandler.GetByID)
@@ -351,7 +295,7 @@ func setupAdminRouter(
 	mux.HandleFunc("DELETE /api/admin/response-headers/{id}", resHeaderHandler.Delete)
 	mux.HandleFunc("GET /api/admin/virtual-directories/{dir_id}/response-headers", resHeaderHandler.GetByDirectory)
 
-	// Routes untuk Query Rewrites
+	// Query Rewrites
 	mux.HandleFunc("POST /api/admin/query-rewrites", queryRewriteHandler.Create)
 	mux.HandleFunc("GET /api/admin/query-rewrites", queryRewriteHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/query-rewrites/{id}", queryRewriteHandler.GetByID)
@@ -359,21 +303,21 @@ func setupAdminRouter(
 	mux.HandleFunc("DELETE /api/admin/query-rewrites/{id}", queryRewriteHandler.Delete)
 	mux.HandleFunc("GET /api/admin/virtual-directories/{dir_id}/query-rewrites", queryRewriteHandler.GetByDirectory)
 
-	// Routes untuk ACME Accounts
+	// ACME Accounts
 	mux.HandleFunc("POST /api/admin/acme-accounts", acmeHandler.Create)
 	mux.HandleFunc("GET /api/admin/acme-accounts", acmeHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/acme-accounts/{id}", acmeHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/acme-accounts/{id}", acmeHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/acme-accounts/{id}", acmeHandler.Delete)
 
-	// Routes untuk SSL Certificates
+	// SSL Certificates
 	mux.HandleFunc("POST /api/admin/ssl-certificates", sslCertHandler.Create)
 	mux.HandleFunc("GET /api/admin/ssl-certificates", sslCertHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/ssl-certificates/{id}", sslCertHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/ssl-certificates/{id}", sslCertHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/ssl-certificates/{id}", sslCertHandler.Delete)
 
-	// Routes untuk Certificate Domains
+	// Certificate Domains
 	mux.HandleFunc("POST /api/admin/certificate-domains", certDomainHandler.Create)
 	mux.HandleFunc("GET /api/admin/certificate-domains", certDomainHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/certificate-domains/{id}", certDomainHandler.GetByID)
@@ -381,55 +325,226 @@ func setupAdminRouter(
 	mux.HandleFunc("DELETE /api/admin/certificate-domains/{id}", certDomainHandler.Delete)
 	mux.HandleFunc("GET /api/admin/ssl-certificates/{cert_id}/domains", certDomainHandler.GetByCertificate)
 
-	// Routes untuk SSL Certificate Bindings
+	// SSL Certificate Bindings
 	mux.HandleFunc("POST /api/admin/ssl-bindings", sslBindingHandler.Create)
 	mux.HandleFunc("GET /api/admin/ssl-bindings", sslBindingHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/ssl-bindings/{id}", sslBindingHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/ssl-bindings/{id}", sslBindingHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/ssl-bindings/{id}", sslBindingHandler.Delete)
 
-	// Routes untuk TLS Options
+	// TLS Options
 	mux.HandleFunc("POST /api/admin/tls-options", tlsOptionHandler.Create)
 	mux.HandleFunc("GET /api/admin/tls-options", tlsOptionHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/tls-options/{id}", tlsOptionHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/tls-options/{id}", tlsOptionHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/tls-options/{id}", tlsOptionHandler.Delete)
 
-	// Routes untuk Service Discovery
+	// Service Discovery
 	mux.HandleFunc("POST /api/admin/service-discovery", svcDiscoveryHandler.Create)
 	mux.HandleFunc("GET /api/admin/service-discovery", svcDiscoveryHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/service-discovery/{id}", svcDiscoveryHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/service-discovery/{id}", svcDiscoveryHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/service-discovery/{id}", svcDiscoveryHandler.Delete)
 
-	// Routes untuk Config Versions
+	// Config Versions
 	mux.HandleFunc("POST /api/admin/config-versions", configVersionHandler.Create)
 	mux.HandleFunc("GET /api/admin/config-versions", configVersionHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/config-versions/{id}", configVersionHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/config-versions/{id}", configVersionHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/config-versions/{id}", configVersionHandler.Delete)
 
-	// Routes untuk Maintenance Windows
+	// Maintenance Windows
 	mux.HandleFunc("POST /api/admin/maintenance-windows", maintWindowHandler.Create)
 	mux.HandleFunc("GET /api/admin/maintenance-windows", maintWindowHandler.GetAll)
 	mux.HandleFunc("GET /api/admin/maintenance-windows/{id}", maintWindowHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/maintenance-windows/{id}", maintWindowHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/maintenance-windows/{id}", maintWindowHandler.Delete)
 
-	// Routes untuk Auth (public - tidak perlu token)
+	// Auth routes
 	mux.Handle("POST /api/admin/auth/login", loginRateLimiter.RateLimit(http.HandlerFunc(authHandler.Login)))
 	mux.HandleFunc("POST /api/admin/auth/refresh", authHandler.Refresh)
 	mux.HandleFunc("POST /api/admin/auth/logout", authHandler.Logout)
-
-	// Routes yang dilindungi auth middleware
 	mux.Handle("GET /api/admin/auth/me", authMiddleware.RequireAuth(http.HandlerFunc(authHandler.Me)))
 
-	// Menggunakan middleware
-	_ = authMiddleware // tersedia untuk proteksi route lain di masa depan
-	return middleware.LoggingMiddleware(middleware.CORSMiddleware(mux))
+	// Bungkus dengan middleware
+	server := httptest.NewServer(middleware.LoggingMiddleware(middleware.CORSMiddleware(mux)))
+
+	return &TestServer{Server: server, DB: db}
 }
 
-// toString mengubah int ke string
-func toString(i int) string {
-	return strconv.Itoa(i)
+// Close menutup server dan database test
+func (ts *TestServer) Close() {
+	ts.Server.Close()
+	ts.DB.Close()
+}
+
+// DoRequest melakukan HTTP request ke test server
+func (ts *TestServer) DoRequest(method, path string, body interface{}) (*http.Response, []byte) {
+	var reqBody io.Reader
+	if body != nil {
+		jsonBytes, _ := json.Marshal(body)
+		reqBody = bytes.NewBuffer(jsonBytes)
+	}
+
+	req, _ := http.NewRequest(method, ts.Server.URL+path, reqBody)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, nil
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	return resp, respBody
+}
+
+// ParseResponse mem-parse response body ke APIResponse
+func ParseResponse(body []byte) APIResponse {
+	var res APIResponse
+	json.Unmarshal(body, &res)
+	return res
+}
+
+// ExtractID mengambil ID dari response data
+func ExtractID(data map[string]interface{}) int64 {
+	if data == nil {
+		return 0
+	}
+	if id, ok := data["id"]; ok {
+		return int64(id.(float64))
+	}
+	return 0
+}
+
+// AssertStatus memvalidasi HTTP status code
+func AssertStatus(t *testing.T, resp *http.Response, expected int) {
+	t.Helper()
+	if resp.StatusCode != expected {
+		t.Errorf("Expected status %d, got %d", expected, resp.StatusCode)
+	}
+}
+
+// AssertSuccess memvalidasi bahwa response sukses
+func AssertSuccess(t *testing.T, body []byte) APIResponse {
+	t.Helper()
+	res := ParseResponse(body)
+	if !res.Success {
+		t.Errorf("Expected success=true, got false. Message: %s", res.Message)
+	}
+	return res
+}
+
+// AssertError memvalidasi bahwa response error
+func AssertError(t *testing.T, body []byte) APIResponse {
+	t.Helper()
+	res := ParseResponse(body)
+	if res.Success {
+		t.Errorf("Expected success=false, got true. Message: %s", res.Message)
+	}
+	return res
+}
+
+// CreateTestHost membuat host test dan mengembalikan ID-nya
+func (ts *TestServer) CreateTestHost(t *testing.T) int64 {
+	t.Helper()
+	_, body := ts.DoRequest("POST", "/api/admin/hosts", map[string]interface{}{
+		"host_name":   fmt.Sprintf("test-%d.example.com", os.Getpid()),
+		"description": "Test host",
+		"is_active":   true,
+	})
+	res := ParseResponse(body)
+	return ExtractID(res.Data)
+}
+
+// CreateTestVirtualHost membuat virtual host test dan mengembalikan ID-nya
+func (ts *TestServer) CreateTestVirtualHost(t *testing.T, hostID int64) int64 {
+	t.Helper()
+	_, body := ts.DoRequest("POST", "/api/admin/virtual-hosts", map[string]interface{}{
+		"host_id":    hostID,
+		"vhost_name": fmt.Sprintf("vhost-%d.example.com", os.Getpid()),
+		"is_active":  true,
+	})
+	res := ParseResponse(body)
+	return ExtractID(res.Data)
+}
+
+// CreateTestVirtualDirectory membuat virtual directory test dan mengembalikan ID-nya
+func (ts *TestServer) CreateTestVirtualDirectory(t *testing.T, vhostID int64) int64 {
+	t.Helper()
+	_, body := ts.DoRequest("POST", "/api/admin/virtual-directories", map[string]interface{}{
+		"virtual_host_id": vhostID,
+		"source_path":     "/api/test",
+		"target_path":     "/test",
+		"is_active":       true,
+	})
+	res := ParseResponse(body)
+	return ExtractID(res.Data)
+}
+
+// CreateTestConsumer membuat consumer test dan mengembalikan ID-nya
+func (ts *TestServer) CreateTestConsumer(t *testing.T) int64 {
+	t.Helper()
+	_, body := ts.DoRequest("POST", "/api/admin/consumers", map[string]interface{}{
+		"consumer_name": fmt.Sprintf("test-consumer-%d", os.Getpid()),
+		"description":   "Test consumer",
+		"is_active":     true,
+	})
+	res := ParseResponse(body)
+	return ExtractID(res.Data)
+}
+
+// DoAuthRequest melakukan HTTP request dengan Authorization header
+func (ts *TestServer) DoAuthRequest(method, path string, body interface{}, token string) (*http.Response, []byte) {
+	var reqBody io.Reader
+	if body != nil {
+		jsonBytes, _ := json.Marshal(body)
+		reqBody = bytes.NewBuffer(jsonBytes)
+	}
+
+	req, _ := http.NewRequest(method, ts.Server.URL+path, reqBody)
+	req.Header.Set("Content-Type", "application/json")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, nil
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	return resp, respBody
+}
+
+// CreateTestUser membuat user test dan mengembalikan ID-nya
+func (ts *TestServer) CreateTestUser(t *testing.T, username, password, role string) int64 {
+	t.Helper()
+	_, body := ts.DoRequest("POST", "/api/admin/users", map[string]interface{}{
+		"username":  username,
+		"password":  password,
+		"full_name": "Test User",
+		"email":     username + "@test.com",
+		"role":      role,
+		"is_active": true,
+	})
+	res := ParseResponse(body)
+	return ExtractID(res.Data)
+}
+
+// LoginTestUser login dan mengembalikan access token + refresh token
+func (ts *TestServer) LoginTestUser(t *testing.T, username, password string) (string, string) {
+	t.Helper()
+	_, body := ts.DoRequest("POST", "/api/admin/auth/login", map[string]interface{}{
+		"username": username,
+		"password": password,
+	})
+	res := ParseResponse(body)
+	if !res.Success {
+		t.Fatalf("Login gagal: %s", res.Message)
+	}
+	accessToken, _ := res.Data["access_token"].(string)
+	refreshToken, _ := res.Data["refresh_token"].(string)
+	return accessToken, refreshToken
 }

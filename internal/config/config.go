@@ -28,6 +28,11 @@ type Config struct {
 	// Konfigurasi Umum
 	AppEnv  string
 	LogLevel string
+
+	// Konfigurasi JWT
+	JWTSecret             string
+	JWTAccessExpireMinutes int
+	JWTRefreshExpireDays  int
 }
 
 // LoadConfig membaca konfigurasi dari environment variables
@@ -54,6 +59,11 @@ func LoadConfig() *Config {
 		// Konfigurasi Umum - membaca environment dan log level
 		AppEnv:   getEnvString("APP_ENV", "development"),
 		LogLevel: getEnvString("LOG_LEVEL", "info"),
+
+		// Konfigurasi JWT
+		JWTSecret:             getEnvString("JWT_SECRET", "swantara-gate-secret-key-change-in-production"),
+		JWTAccessExpireMinutes: getEnvInt("JWT_ACCESS_EXPIRE_MINUTES", 30),
+		JWTRefreshExpireDays:  getEnvInt("JWT_REFRESH_EXPIRE_DAYS", 7),
 	}
 }
 
