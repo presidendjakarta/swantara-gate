@@ -51,6 +51,24 @@
 			]
 		},
 		{
+			"name": "Configuration",
+			"item": [
+				{
+					"name": "Reload Proxy Configuration",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/config/reload",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "config", "reload"]
+						},
+						"description": "Reload semua konfigurasi proxy dari database: routes, upstreams, load balancer, health checker, authentication, rate limiting, circuit breaker, IP filter, CORS, maintenance windows, header rules, dan query rewrites.\n\nPanggil endpoint ini setelah mengubah konfigurasi di database secara manual atau setelah deploy perubahan yang perlu diterapkan tanpa restart server.\n\ncurl -X POST http://localhost:9090/api/admin/config/reload"
+					}
+				}
+			]
+		},
+		{
 			"name": "Auth",
 			"item": [
 				{

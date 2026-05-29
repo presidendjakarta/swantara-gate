@@ -1,5 +1,7 @@
 # Test Load Balancer - Swantara Gate
 # Usage: .\test-lb.ps1 [-Total 20] [-Url "http://api.example.local:8000/"]
+# cd x:\laragon\go-apps\swantara-gate ; powershell -ExecutionPolicy Bypass -File .\test-lb.ps1 -Total 10
+
 
 param(
     [int]$Total = 20,

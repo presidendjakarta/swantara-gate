@@ -131,6 +131,11 @@ func main() {
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 	loginRateLimiter := middleware.NewLoginRateLimiter(5, 60) // 5 attempts per 60 seconds
 
+	// Inisialisasi Proxy Server (perlu sebelum admin router untuk endpoint reload)
+	proxyServer := proxy.NewProxyServer(db)
+	proxyServer.Start()
+	defer proxyServer.Stop()
+
 	// Setup Admin Router
 	adminMux := setupAdminRouter(
 		userHandler, consumerHandler, hostHandler, vhostHandler,
@@ -141,6 +146,7 @@ func main() {
 		acmeHandler, sslCertHandler, certDomainHandler, sslBindingHandler,
 		tlsOptionHandler, svcDiscoveryHandler, configVersionHandler, maintWindowHandler,
 		authHandler, authMiddleware, loginRateLimiter,
+		proxyServer,
 	)
 
 	// Menjalankan Admin HTTP Server
@@ -160,11 +166,6 @@ func main() {
 	// 		log.Fatalf("❌ Admin HTTPS Server error: %v", err)
 	// 	}
 	// }()
-
-	// Inisialisasi Proxy Server
-	proxyServer := proxy.NewProxyServer(db)
-	proxyServer.Start()
-	defer proxyServer.Stop()
 
 	// Menjalankan Proxy HTTP Server
 	go func() {
@@ -217,6 +218,7 @@ func setupAdminRouter(
 	authHandler *handler.AuthHandler,
 	authMiddleware *middleware.AuthMiddleware,
 	loginRateLimiter *middleware.LoginRateLimiter,
+	proxyServer *proxy.ProxyServer,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -430,6 +432,19 @@ func setupAdminRouter(
 	mux.HandleFunc("GET /api/admin/maintenance-windows/{id}", maintWindowHandler.GetByID)
 	mux.HandleFunc("PUT /api/admin/maintenance-windows/{id}", maintWindowHandler.Update)
 	mux.HandleFunc("DELETE /api/admin/maintenance-windows/{id}", maintWindowHandler.Delete)
+
+	// Reload proxy configuration (routes, upstreams, security, etc.)
+	mux.HandleFunc("POST /api/admin/config/reload", func(w http.ResponseWriter, r *http.Request) {
+		if proxyServer == nil {
+			http.Error(w, `{"error":"proxy server not initialized"}`, http.StatusServiceUnavailable)
+			return
+		}
+		log.Println("[Admin] Reloading proxy configuration...")
+		proxyServer.ReloadConfig()
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok","message":"Proxy configuration reloaded successfully"}`))
+	})
 
 	// Routes untuk Auth (public - tidak perlu token)
 	mux.Handle("POST /api/admin/auth/login", loginRateLimiter.RateLimit(http.HandlerFunc(authHandler.Login)))
