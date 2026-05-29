@@ -54,6 +54,33 @@ Bayangkan seperti **satpam komplek perumahan**:
 
 **Hubungan:** Satu Virtual Host bisa punya banyak Virtual Directory (route yang berbeda-beda).
 
+**Match Type (Cara Mencocokkan Path):**
+
+| Match Type | Keterangan | Contoh Pattern | Yang Match |
+|---|---|---|---|
+| **`exact`** | Harus persis sama | `/api/health` | Hanya `/api/health` |
+| **`prefix`** | Path dimulai dengan pattern ini | `/api` | `/api`, `/api/users`, `/api/users/123` |
+| **`wildcard`** | Support `*` (1 segment) dan `**` (banyak segment) | `/api/*/detail` | `/api/users/detail` (tapi tidak `/api/users/123/detail`). `/api/**` match semua di bawah `/api/` |
+| **`regex`** | Pakai regular expression | `/api/v[0-9]+/.*` | `/api/v1/users`, `/api/v2/orders` |
+| **`parameter`** | Path dengan parameter `{nama}` | `/users/{id}/posts/{post_id}` | `/users/42/posts/7` (extract: `id=42`, `post_id=7`) |
+| **`rewrite`** | Transformasi path dengan parameter mapping | `/blog/{id}` → `/artikel/{id}` | `/blog/99` → backend: `/artikel/99` |
+
+**Contoh Rewrite:**
+```
+source_path: /blog/{id}           →  target_path: /artikel/{id}
+source_path: /project/{nama}/{id} →  target_path: /project/detail/{id}/{nama}
+source_path: /user/{username}     →  target_path: /profile/{username}/view
+```
+
+**Perbedaan `parameter` vs `rewrite`:**
+- `parameter`: Extract params tapi target path tetap (`/users/{id}` → `/api/users`)
+- `rewrite`: Transformasi path lengkap dengan params (`/users/{id}` → `/api/user/{id}`)
+
+**Prioritas matching** (dari yang paling diprioritaskan): `exact` → `regex` → `parameter` → `rewrite` → `prefix` → `wildcard`
+
+**Strip Prefix:** Kalau `strip_prefix = true`, maka pattern di Source Path akan dihilangkan sebelum dikirim ke backend.
+> Contoh: `source_path=/api`, `target_path=/`, path masuk `/api/users` → dikirim ke backend sebagai `/users`
+
 ---
 
 ### API Consumer

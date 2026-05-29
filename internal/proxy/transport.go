@@ -134,18 +134,26 @@ func buildTargetURL(r *http.Request, upstream *UpstreamConfig, route *VDirConfig
 	}
 
 	// Determine the path
-	path := r.URL.Path
-	if route.StripPrefix && route.MatchType == "prefix" {
-		path = strings.TrimPrefix(path, route.SourcePath)
-		if path == "" || path[0] != '/' {
-			path = "/" + path
+	var path string
+	if route.MatchType == "rewrite" {
+		// For rewrite: extract parameters from source, substitute into target
+		params, _ := matchParameterPath(route.SourcePath, r.URL.Path)
+		path = substituteParameters(route.TargetPath, params)
+	} else {
+		// Default behavior (prefix, exact, etc.)
+		path = r.URL.Path
+		if route.StripPrefix && route.MatchType == "prefix" {
+			path = strings.TrimPrefix(path, route.SourcePath)
+			if path == "" || path[0] != '/' {
+				path = "/" + path
+			}
 		}
-	}
 
-	// Prepend target path
-	targetPath := strings.TrimSuffix(route.TargetPath, "/")
-	if targetPath != "" && targetPath != "/" {
-		path = targetPath + path
+		// Prepend target path
+		targetPath := strings.TrimSuffix(route.TargetPath, "/")
+		if targetPath != "" && targetPath != "/" {
+			path = targetPath + path
+		}
 	}
 
 	// Build full URL

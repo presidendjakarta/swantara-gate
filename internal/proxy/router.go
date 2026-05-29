@@ -393,6 +393,12 @@ func matchRoute(route *VDirConfig, path string) (map[string]string, bool) {
 		if params, ok := matchParameterPath(route.SourcePath, path); ok {
 			return params, true
 		}
+	case "rewrite":
+		// Match source path with parameters, return extracted params
+		// The actual path transformation happens in the proxy pipeline
+		if params, ok := matchParameterPath(route.SourcePath, path); ok {
+			return params, true
+		}
 	default:
 		// Default to prefix matching
 		if strings.HasPrefix(path, route.SourcePath) {
@@ -463,4 +469,19 @@ func matchParameterPath(pattern, path string) (map[string]string, bool) {
 		}
 	}
 	return params, true
+}
+
+// substituteParameters replaces {param} placeholders in a path with actual values from params map
+// Example: substituteParameters("/artikel/{id}", map[string]string{"id": "42"}) → "/artikel/42"
+func substituteParameters(path string, params map[string]string) string {
+	if len(params) == 0 {
+		return path
+	}
+
+	result := path
+	for key, value := range params {
+		placeholder := "{" + key + "}"
+		result = strings.ReplaceAll(result, placeholder, value)
+	}
+	return result
 }

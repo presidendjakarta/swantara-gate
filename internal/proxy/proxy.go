@@ -117,6 +117,14 @@ func (ps *ProxyServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vhost := match.VirtualHost
 	route := match.VirtualDirectory
 
+	if ps.router.debug {
+		log.Printf("[Proxy:DEBUG] PIPELINE | Host=%q Path=%q → VHost#%d (%s) [host_id=%d, lb=%s, sticky=%v] → Route#%d [%s] %s → %s [strip=%v, auth=%s, timeout=%ds]",
+			r.Host, r.URL.Path,
+			vhost.ID, vhost.VHostName, vhost.HostID, vhost.LBAlgorithm, vhost.StickySession,
+			route.ID, route.MatchType, route.SourcePath, route.TargetPath,
+			route.StripPrefix, route.AuthType, route.ProxyTimeoutSeconds)
+	}
+
 	// Step 2: Maintenance mode check
 	if inMaint, cfg := ps.maintenance.IsInMaintenance(vhost.ID); inMaint {
 		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, cfg.Message), cfg.ResponseCode)
@@ -213,17 +221,34 @@ func (ps *ProxyServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if ps.router.debug {
+		var upstreamDesc []string
+		for _, u := range upstreamList {
+			upstreamDesc = append(upstreamDesc, fmt.Sprintf("%s:%d [pri=%d,w=%d]", u.TargetHost, u.TargetPort, u.Priority, u.Weight))
+		}
+		log.Printf("[Proxy:DEBUG] UPSTREAMS | VHost#%d has %d upstream(s): %s",
+			vhost.ID, len(upstreamList), strings.Join(upstreamDesc, ", "))
+	}
+
 	var resp *ProxyResponse
 	var upstream *UpstreamConfig
 	var lastErr error
 
 	for i, candidate := range upstreamList {
+		if ps.router.debug {
+			log.Printf("[Proxy:DEBUG] FORWARD | Attempt %d/%d → %s://%s:%d%s", 
+				i+1, len(upstreamList), candidate.Protocol, candidate.TargetHost, candidate.TargetPort, r.URL.Path)
+		}
 		resp, lastErr = ps.transport.ForwardOnce(r, candidate, route)
 		if lastErr == nil && resp.StatusCode < 502 {
 			// Success
 			upstream = candidate
 			ps.healthChecker.MarkSuccess(candidate)
 			ps.circuitBreaker.RecordSuccess(route.ID)
+			if ps.router.debug {
+				log.Printf("[Proxy:DEBUG] SUCCESS | %s:%d → %d (%d bytes, %v)",
+					candidate.TargetHost, candidate.TargetPort, resp.StatusCode, len(resp.Body), time.Since(start))
+			}
 			break
 		}
 
@@ -232,8 +257,13 @@ func (ps *ProxyServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if lastErr == nil {
 			lastErr = fmt.Errorf("upstream returned %d", resp.StatusCode)
 		}
-		log.Printf("[Proxy] Upstream %s:%d failed (%d/%d): %v",
-			candidate.TargetHost, candidate.TargetPort, i+1, len(upstreamList), lastErr)
+		if ps.router.debug {
+			log.Printf("[Proxy:DEBUG] FAILED | %s:%d → %v (trying next...)",
+				candidate.TargetHost, candidate.TargetPort, lastErr)
+		} else {
+			log.Printf("[Proxy] Upstream %s:%d failed (%d/%d): %v",
+				candidate.TargetHost, candidate.TargetPort, i+1, len(upstreamList), lastErr)
+		}
 		resp = nil
 
 		// Brief delay before trying next
@@ -259,6 +289,9 @@ func (ps *ProxyServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Step 16: Cache response if enabled
 	if route.CacheEnabled {
 		ps.cache.Set(r, resp, route.CacheTTLSeconds)
+		if ps.router.debug {
+			log.Printf("[Proxy:DEBUG] CACHE | Response cached for %s (TTL=%ds)", r.URL.Path, route.CacheTTLSeconds)
+		}
 	}
 
 	// Step 17: Write response to client
