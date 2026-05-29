@@ -52,7 +52,7 @@ func NewProxyServer(db *sql.DB) *ProxyServer {
 		ipFilter:        NewIPFilter(db),
 		cors:            NewProxyCORS(db),
 		maintenance:     NewMaintenanceChecker(db),
-		accessLogger:    NewAccessLogger(db),
+		accessLogger:    NewAccessLogger(db, "logs"),
 		loadBalancers:   make(map[int64]LoadBalancer),
 	}
 	return ps

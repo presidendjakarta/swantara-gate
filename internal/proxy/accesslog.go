@@ -5,7 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
 	"time"
+
+	_ "modernc.org/sqlite"
 )
 
 // AccessLogEntry represents a single access log record
@@ -25,33 +31,72 @@ type AccessLogEntry struct {
 	UpstreamPort int
 }
 
-// AccessLogger logs proxy requests to the database
+// AccessLogger logs proxy requests to rotating SQLite files (one per day)
 type AccessLogger struct {
-	db      *sql.DB
-	enabled bool
-	logCh   chan *AccessLogEntry
+	logDir    string
+	enabled   bool
+	logCh     chan *AccessLogEntry
+	currentDB *sql.DB
+	currentDate string
+	mu        sync.Mutex
 }
 
-// NewAccessLogger creates a new access logger
-func NewAccessLogger(db *sql.DB) *AccessLogger {
+// NewAccessLogger creates a new access logger with daily rotation
+func NewAccessLogger(db *sql.DB, logDir string) *AccessLogger {
+	if logDir == "" {
+		logDir = "logs"
+	}
+
+	// Create log directory if not exists
+	os.MkdirAll(logDir, 0755)
+
 	al := &AccessLogger{
-		db:      db,
+		logDir:  logDir,
 		enabled: true,
 		logCh:   make(chan *AccessLogEntry, 1000),
 	}
 
-	// Ensure the access_logs table exists
-	al.ensureTable()
+	// Initialize today's log file
+	al.rotateIfNeeded()
 
 	// Start background writer
 	go al.writer()
 
+	// Start daily rotation checker
+	go al.rotationChecker()
+
 	return al
 }
 
-// ensureTable creates the access_logs table if it doesn't exist
-func (al *AccessLogger) ensureTable() {
-	_, err := al.db.Exec(`
+// rotateIfNeeded creates a new log file if the date has changed
+func (al *AccessLogger) rotateIfNeeded() {
+	al.mu.Lock()
+	defer al.mu.Unlock()
+
+	today := time.Now().Format("2006-01-02")
+	if al.currentDate == today && al.currentDB != nil {
+		return // Already initialized for today
+	}
+
+	// Close yesterday's DB
+	if al.currentDB != nil {
+		al.currentDB.Close()
+	}
+
+	// Open today's log file
+	logFile := filepath.Join(al.logDir, fmt.Sprintf("access-%s.db", today))
+	db, err := sql.Open("sqlite", logFile)
+	if err != nil {
+		log.Printf("[Proxy:AccessLog] Error opening log file %s: %v", logFile, err)
+		return
+	}
+
+	// Enable WAL mode for better concurrent performance
+	db.Exec("PRAGMA journal_mode=WAL")
+	db.Exec("PRAGMA synchronous=NORMAL")
+
+	// Create table
+	db.Exec(`
 		CREATE TABLE IF NOT EXISTS access_logs (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -69,9 +114,65 @@ func (al *AccessLogger) ensureTable() {
 			upstream_port INTEGER
 		)
 	`)
-	if err != nil {
-		log.Printf("[Proxy:AccessLog] Error creating table: %v", err)
+
+	al.currentDB = db
+	al.currentDate = today
+
+	log.Printf("[Proxy:AccessLog] Rotated to new log file: %s", logFile)
+
+	// Cleanup old logs (keep only last 24 hours)
+	go al.cleanupOldLogs()
+}
+
+// rotationChecker runs daily at midnight to rotate log file
+func (al *AccessLogger) rotationChecker() {
+	for {
+		now := time.Now()
+		// Calculate time until midnight
+		tomorrow := now.Add(24 * time.Hour)
+		midnight := time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 0, 0, 0, 0, now.Location())
+		timeUntilMidnight := midnight.Sub(now)
+
+		time.Sleep(timeUntilMidnight)
+		al.rotateIfNeeded()
 	}
+}
+
+// cleanupOldLogs removes log files older than 24 hours
+func (al *AccessLogger) cleanupOldLogs() {
+	cutoff := time.Now().Add(-24 * time.Hour)
+	cutoffDate := cutoff.Format("2006-01-02")
+
+	entries, err := os.ReadDir(al.logDir)
+	if err != nil {
+		log.Printf("[Proxy:AccessLog] Error reading log directory: %v", err)
+		return
+	}
+
+	for _, entry := range entries {
+		if !strings.HasSuffix(entry.Name(), ".db") || !strings.HasPrefix(entry.Name(), "access-") {
+			continue
+		}
+
+		// Extract date from filename (access-2006-01-02.db)
+		name := entry.Name()
+		dateStr := strings.TrimPrefix(name, "access-")
+		dateStr = strings.TrimSuffix(dateStr, ".db")
+
+		if dateStr < cutoffDate {
+			filePath := filepath.Join(al.logDir, name)
+			if err := os.Remove(filePath); err != nil {
+				log.Printf("[Proxy:AccessLog] Error removing old log %s: %v", name, err)
+			} else {
+				log.Printf("[Proxy:AccessLog] Removed old log file: %s", name)
+			}
+		}
+	}
+}
+
+// ensureTable kept for backward compatibility (no-op now)
+func (al *AccessLogger) ensureTable() {
+	// Table creation moved to rotateIfNeeded
 }
 
 // Log records an access log entry asynchronously
@@ -149,7 +250,19 @@ func (al *AccessLogger) flush(entries []*AccessLogEntry) {
 		return
 	}
 
-	tx, err := al.db.Begin()
+	// Ensure we have today's DB
+	al.rotateIfNeeded()
+
+	al.mu.Lock()
+	db := al.currentDB
+	al.mu.Unlock()
+
+	if db == nil {
+		log.Printf("[Proxy:AccessLog] No database available for writing logs")
+		return
+	}
+
+	tx, err := db.Begin()
 	if err != nil {
 		log.Printf("[Proxy:AccessLog] Error starting transaction: %v", err)
 		return
