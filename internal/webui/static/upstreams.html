@@ -1,0 +1,884 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upstream Servers - Swantara Gate</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Metro UI -->
+    <link rel="stylesheet" href="https://cdn.metroui.org.ua/current/metro.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+    <!-- NProgress -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
+    
+    <!-- App Styles -->
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+    <link rel="stylesheet" href="/assets/css/datatables.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+    <link rel="stylesheet" href="/assets/css/dark.css">
+    <link rel="stylesheet" href="/assets/css/swal-custom.css">
+    
+    <style>
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 640px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: slideUp 0.25s ease;
+            overflow: hidden;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-header h3 i { color: var(--accent); }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: var(--transition-fast);
+        }
+        .modal-close:hover { background: var(--bg-secondary); color: var(--text-primary); }
+        .modal-body { padding: 24px; max-height: 65vh; overflow-y: auto; }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-subtle);
+            background: var(--bg-secondary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+        }
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+        .empty-state h4 {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .empty-state p { font-size: 13px; margin: 0; }
+
+        /* Switch Toggle */
+        .switch-toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+        .switch-toggle input { opacity: 0; width: 0; height: 0; }
+        .switch-slider {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 22px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        .switch-slider::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: var(--transition-fast);
+        }
+        .switch-toggle input:checked + .switch-slider { background: var(--success); }
+        .switch-toggle input:checked + .switch-slider::before { transform: translateX(18px); }
+
+        /* VHost Selector Card */
+        .vhost-selector-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-subtle);
+        }
+        .vhost-selector-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .vhost-selector-row label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .vhost-selector-row label i { color: var(--accent); }
+        .vhost-selector-row select {
+            flex: 1;
+            min-width: 250px;
+            height: 42px;
+            padding: 8px 14px;
+            font-size: 14px;
+        }
+        .vhost-info-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .vhost-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .vhost-chip i { font-size: 11px; color: var(--accent); }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 18px;
+        }
+        .form-grid .form-group.full-width { grid-column: 1 / -1; }
+        .form-grid .form-group { margin-bottom: 0; }
+
+        /* Health Check Section */
+        .health-check-section {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin-top: 4px;
+        }
+        .health-check-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title i { font-size: 13px; color: var(--accent); }
+
+        /* Table Target Cell */
+        .target-cell { display: flex; align-items: center; gap: 10px; }
+        .target-icon {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 600; color: #fff;
+            flex-shrink: 0;
+        }
+        .target-info .target-host { font-weight: 600; font-size: 13px; }
+        .target-info .target-port { font-size: 11px; color: var(--text-tertiary); }
+
+        /* Loading Spinner */
+        .table-loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-tertiary);
+        }
+        .table-loading i {
+            font-size: 24px;
+            animation: fa-spin 1s linear infinite;
+            margin-bottom: 10px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- App Container -->
+    <div class="app-container">
+        
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content Area -->
+        <div class="app-main">
+            <!-- Top Navbar -->
+            <div id="navbar-container"></div>
+
+            <!-- Page Content -->
+            <main class="app-content">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div>
+                        <h1>Upstream Server Management</h1>
+                        <p>Manage backend servers for each virtual host</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="refreshData()">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>Refresh</span>
+                        </button>
+                        <button class="btn btn-primary" id="btnAddUpstream" onclick="openAddForm()" disabled>
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Add Upstream</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info Alert -->
+                <div class="content-card" style="margin-bottom: 24px; border-left: 4px solid var(--accent);">
+                    <div class="card-body" style="padding: 16px 20px;">
+                        <div style="display: flex; gap: 12px; align-items: start;">
+                            <i class="fa-solid fa-circle-info" style="color: var(--accent); font-size: 20px; margin-top: 2px;"></i>
+                            <div style="flex: 1;">
+                                <h4 style="margin-bottom: 4px; font-size: 14px;">What is an Upstream Server?</h4>
+                                <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">An Upstream Server is a backend server that receives proxied traffic. Each Virtual Host can have multiple upstream servers with configurable priority, weight, health checks, and failover behavior.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Virtual Host Selector -->
+                <div class="vhost-selector-card">
+                    <div class="vhost-selector-row">
+                        <label><i class="fa-solid fa-globe"></i> Select Virtual Host</label>
+                        <select class="form-control" id="vhostSelect" onchange="onVHostChange()">
+                            <option value="">-- Choose a virtual host --</option>
+                        </select>
+                    </div>
+                    <div class="vhost-info-chips" id="vhostInfoChips" style="display: none;"></div>
+                </div>
+
+                <!-- Upstream Table -->
+                <div class="content-card" id="upstreamTableCard" style="display: none;">
+                    <div class="card-header">
+                        <div class="card-header-left">
+                            <div class="card-icon bg-primary">
+                                <i class="fa-solid fa-server"></i>
+                            </div>
+                            <div>
+                                <h3>Upstream Servers</h3>
+                                <p class="card-subtitle" id="tableSubtitle">Select a virtual host to view upstreams</p>
+                            </div>
+                        </div>
+                        <div id="upstreamCountBadge"></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="data-table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Target</th>
+                                        <th>Protocol</th>
+                                        <th>Priority</th>
+                                        <th>Weight</th>
+                                        <th>Health Check</th>
+                                        <th style="width: 100px;">Status</th>
+                                        <th style="width: 130px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="upstreamTableBody">
+                                    <tr>
+                                        <td colspan="8">
+                                            <div class="empty-state">
+                                                <i class="fa-solid fa-arrow-up"></i>
+                                                <h4>Select a Virtual Host</h4>
+                                                <p>Choose a virtual host above to view its upstream servers</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="modal-overlay" id="upstreamModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fa-solid fa-server"></i> <span>Add Upstream Server</span></h3>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="upstreamForm" onsubmit="return false;">
+                    <input type="hidden" id="upstreamId">
+                    <div class="section-title"><i class="fa-solid fa-crosshairs"></i> Target Configuration</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Target Host <span style="color:var(--danger);">*</span></label>
+                            <input type="text" class="form-control" id="targetHost" placeholder="e.g. 192.168.1.10 or backend.local">
+                        </div>
+                        <div class="form-group">
+                            <label>Target Port <span style="color:var(--danger);">*</span></label>
+                            <input type="number" class="form-control" id="targetPort" placeholder="8080" min="1" max="65535">
+                        </div>
+                        <div class="form-group">
+                            <label>Protocol</label>
+                            <select class="form-control" id="protocol">
+                                <option value="http">HTTP</option>
+                                <option value="https">HTTPS</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <input type="number" class="form-control" id="priority" value="1" min="1">
+                            <div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;">Lower = higher priority</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Weight</label>
+                            <input type="number" class="form-control" id="weight" value="1" min="0">
+                            <div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;">For weighted load balancing</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Fails</label>
+                            <input type="number" class="form-control" id="maxFails" value="3" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Fail Timeout (sec)</label>
+                            <input type="number" class="form-control" id="failTimeout" value="30" min="1">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div class="section-title"><i class="fa-solid fa-toggle-on"></i> Server Flags</div>
+                        <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <label class="switch-toggle"><input type="checkbox" id="isActive" checked><span class="switch-slider"></span></label>
+                                <span id="statusLabel" style="font-size:13px;font-weight:500;color:var(--success);">Active</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <label class="switch-toggle"><input type="checkbox" id="isBackup"><span class="switch-slider"></span></label>
+                                <span id="backupLabel" style="font-size:13px;font-weight:500;color:var(--text-tertiary);">Backup</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                            <div class="section-title" style="margin-bottom:0;padding-bottom:0;border-bottom:none;"><i class="fa-solid fa-heart-pulse"></i> Health Check</div>
+                            <label class="switch-toggle"><input type="checkbox" id="healthEnabled"><span class="switch-slider"></span></label>
+                        </div>
+                        <div class="health-check-section" id="healthCheckSection" style="display:none;">
+                            <div class="health-check-grid">
+                                <div class="form-group full-width">
+                                    <label style="font-size:12px;font-weight:500;color:var(--text-secondary);">Health Check Path</label>
+                                    <input type="text" class="form-control" id="healthPath" placeholder="/health" value="/health">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size:12px;font-weight:500;color:var(--text-secondary);">Interval (sec)</label>
+                                    <input type="number" class="form-control" id="healthInterval" value="10" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size:12px;font-weight:500;color:var(--text-secondary);">Timeout (sec)</label>
+                                    <input type="number" class="form-control" id="healthTimeout" value="5" min="1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </button>
+                <button class="btn btn-primary" id="btnSave" onclick="saveUpstream()">
+                    <i class="fa-solid fa-check"></i> <span id="btnSaveText">Save</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Command Palette -->
+    <div class="command-palette-overlay" id="commandPaletteOverlay">
+        <div class="command-palette" id="commandPalette">
+            <div class="command-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="commandInput" placeholder="Type a command or search...">
+                <kbd>ESC</kbd>
+            </div>
+            <div class="command-results" id="commandResults"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.metroui.org.ua/current/metro.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    
+    <!-- SweetAlert2 Custom Config -->
+    <script src="/assets/js/swal-config.js"></script>
+    <script src="/assets/js/app.js"></script>
+    
+    <script>
+        // ========================
+        // State
+        // ========================
+        let selectedVHostId = null;
+        let selectedVHostName = '';
+        let editingId = null;
+        let vhostsList = [];
+        let upstreamsList = [];
+
+        const VHOST_API = '/api/admin/virtual-hosts';
+        const UPSTREAM_API = '/api/admin/upstream-servers';
+
+        // ========================
+        // Init
+        // ========================
+        $(document).ready(function() {
+            $('#sidebar-container').load('/components/sidebar.html');
+            $('#navbar-container').load('/components/navbar.html');
+
+            // Auth check
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            loadVHosts();
+
+            // Toggle listeners
+            $('#isActive').on('change', function() {
+                const v = $(this).is(':checked');
+                $('#statusLabel').text(v ? 'Active' : 'Inactive').css('color', v ? 'var(--success)' : 'var(--text-tertiary)');
+            });
+            $('#isBackup').on('change', function() {
+                const v = $(this).is(':checked');
+                $('#backupLabel').text(v ? 'Backup' : 'No Backup').css('color', v ? 'var(--warning)' : 'var(--text-tertiary)');
+            });
+            $('#healthEnabled').on('change', function() {
+                $('#healthCheckSection').toggle($(this).is(':checked'));
+            });
+
+            // Close modal
+            $('#upstreamModal').on('click', function(e) { if (e.target === this) closeModal(); });
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape') closeModal();
+            });
+        });
+
+        function getHeaders() {
+            return { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') };
+        }
+
+        // ========================
+        // Load Virtual Hosts (dropdown)
+        // ========================
+        function loadVHosts() {
+            $.ajax({
+                url: VHOST_API + '?limit=200',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(response) {
+                    if (response.success && response.data) {
+                        vhostsList = response.data.virtual_hosts || [];
+                        const $select = $('#vhostSelect');
+                        $select.find('option:not(:first)').remove();
+                        vhostsList.forEach(function(vh) {
+                            $select.append('<option value="' + vh.id + '" data-lb="' + escapeHtml(vh.lb_algorithm) + '" data-fm="' + escapeHtml(vh.failover_mode) + '">' + escapeHtml(vh.vhost_name) + '</option>');
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 401) window.location.href = '/login.html';
+                }
+            });
+        }
+
+        // ========================
+        // VHost Selector Change
+        // ========================
+        function onVHostChange() {
+            const val = $('#vhostSelect').val();
+            if (!val) {
+                selectedVHostId = null;
+                selectedVHostName = '';
+                $('#vhostInfoChips').hide();
+                $('#upstreamTableCard').hide();
+                $('#btnAddUpstream').prop('disabled', true);
+                return;
+            }
+
+            selectedVHostId = parseInt(val);
+            const $opt = $('#vhostSelect option:selected');
+            selectedVHostName = $opt.text();
+            const lbAlgo = $opt.data('lb') || 'round_robin';
+            const failMode = $opt.data('fm') || 'active-active';
+
+            // Show info chips
+            $('#vhostInfoChips').html(
+                '<span class="vhost-chip"><i class="fa-solid fa-globe"></i> ' + escapeHtml(selectedVHostName) + '</span>' +
+                '<span class="vhost-chip"><i class="fa-solid fa-code-branch"></i> ' + formatLBAlgorithm(lbAlgo) + '</span>' +
+                '<span class="vhost-chip"><i class="fa-solid fa-shield-halved"></i> ' + formatFailoverMode(failMode) + '</span>'
+            ).show();
+
+            $('#btnAddUpstream').prop('disabled', false);
+            $('#upstreamTableCard').show();
+            loadUpstreams();
+        }
+
+        // ========================
+        // Load Upstreams
+        // ========================
+        function loadUpstreams() {
+            if (!selectedVHostId) return;
+
+            $('#upstreamTableBody').html('<tr><td colspan="8"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading upstream servers...</div></td></tr>');
+            $('#tableSubtitle').text('Loading...');
+
+            $.ajax({
+                url: VHOST_API + '/' + selectedVHostId + '/upstream-servers',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(response) {
+                    if (response.success && response.data) {
+                        upstreamsList = Array.isArray(response.data) ? response.data : [];
+                        renderTable(upstreamsList);
+                        $('#upstreamCountBadge').html('<span class="badge badge-primary"><i class="fa-solid fa-server" style="margin-right:4px"></i>' + upstreamsList.length + ' servers</span>');
+                        $('#tableSubtitle').text(upstreamsList.length + ' upstream server(s) for ' + selectedVHostName);
+                    } else {
+                        renderEmpty();
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 401) { window.location.href = '/login.html'; return; }
+                    $('#upstreamTableBody').html('<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><h4>Error</h4><p>Failed to load upstream data</p></div></td></tr>');
+                }
+            });
+        }
+
+        // ========================
+        // Render Table
+        // ========================
+        function renderTable(upstreams) {
+            if (!upstreams || upstreams.length === 0) { renderEmpty(); return; }
+
+            let html = '';
+            const colors = ['0078D4','16C60C','FFB900','E81123','8764B8','00B294'];
+            upstreams.forEach(function(us, i) {
+                const statusBadge = us.is_active
+                    ? '<span class="badge badge-success"><i class="fa-solid fa-check-circle" style="margin-right:4px"></i>Active</span>'
+                    : '<span class="badge badge-danger"><i class="fa-solid fa-times-circle" style="margin-right:4px"></i>Inactive</span>';
+                const backupBadge = us.is_backup ? ' <span class="badge badge-warning" style="font-size:11px;">Backup</span>' : '';
+                const protocolBadge = us.protocol === 'https'
+                    ? '<span class="badge badge-primary" style="font-size:11px;">HTTPS</span>'
+                    : '<span style="font-size:12px;color:var(--text-tertiary);">HTTP</span>';
+                const healthIcon = us.health_check_enabled
+                    ? '<i class="fa-solid fa-heart-pulse" style="color:var(--success);" title="Enabled: ' + escapeHtml(us.health_check_path || '/health') + '"></i>'
+                    : '<i class="fa-solid fa-heart-pulse" style="color:var(--text-disabled);" title="Disabled"></i>';
+
+                const initial = (us.target_host || '?').charAt(0).toUpperCase();
+                const bgColor = colors[i % colors.length];
+
+                html += '<tr>' +
+                    '<td>' + (i + 1) + '</td>' +
+                    '<td>' +
+                        '<div class="target-cell">' +
+                            '<div class="target-icon" style="background:#' + bgColor + ';">' + initial + '</div>' +
+                            '<div class="target-info">' +
+                                '<div class="target-host">' + escapeHtml(us.target_host) + '</div>' +
+                                '<div class="target-port">:' + us.target_port + '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td>' + protocolBadge + '</td>' +
+                    '<td style="text-align:center;">' + us.priority + '</td>' +
+                    '<td style="text-align:center;">' + us.weight + backupBadge + '</td>' +
+                    '<td style="text-align:center;">' + healthIcon + '</td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td>' +
+                        '<div style="display:flex;gap:6px;">' +
+                            '<button class="btn btn-sm btn-secondary" title="Edit" onclick="openEditForm(' + us.id + ')"><i class="fa-solid fa-pen"></i></button>' +
+                            '<button class="btn btn-sm btn-danger" title="Delete" onclick="deleteUpstream(' + us.id + ', \'' + escapeHtml(us.target_host) + ':' + us.target_port + '\')"><i class="fa-solid fa-trash"></i></button>' +
+                        '</div>' +
+                    '</td>' +
+                '</tr>';
+            });
+
+            $('#upstreamTableBody').html(html);
+        }
+
+        function renderEmpty() {
+            $('#upstreamTableBody').html(
+                '<tr><td colspan="8">' +
+                    '<div class="empty-state">' +
+                        '<i class="fa-solid fa-server"></i>' +
+                        '<h4>No Upstream Servers</h4>' +
+                        '<p>Click <strong>Add Upstream</strong> to add a backend server</p>' +
+                    '</div>' +
+                '</td></tr>'
+            );
+            $('#upstreamCountBadge').html('');
+            $('#tableSubtitle').text('No upstream servers for ' + selectedVHostName);
+        }
+
+        // ========================
+        // Modal
+        // ========================
+        function openAddForm() {
+            if (!selectedVHostId) { showWarning('Validation', 'Please select a virtual host first'); return; }
+            editingId = null;
+            $('#modalTitle span').text('Add Upstream Server');
+            $('#modalTitle i').attr('class', 'fa-solid fa-plus');
+            $('#upstreamId').val('');
+            $('#targetHost').val('');
+            $('#targetPort').val('');
+            $('#protocol').val('http');
+            $('#priority').val(1);
+            $('#weight').val(1);
+            $('#maxFails').val(3);
+            $('#failTimeout').val(30);
+            $('#isBackup').prop('checked', false).trigger('change');
+            $('#isActive').prop('checked', true).trigger('change');
+            $('#healthEnabled').prop('checked', false).trigger('change');
+            $('#healthPath').val('/health');
+            $('#healthInterval').val(10);
+            $('#healthTimeout').val(5);
+            $('#healthCheckSection').hide();
+            $('#btnSaveText').text('Save');
+            $('#btnSave').removeClass('btn-warning').addClass('btn-primary');
+            $('#upstreamModal').addClass('active');
+            setTimeout(() => $('#targetHost').focus(), 200);
+        }
+
+        function openEditForm(id) {
+            $.ajax({
+                url: UPSTREAM_API + '/' + id,
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(response) {
+                    if (response.success && response.data) {
+                        const us = response.data;
+                        editingId = id;
+                        $('#modalTitle span').text('Edit Upstream Server');
+                        $('#modalTitle i').attr('class', 'fa-solid fa-pen');
+                        $('#upstreamId').val(us.id);
+                        $('#targetHost').val(us.target_host);
+                        $('#targetPort').val(us.target_port);
+                        $('#protocol').val(us.protocol || 'http');
+                        $('#priority').val(us.priority);
+                        $('#weight').val(us.weight);
+                        $('#maxFails').val(us.max_fails);
+                        $('#failTimeout').val(us.fail_timeout_seconds);
+                        $('#isBackup').prop('checked', us.is_backup).trigger('change');
+                        $('#isActive').prop('checked', us.is_active).trigger('change');
+                        $('#healthEnabled').prop('checked', us.health_check_enabled).trigger('change');
+                        $('#healthPath').val(us.health_check_path || '/health');
+                        $('#healthInterval').val(us.health_check_interval_seconds || 10);
+                        $('#healthTimeout').val(us.health_check_timeout_seconds || 5);
+                        if (us.health_check_enabled) $('#healthCheckSection').show();
+                        $('#btnSaveText').text('Update');
+                        $('#btnSave').removeClass('btn-primary').addClass('btn-warning');
+                        $('#upstreamModal').addClass('active');
+                    }
+                },
+                error: function() { showError('Error', 'Failed to load upstream data'); }
+            });
+        }
+
+        function closeModal() {
+            $('#upstreamModal').removeClass('active');
+            editingId = null;
+        }
+
+        // ========================
+        // Save (Create / Update)
+        // ========================
+        function saveUpstream() {
+            const targetHost = $('#targetHost').val().trim();
+            const targetPort = parseInt($('#targetPort').val());
+            if (!targetHost) { showWarning('Validation', 'Target host is required'); $('#targetHost').focus(); return; }
+            if (!targetPort || targetPort < 1 || targetPort > 65535) { showWarning('Validation', 'Valid port is required (1-65535)'); $('#targetPort').focus(); return; }
+
+            const payload = {
+                virtual_host_id: selectedVHostId,
+                target_host: targetHost,
+                target_port: targetPort,
+                protocol: $('#protocol').val(),
+                priority: parseInt($('#priority').val()) || 1,
+                weight: parseInt($('#weight').val()) || 1,
+                is_backup: $('#isBackup').is(':checked'),
+                is_active: $('#isActive').is(':checked'),
+                health_check_enabled: $('#healthEnabled').is(':checked'),
+                health_check_path: $('#healthPath').val().trim() || '/health',
+                health_check_interval_seconds: parseInt($('#healthInterval').val()) || 10,
+                health_check_timeout_seconds: parseInt($('#healthTimeout').val()) || 5,
+                max_fails: parseInt($('#maxFails').val()) || 3,
+                fail_timeout_seconds: parseInt($('#failTimeout').val()) || 30
+            };
+
+            const btn = $('#btnSave');
+            const origHtml = btn.html();
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Saving...');
+
+            if (editingId) {
+                delete payload.virtual_host_id;
+                $.ajax({
+                    url: UPSTREAM_API + '/' + editingId,
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function() { closeModal(); showToast('Upstream server updated successfully', 'success'); loadUpstreams(); },
+                    error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to update upstream'); },
+                    complete: function() { btn.prop('disabled', false).html(origHtml); }
+                });
+            } else {
+                $.ajax({
+                    url: UPSTREAM_API,
+                    method: 'POST',
+                    headers: getHeaders(),
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function() { closeModal(); showToast('Upstream server added successfully', 'success'); loadUpstreams(); },
+                    error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to create upstream'); },
+                    complete: function() { btn.prop('disabled', false).html(origHtml); }
+                });
+            }
+        }
+
+        // ========================
+        // Delete
+        // ========================
+        function deleteUpstream(id, label) {
+            showConfirm('Delete Upstream Server', 'Are you sure you want to delete upstream "' + label + '"?', 'Yes, Delete', 'Cancel').then(function(result) {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: UPSTREAM_API + '/' + id,
+                        method: 'DELETE',
+                        headers: getHeaders(),
+                        success: function() { showToast('Upstream server deleted successfully', 'success'); loadUpstreams(); },
+                        error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to delete upstream'); }
+                    });
+                }
+            });
+        }
+
+        // ========================
+        // Helpers
+        // ========================
+        function refreshData() {
+            if (selectedVHostId) { loadUpstreams(); }
+            loadVHosts();
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        function formatLBAlgorithm(algo) {
+            if (!algo) return 'Round Robin';
+            const map = { 'round_robin': 'Round Robin', 'weighted_round_robin': 'Weighted Round Robin' };
+            return map[algo] || algo;
+        }
+
+        function formatFailoverMode(mode) {
+            if (!mode) return 'Active-Active';
+            const map = { 'active-active': 'Active-Active', 'active-passive': 'Active-Passive' };
+            return map[mode] || mode;
+        }
+
+        function logout() {
+            $.ajax({
+                url: '/api/admin/auth/logout',
+                method: 'POST',
+                headers: getHeaders(),
+                complete: function() {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    window.location.href = '/login.html';
+                }
+            });
+        }
+
+        function reloadConfig() {
+            $.ajax({
+                url: '/api/admin/config/reload',
+                method: 'POST',
+                headers: getHeaders(),
+                success: function() { showToast('Proxy configuration reloaded successfully', 'success'); },
+                error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to reload configuration'); }
+            });
+        }
+    </script>
+    
+</body>
+</html>
