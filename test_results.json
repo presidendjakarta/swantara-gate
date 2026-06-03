@@ -1,0 +1,550 @@
+{
+  "total_tests": 42,
+  "passed": 42,
+  "failed": 0,
+  "total_duration": 166842000,
+  "results": [
+    {
+      "Endpoint": "/api/health",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 8214300,
+      "RequestBody": "",
+      "ResponseBody": "{\"status\":\"ok\",\"message\":\"Swantara Gate Admin API is running\"}",
+      "RequestHeaders": {},
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/auth/login",
+      "Method": "POST",
+      "Status": 200,
+      "Success": true,
+      "Duration": 50235400,
+      "RequestBody": "{\"password\":\"admin1324\",\"username\":\"testcli\"}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Login berhasil\",\"data\":{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODA0NzQyMjksImlhdCI6MTc4MDQ3MjQyOSwicm9sZSI6ImFkbWluIiwidXNlcl9pZCI6MSwidXNlcm5hbWUiOiJ0ZXN0Y2xpIn0.kK5yNNjjiUriIHVmPE-bSt5_caO6o7L9damiaZp06K0\",\"refresh_token\":\"ffb85a023f89d25de3fe000cf2689728e1c3b4bf0a839a2040aa882ace0e234c\",\"token_type\":\"Bearer\",\"expires_in\":1800}}\n",
+      "RequestHeaders": {},
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/auth/me",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 507700,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Profil user\",\"data\":{\"role\":\"admin\",\"user_id\":1,\"username\":\"testcli\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/auth/refresh",
+      "Method": "POST",
+      "Status": 200,
+      "Success": true,
+      "Duration": 4086700,
+      "RequestBody": "{\"refresh_token\":\"ffb85a023f89d25de3fe000cf2689728e1c3b4bf0a839a2040aa882ace0e234c\"}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Token berhasil diperbarui\",\"data\":{\"access_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODA0NzQyMjksImlhdCI6MTc4MDQ3MjQyOSwicm9sZSI6ImFkbWluIiwidXNlcl9pZCI6MSwidXNlcm5hbWUiOiJ0ZXN0Y2xpIn0.kK5yNNjjiUriIHVmPE-bSt5_caO6o7L9damiaZp06K0\",\"refresh_token\":\"426db7048f7c750924b2b8f786a9e5551310800a396069e3d00dca4d080e3950\",\"token_type\":\"Bearer\",\"expires_in\":1800}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/config/reload",
+      "Method": "POST",
+      "Status": 200,
+      "Success": true,
+      "Duration": 4348900,
+      "RequestBody": "",
+      "ResponseBody": "{\"status\":\"ok\",\"message\":\"Proxy configuration reloaded successfully\"}",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/users",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 0,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Daftar user berhasil diambil\",\"data\":{\"pagination\":{\"limit\":10,\"page\":1,\"total\":5},\"users\":[{\"id\":8,\"username\":\"apitest_1780472247\",\"full_name\":\"API Test User\",\"email\":\"apitest1780472247@example.com\",\"role\":\"admin\",\"is_active\":true,\"created_at\":\"2026-06-03T07:37:27Z\",\"updated_at\":\"2026-06-03T07:37:27Z\"},{\"id\":7,\"username\":\"apitest_1780472241\",\"full_name\":\"API Test User\",\"email\":\"apitest1780472241@example.com\",\"role\":\"admin\",\"is_active\":true,\"created_at\":\"2026-06-03T07:37:21Z\",\"updated_at\":\"2026-06-03T07:37:21Z\"},{\"id\":6,\"username\":\"apitest_user\",\"full_name\":\"API Test User\",\"email\":\"apitest@example.com\",\"role\":\"admin\",\"is_active\":true,\"created_at\":\"2026-06-03T07:34:25Z\",\"updated_at\":\"2026-06-03T07:34:25Z\"},{\"id\":4,\"username\":\"testuser\",\"full_name\":\"Test User\",\"email\":\"test@example.com\",\"role\":\"admin\",\"is_active\":true,\"created_at\":\"2026-06-03T07:17:31Z\",\"updated_at\":\"2026-06-03T07:17:31Z\"},{\"id\":1,\"username\":\"testcli\",\"full_name\":\"Updated Name\",\"email\":\"updated@example.com\",\"role\":\"admin\",\"is_active\":true,\"last_login_at\":\"2026-06-03T14:40:29.2062808+07:00\",\"created_at\":\"2026-05-28T14:10:50.0340632+07:00\",\"updated_at\":\"2026-06-03T14:40:29.2062808+07:00\"}]}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/users",
+      "Method": "POST",
+      "Status": 201,
+      "Success": true,
+      "Duration": 48313100,
+      "RequestBody": "{\"email\":\"apitest1780472429@example.com\",\"full_name\":\"API Test User\",\"is_active\":true,\"password\":\"test123\",\"role\":\"admin\",\"username\":\"apitest_1780472429\"}",
+      "ResponseBody": "{\"success\":true,\"message\":\"User berhasil dibuat\",\"data\":{\"id\":9,\"username\":\"apitest_1780472429\",\"full_name\":\"API Test User\",\"email\":\"apitest1780472429@example.com\",\"role\":\"admin\",\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/users/1",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 541100,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"User berhasil diambil\",\"data\":{\"id\":1,\"username\":\"testcli\",\"full_name\":\"Updated Name\",\"email\":\"updated@example.com\",\"role\":\"admin\",\"is_active\":true,\"last_login_at\":\"2026-06-03T14:40:29.2062808+07:00\",\"created_at\":\"2026-05-28T14:10:50.0340632+07:00\",\"updated_at\":\"2026-06-03T14:40:29.2062808+07:00\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/users/1",
+      "Method": "PUT",
+      "Status": 200,
+      "Success": true,
+      "Duration": 2130500,
+      "RequestBody": "{\"email\":\"updated@example.com\",\"full_name\":\"Updated Name\",\"is_active\":true,\"role\":\"admin\"}",
+      "ResponseBody": "{\"success\":true,\"message\":\"User berhasil diupdate\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/consumers",
+      "Method": "POST",
+      "Status": 201,
+      "Success": true,
+      "Duration": 1882100,
+      "RequestBody": "{\"consumer_name\":\"apitest-1780472429\",\"contact_email\":\"apitest1780472429@app.com\",\"description\":\"API Test Application\",\"is_active\":true}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Consumer berhasil dibuat\",\"data\":{\"id\":6,\"consumer_name\":\"apitest-1780472429\",\"description\":\"API Test Application\",\"contact_email\":\"apitest1780472429@app.com\",\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/consumers",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 504700,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Daftar consumer berhasil diambil\",\"data\":{\"consumers\":[{\"id\":6,\"consumer_name\":\"apitest-1780472429\",\"description\":\"API Test Application\",\"contact_email\":\"apitest1780472429@app.com\",\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\"}],\"pagination\":{\"limit\":10,\"page\":1,\"total\":1}}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/consumers/6",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 0,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Consumer berhasil diambil\",\"data\":{\"id\":6,\"consumer_name\":\"apitest-1780472429\",\"description\":\"API Test Application\",\"contact_email\":\"apitest1780472429@app.com\",\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/consumers/6",
+      "Method": "PUT",
+      "Status": 200,
+      "Success": true,
+      "Duration": 2856800,
+      "RequestBody": "{\"contact_email\":\"updated@app.com\",\"description\":\"Updated App\",\"is_active\":true}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Consumer berhasil diupdate\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/consumers/6",
+      "Method": "DELETE",
+      "Status": 200,
+      "Success": true,
+      "Duration": 2128600,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Consumer berhasil dihapus\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/hosts",
+      "Method": "POST",
+      "Status": 201,
+      "Success": true,
+      "Duration": 1507900,
+      "RequestBody": "{\"description\":\"API Test Host\",\"host_name\":\"api1780472429.apitest.com\",\"is_active\":true}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Host berhasil dibuat\",\"data\":{\"id\":8,\"host_name\":\"api1780472429.apitest.com\",\"description\":\"API Test Host\",\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/hosts",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 0,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Daftar host berhasil diambil\",\"data\":{\"hosts\":[{\"id\":8,\"host_name\":\"api1780472429.apitest.com\",\"description\":\"API Test Host\",\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\"},{\"id\":3,\"host_name\":\"api.test.com\",\"description\":\"Test Host\",\"is_active\":true,\"created_at\":\"2026-06-03T07:17:31Z\",\"updated_at\":\"2026-06-03T07:17:31Z\"},{\"id\":2,\"host_name\":\"api-dua.example.local\",\"description\":\"Main API Host\",\"is_active\":true,\"created_at\":\"2026-05-28T10:11:55Z\",\"updated_at\":\"2026-05-28T10:11:55Z\"}],\"pagination\":{\"limit\":10,\"page\":1,\"total\":3}}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/hosts/8",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 0,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Host berhasil diambil\",\"data\":{\"id\":8,\"host_name\":\"api1780472429.apitest.com\",\"description\":\"API Test Host\",\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/hosts/8",
+      "Method": "PUT",
+      "Status": 200,
+      "Success": true,
+      "Duration": 4007500,
+      "RequestBody": "{\"description\":\"Updated Host\",\"is_active\":true}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Host berhasil diupdate\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/hosts/8",
+      "Method": "DELETE",
+      "Status": 200,
+      "Success": true,
+      "Duration": 2521700,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Host berhasil dihapus\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/virtual-hosts",
+      "Method": "POST",
+      "Status": 201,
+      "Success": true,
+      "Duration": 2741200,
+      "RequestBody": "{\"failover_mode\":\"active-active\",\"host_id\":1,\"is_active\":true,\"lb_algorithm\":\"round_robin\",\"sticky_session\":false,\"vhost_name\":\"vhost1780472429.apitest.com\"}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Virtual host berhasil dibuat\",\"data\":{\"id\":6,\"host_id\":1,\"vhost_name\":\"vhost1780472429.apitest.com\",\"lb_algorithm\":\"round_robin\",\"sticky_session\":false,\"failover_mode\":\"active-active\",\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/virtual-hosts",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 811700,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Daftar virtual host berhasil diambil\",\"data\":{\"pagination\":{\"limit\":10,\"page\":1,\"total\":6},\"virtual_hosts\":[{\"id\":6,\"host_id\":1,\"vhost_name\":\"vhost1780472429.apitest.com\",\"lb_algorithm\":\"round_robin\",\"sticky_session\":false,\"failover_mode\":\"active-active\",\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\"},{\"id\":5,\"host_id\":1,\"vhost_name\":\"vhost1780472247.apitest.com\",\"lb_algorithm\":\"weighted_round_robin\",\"sticky_session\":true,\"failover_mode\":\"active-passive\",\"is_active\":true,\"created_at\":\"2026-06-03T07:37:27Z\",\"updated_at\":\"2026-06-03T14:37:27.6350168+07:00\"},{\"id\":4,\"host_id\":1,\"vhost_name\":\"vhost1780472241.apitest.com\",\"lb_algorithm\":\"weighted_round_robin\",\"sticky_session\":true,\"failover_mode\":\"active-passive\",\"is_active\":true,\"created_at\":\"2026-06-03T07:37:21Z\",\"updated_at\":\"2026-06-03T14:37:21.1726446+07:00\"},{\"id\":3,\"host_id\":1,\"vhost_name\":\"api.apitest.com\",\"lb_algorithm\":\"round_robin\",\"sticky_session\":false,\"failover_mode\":\"active-active\",\"is_active\":true,\"created_at\":\"2026-06-03T07:34:25Z\",\"updated_at\":\"2026-06-03T07:34:25Z\"},{\"id\":2,\"host_id\":1,\"vhost_name\":\"server-3-4.local\",\"lb_algorithm\":\"round_robin\",\"sticky_session\":false,\"failover_mode\":\"active-active\",\"is_active\":true,\"created_at\":\"2026-05-28T10:35:13Z\",\"updated_at\":\"2026-05-28T10:35:13Z\"},{\"id\":1,\"host_id\":1,\"vhost_name\":\"server-1-2.local\",\"lb_algorithm\":\"round_robin\",\"sticky_session\":false,\"failover_mode\":\"active-active\",\"is_active\":true,\"created_at\":\"2026-05-28T10:35:07Z\",\"updated_at\":\"2026-05-28T10:35:07Z\"}]}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/virtual-hosts/6",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 0,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Virtual host berhasil diambil\",\"data\":{\"id\":6,\"host_id\":1,\"vhost_name\":\"vhost1780472429.apitest.com\",\"lb_algorithm\":\"round_robin\",\"sticky_session\":false,\"failover_mode\":\"active-active\",\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/virtual-hosts/6",
+      "Method": "PUT",
+      "Status": 200,
+      "Success": true,
+      "Duration": 1508700,
+      "RequestBody": "{\"failover_mode\":\"active-passive\",\"is_active\":true,\"lb_algorithm\":\"weighted_round_robin\",\"sticky_session\":true}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Virtual host berhasil diupdate\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/virtual-directories",
+      "Method": "POST",
+      "Status": 201,
+      "Success": true,
+      "Duration": 3129500,
+      "RequestBody": "{\"auth_type\":\"none\",\"cache_enabled\":false,\"cache_ttl_seconds\":0,\"is_active\":true,\"match_type\":\"prefix\",\"max_request_size_mb\":10,\"preserve_host_header\":false,\"proxy_timeout_seconds\":30,\"retry_count\":2,\"retry_delay_ms\":100,\"source_path\":\"/api/v1\",\"strip_prefix\":true,\"target_path\":\"/\",\"virtual_host_id\":6,\"websocket_enabled\":false}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Virtual directory berhasil dibuat\",\"data\":{\"id\":6,\"virtual_host_id\":6,\"source_path\":\"/api/v1\",\"target_path\":\"/\",\"match_type\":\"prefix\",\"strip_prefix\":true,\"preserve_host_header\":false,\"auth_type\":\"none\",\"is_active\":true,\"proxy_timeout_seconds\":30,\"retry_count\":2,\"retry_delay_ms\":100,\"max_request_size_mb\":10,\"websocket_enabled\":false,\"cache_enabled\":false,\"cache_ttl_seconds\":0,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/virtual-directories",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 898400,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Daftar virtual directory berhasil diambil\",\"data\":{\"pagination\":{\"limit\":10,\"page\":1,\"total\":5},\"virtual_directories\":[{\"id\":6,\"virtual_host_id\":6,\"source_path\":\"/api/v1\",\"target_path\":\"/\",\"match_type\":\"prefix\",\"strip_prefix\":true,\"preserve_host_header\":false,\"auth_type\":\"none\",\"is_active\":true,\"proxy_timeout_seconds\":30,\"retry_count\":2,\"retry_delay_ms\":100,\"max_request_size_mb\":10,\"websocket_enabled\":false,\"cache_enabled\":false,\"cache_ttl_seconds\":0,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\",\"vhost_name\":\"vhost1780472429.apitest.com\"},{\"id\":5,\"virtual_host_id\":5,\"source_path\":\"/api/v2\",\"target_path\":\"/v2\",\"match_type\":\"prefix\",\"strip_prefix\":true,\"preserve_host_header\":false,\"auth_type\":\"\",\"is_active\":true,\"proxy_timeout_seconds\":0,\"retry_count\":0,\"retry_delay_ms\":0,\"max_request_size_mb\":0,\"websocket_enabled\":false,\"cache_enabled\":false,\"cache_ttl_seconds\":0,\"created_at\":\"2026-06-03T07:37:27Z\",\"updated_at\":\"2026-06-03T14:37:27.6424963+07:00\",\"vhost_name\":\"vhost1780472247.apitest.com\"},{\"id\":4,\"virtual_host_id\":4,\"source_path\":\"/api/v2\",\"target_path\":\"/v2\",\"match_type\":\"prefix\",\"strip_prefix\":true,\"preserve_host_header\":false,\"auth_type\":\"\",\"is_active\":true,\"proxy_timeout_seconds\":0,\"retry_count\":0,\"retry_delay_ms\":0,\"max_request_size_mb\":0,\"websocket_enabled\":false,\"cache_enabled\":false,\"cache_ttl_seconds\":0,\"created_at\":\"2026-06-03T07:37:21Z\",\"updated_at\":\"2026-06-03T14:37:21.1793762+07:00\",\"vhost_name\":\"vhost1780472241.apitest.com\"},{\"id\":3,\"virtual_host_id\":3,\"source_path\":\"/api/v2\",\"target_path\":\"/v2\",\"match_type\":\"prefix\",\"strip_prefix\":true,\"preserve_host_header\":false,\"auth_type\":\"\",\"is_active\":true,\"proxy_timeout_seconds\":0,\"retry_count\":0,\"retry_delay_ms\":0,\"max_request_size_mb\":0,\"websocket_enabled\":false,\"cache_enabled\":false,\"cache_ttl_seconds\":0,\"created_at\":\"2026-06-03T07:34:25Z\",\"updated_at\":\"2026-06-03T14:34:25.4943936+07:00\",\"vhost_name\":\"api.apitest.com\"},{\"id\":2,\"virtual_host_id\":2,\"source_path\":\"/jamet\",\"target_path\":\"/\",\"match_type\":\"rewrite\",\"strip_prefix\":true,\"preserve_host_header\":false,\"auth_type\":\"none\",\"is_active\":true,\"proxy_timeout_seconds\":30,\"retry_count\":2,\"retry_delay_ms\":100,\"max_request_size_mb\":10,\"websocket_enabled\":false,\"cache_enabled\":false,\"cache_ttl_seconds\":0,\"created_at\":\"2026-05-28T10:41:05Z\",\"updated_at\":\"2026-05-28T10:41:05Z\",\"vhost_name\":\"server-3-4.local\"}]}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/virtual-directories/6",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 0,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Virtual directory berhasil diambil\",\"data\":{\"id\":6,\"virtual_host_id\":6,\"source_path\":\"/api/v1\",\"target_path\":\"/\",\"match_type\":\"prefix\",\"strip_prefix\":true,\"preserve_host_header\":false,\"auth_type\":\"none\",\"is_active\":true,\"proxy_timeout_seconds\":30,\"retry_count\":2,\"retry_delay_ms\":100,\"max_request_size_mb\":10,\"websocket_enabled\":false,\"cache_enabled\":false,\"cache_ttl_seconds\":0,\"created_at\":\"2026-06-03T07:40:29Z\",\"updated_at\":\"2026-06-03T07:40:29Z\",\"vhost_name\":\"vhost1780472429.apitest.com\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/virtual-directories/6",
+      "Method": "PUT",
+      "Status": 200,
+      "Success": true,
+      "Duration": 2688300,
+      "RequestBody": "{\"is_active\":true,\"match_type\":\"prefix\",\"source_path\":\"/api/v2\",\"strip_prefix\":true,\"target_path\":\"/v2\"}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Virtual directory berhasil diupdate\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/rate-limits",
+      "Method": "POST",
+      "Status": 201,
+      "Success": true,
+      "Duration": 2319700,
+      "RequestBody": "{\"block_duration_seconds\":60,\"burst\":10,\"is_active\":true,\"limit_by\":\"ip\",\"requests_per_minute\":60,\"virtual_directory_id\":6}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Rate limit berhasil dibuat\",\"data\":{\"id\":4,\"virtual_directory_id\":6,\"limit_by\":\"ip\",\"requests_per_minute\":60,\"burst\":10,\"block_duration_seconds\":60,\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/rate-limits",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 503000,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Daftar rate limit berhasil diambil\",\"data\":{\"pagination\":{\"limit\":10,\"page\":1,\"total\":1},\"rate_limits\":[{\"id\":4,\"virtual_directory_id\":6,\"limit_by\":\"ip\",\"requests_per_minute\":60,\"burst\":10,\"block_duration_seconds\":60,\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"source_path\":\"/api/v2\"}]}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/rate-limits/4",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 507400,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Rate limit berhasil diambil\",\"data\":{\"id\":4,\"virtual_directory_id\":6,\"limit_by\":\"ip\",\"requests_per_minute\":60,\"burst\":10,\"block_duration_seconds\":60,\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"source_path\":\"/api/v2\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/rate-limits/4",
+      "Method": "PUT",
+      "Status": 200,
+      "Success": true,
+      "Duration": 1963000,
+      "RequestBody": "{\"burst\":20,\"is_active\":true,\"requests_per_minute\":120}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Rate limit berhasil diupdate\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/rate-limits/4",
+      "Method": "DELETE",
+      "Status": 200,
+      "Success": true,
+      "Duration": 2616500,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Rate limit berhasil dihapus\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/cors-configs",
+      "Method": "POST",
+      "Status": 201,
+      "Success": true,
+      "Duration": 2126500,
+      "RequestBody": "{\"allow_credentials\":true,\"allowed_headers\":\"Content-Type,Authorization\",\"allowed_methods\":\"GET,POST,PUT,DELETE,OPTIONS\",\"allowed_origins\":\"https://app.example.com\",\"is_active\":true,\"max_age_seconds\":3600,\"virtual_directory_id\":6}",
+      "ResponseBody": "{\"success\":true,\"message\":\"CORS config berhasil dibuat\",\"data\":{\"id\":4,\"virtual_directory_id\":6,\"allowed_origins\":\"https://app.example.com\",\"allowed_methods\":\"GET,POST,PUT,DELETE,OPTIONS\",\"allowed_headers\":\"Content-Type,Authorization\",\"exposed_headers\":\"\",\"allow_credentials\":true,\"max_age_seconds\":3600,\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/cors-configs",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 513400,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Daftar CORS config berhasil diambil\",\"data\":{\"cors_configs\":[{\"id\":4,\"virtual_directory_id\":6,\"allowed_origins\":\"https://app.example.com\",\"allowed_methods\":\"GET,POST,PUT,DELETE,OPTIONS\",\"allowed_headers\":\"Content-Type,Authorization\",\"exposed_headers\":\"\",\"allow_credentials\":true,\"max_age_seconds\":3600,\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"source_path\":\"/api/v2\"}],\"pagination\":{\"limit\":10,\"page\":1,\"total\":1}}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/cors-configs/4",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 0,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"CORS config berhasil diambil\",\"data\":{\"id\":4,\"virtual_directory_id\":6,\"allowed_origins\":\"https://app.example.com\",\"allowed_methods\":\"GET,POST,PUT,DELETE,OPTIONS\",\"allowed_headers\":\"Content-Type,Authorization\",\"exposed_headers\":\"\",\"allow_credentials\":true,\"max_age_seconds\":3600,\"is_active\":true,\"created_at\":\"2026-06-03T07:40:29Z\",\"source_path\":\"/api/v2\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/cors-configs/4",
+      "Method": "PUT",
+      "Status": 200,
+      "Success": true,
+      "Duration": 1597200,
+      "RequestBody": "{\"allow_credentials\":false,\"allowed_origins\":\"*\",\"is_active\":true}",
+      "ResponseBody": "{\"success\":true,\"message\":\"CORS config berhasil diupdate\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/cors-configs/4",
+      "Method": "DELETE",
+      "Status": 200,
+      "Success": true,
+      "Duration": 2985100,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"CORS config berhasil dihapus\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/circuit-breakers",
+      "Method": "POST",
+      "Status": 201,
+      "Success": true,
+      "Duration": 1510700,
+      "RequestBody": "{\"enabled\":true,\"failure_threshold\":5,\"half_open_max_requests\":3,\"recovery_timeout_seconds\":30,\"virtual_directory_id\":6}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Circuit breaker berhasil dibuat\",\"data\":{\"id\":4,\"virtual_directory_id\":6,\"enabled\":true,\"failure_threshold\":5,\"recovery_timeout_seconds\":30,\"half_open_max_requests\":3,\"created_at\":\"2026-06-03T07:40:29Z\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/circuit-breakers",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 998600,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Daftar circuit breaker berhasil diambil\",\"data\":{\"circuit_breakers\":[{\"id\":4,\"virtual_directory_id\":6,\"enabled\":true,\"failure_threshold\":5,\"recovery_timeout_seconds\":30,\"half_open_max_requests\":3,\"created_at\":\"2026-06-03T07:40:29Z\",\"source_path\":\"/api/v2\"}],\"pagination\":{\"limit\":10,\"page\":1,\"total\":1}}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/circuit-breakers/4",
+      "Method": "GET",
+      "Status": 200,
+      "Success": true,
+      "Duration": 0,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Circuit breaker berhasil diambil\",\"data\":{\"id\":4,\"virtual_directory_id\":6,\"enabled\":true,\"failure_threshold\":5,\"recovery_timeout_seconds\":30,\"half_open_max_requests\":3,\"created_at\":\"2026-06-03T07:40:29Z\",\"source_path\":\"/api/v2\"}}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/circuit-breakers/4",
+      "Method": "PUT",
+      "Status": 200,
+      "Success": true,
+      "Duration": 2017300,
+      "RequestBody": "{\"enabled\":true,\"failure_threshold\":10,\"half_open_max_requests\":5,\"recovery_timeout_seconds\":60}",
+      "ResponseBody": "{\"success\":true,\"message\":\"Circuit breaker berhasil diupdate\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    },
+    {
+      "Endpoint": "/api/admin/circuit-breakers/4",
+      "Method": "DELETE",
+      "Status": 200,
+      "Success": true,
+      "Duration": 1618800,
+      "RequestBody": "",
+      "ResponseBody": "{\"success\":true,\"message\":\"Circuit breaker berhasil dihapus\"}\n",
+      "RequestHeaders": {
+        "Authorization": "Bearer ***"
+      },
+      "Error": ""
+    }
+  ]
+}

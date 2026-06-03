@@ -37,8 +37,8 @@ func (s *HostService) GetHostByID(id int64) (*model.Host, error) {
 	return host, nil
 }
 
-// GetAllHosts mengambil semua host dengan pagination
-func (s *HostService) GetAllHosts(page, limit int) ([]model.Host, int64, error) {
+// GetAllHosts mengambil semua host dengan pagination dan search
+func (s *HostService) GetAllHosts(page, limit int, search string) ([]model.Host, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -46,12 +46,12 @@ func (s *HostService) GetAllHosts(page, limit int) ([]model.Host, int64, error) 
 		limit = 10
 	}
 
-	total, err := s.HostRepo.Count()
+	total, err := s.HostRepo.Count(search)
 	if err != nil {
 		return nil, 0, fmt.Errorf("gagal menghitung host: %w", err)
 	}
 
-	hosts, err := s.HostRepo.GetAll(page, limit)
+	hosts, err := s.HostRepo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, fmt.Errorf("gagal mengambil daftar host: %w", err)
 	}
@@ -127,8 +127,8 @@ func (s *VirtualHostService) GetVirtualHostByID(id int64) (*model.VirtualHost, e
 	return vhost, nil
 }
 
-// GetAllVirtualHosts mengambil semua virtual host dengan pagination
-func (s *VirtualHostService) GetAllVirtualHosts(page, limit int) ([]model.VirtualHost, int64, error) {
+// GetAllVirtualHosts mengambil semua virtual host dengan pagination dan search
+func (s *VirtualHostService) GetAllVirtualHosts(page, limit int, search string) ([]model.VirtualHost, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -136,12 +136,12 @@ func (s *VirtualHostService) GetAllVirtualHosts(page, limit int) ([]model.Virtua
 		limit = 10
 	}
 
-	total, err := s.VHostRepo.Count()
+	total, err := s.VHostRepo.Count(search)
 	if err != nil {
 		return nil, 0, fmt.Errorf("gagal menghitung virtual host: %w", err)
 	}
 
-	vhosts, err := s.VHostRepo.GetAll(page, limit)
+	vhosts, err := s.VHostRepo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, fmt.Errorf("gagal mengambil daftar virtual host: %w", err)
 	}

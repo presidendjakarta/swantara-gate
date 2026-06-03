@@ -63,6 +63,7 @@ func (r *VirtualHostRepository) GetByID(id int64) (*model.VirtualHost, error) {
 	`
 
 	var vhost model.VirtualHost
+	var hostName sql.NullString
 	err := r.DB.QueryRow(query, id).Scan(
 		&vhost.ID,
 		&vhost.HostID,
@@ -73,7 +74,7 @@ func (r *VirtualHostRepository) GetByID(id int64) (*model.VirtualHost, error) {
 		&vhost.IsActive,
 		&vhost.CreatedAt,
 		&vhost.UpdatedAt,
-		&vhost.HostName,
+		&hostName,
 	)
 
 	if err != nil {
@@ -83,11 +84,15 @@ func (r *VirtualHostRepository) GetByID(id int64) (*model.VirtualHost, error) {
 		return nil, fmt.Errorf("gagal mengambil virtual host: %w", err)
 	}
 
+	if hostName.Valid {
+		vhost.HostName = hostName.String
+	}
+
 	return &vhost, nil
 }
 
-// GetAll mengambil semua virtual host dengan pagination
-func (r *VirtualHostRepository) GetAll(page, limit int) ([]model.VirtualHost, error) {
+// GetAll mengambil semua virtual host dengan pagination dan search
+func (r *VirtualHostRepository) GetAll(page, limit int, search string) ([]model.VirtualHost, error) {
 	offset := (page - 1) * limit
 
 	query := `
@@ -96,11 +101,21 @@ func (r *VirtualHostRepository) GetAll(page, limit int) ([]model.VirtualHost, er
 		       h.host_name
 		FROM virtual_hosts vh
 		LEFT JOIN hosts h ON vh.host_id = h.id
-		ORDER BY vh.created_at DESC
-		LIMIT ? OFFSET ?
 	`
+	
+	var args []interface{}
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE vh.vhost_name LIKE ? OR h.host_name LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY vh.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
 
-	rows, err := r.DB.Query(query, limit, offset)
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar virtual host: %w", err)
 	}
@@ -109,6 +124,7 @@ func (r *VirtualHostRepository) GetAll(page, limit int) ([]model.VirtualHost, er
 	var vhosts []model.VirtualHost
 	for rows.Next() {
 		var vhost model.VirtualHost
+		var hostName sql.NullString
 		err := rows.Scan(
 			&vhost.ID,
 			&vhost.HostID,
@@ -119,10 +135,13 @@ func (r *VirtualHostRepository) GetAll(page, limit int) ([]model.VirtualHost, er
 			&vhost.IsActive,
 			&vhost.CreatedAt,
 			&vhost.UpdatedAt,
-			&vhost.HostName,
+			&hostName,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("gagal memindai virtual host: %w", err)
+		}
+		if hostName.Valid {
+			vhost.HostName = hostName.String
 		}
 		vhosts = append(vhosts, vhost)
 	}
@@ -151,6 +170,7 @@ func (r *VirtualHostRepository) GetByHostID(hostID int64) ([]model.VirtualHost, 
 	var vhosts []model.VirtualHost
 	for rows.Next() {
 		var vhost model.VirtualHost
+		var hostName sql.NullString
 		err := rows.Scan(
 			&vhost.ID,
 			&vhost.HostID,
@@ -161,10 +181,13 @@ func (r *VirtualHostRepository) GetByHostID(hostID int64) ([]model.VirtualHost, 
 			&vhost.IsActive,
 			&vhost.CreatedAt,
 			&vhost.UpdatedAt,
-			&vhost.HostName,
+			&hostName,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("gagal memindai virtual host: %w", err)
+		}
+		if hostName.Valid {
+			vhost.HostName = hostName.String
 		}
 		vhosts = append(vhosts, vhost)
 	}
@@ -218,12 +241,22 @@ func (r *VirtualHostRepository) Delete(id int64) error {
 	return nil
 }
 
-// Count menghitung total virtual host
-func (r *VirtualHostRepository) Count() (int64, error) {
-	query := `SELECT COUNT(*) FROM virtual_hosts`
+// Count menghitung total virtual host dengan search filter
+func (r *VirtualHostRepository) Count(search string) (int64, error) {
+	query := `SELECT COUNT(*) FROM virtual_hosts vh
+		LEFT JOIN hosts h ON vh.host_id = h.id`
+	
+	var args []interface{}
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE vh.vhost_name LIKE ? OR h.host_name LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern)
+	}
 
 	var count int64
-	err := r.DB.QueryRow(query).Scan(&count)
+	err := r.DB.QueryRow(query, args...).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("gagal menghitung virtual host: %w", err)
 	}

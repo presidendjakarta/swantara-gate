@@ -73,18 +73,28 @@ func (r *HostRepository) GetByID(id int64) (*model.Host, error) {
 	return &host, nil
 }
 
-// GetAll mengambil semua host dengan pagination
-func (r *HostRepository) GetAll(page, limit int) ([]model.Host, error) {
+// GetAll mengambil semua host dengan pagination dan search
+func (r *HostRepository) GetAll(page, limit int, search string) ([]model.Host, error) {
 	offset := (page - 1) * limit
 
 	query := `
 		SELECT id, host_name, description, is_active, created_at, updated_at
 		FROM hosts
-		ORDER BY created_at DESC
-		LIMIT ? OFFSET ?
 	`
+	
+	var args []interface{}
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE host_name LIKE ? OR description LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
 
-	rows, err := r.DB.Query(query, limit, offset)
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar host: %w", err)
 	}
@@ -114,11 +124,11 @@ func (r *HostRepository) GetAll(page, limit int) ([]model.Host, error) {
 func (r *HostRepository) Update(id int64, host *model.UpdateHostRequest) error {
 	query := `
 		UPDATE hosts
-		SET description = ?, is_active = ?, updated_at = ?
+		SET host_name = ?, description = ?, is_active = ?, updated_at = ?
 		WHERE id = ?
 	`
 
-	result, err := r.DB.Exec(query, host.Description, host.IsActive, time.Now(), id)
+	result, err := r.DB.Exec(query, host.HostName, host.Description, host.IsActive, time.Now(), id)
 	if err != nil {
 		return fmt.Errorf("gagal mengupdate host: %w", err)
 	}
@@ -156,12 +166,21 @@ func (r *HostRepository) Delete(id int64) error {
 	return nil
 }
 
-// Count menghitung total host
-func (r *HostRepository) Count() (int64, error) {
+// Count menghitung total host dengan search filter
+func (r *HostRepository) Count(search string) (int64, error) {
 	query := `SELECT COUNT(*) FROM hosts`
+	
+	var args []interface{}
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE host_name LIKE ? OR description LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern)
+	}
 
 	var count int64
-	err := r.DB.QueryRow(query).Scan(&count)
+	err := r.DB.QueryRow(query, args...).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("gagal menghitung host: %w", err)
 	}

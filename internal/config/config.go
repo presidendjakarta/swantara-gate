@@ -28,6 +28,7 @@ type Config struct {
 	// Konfigurasi Umum
 	AppEnv  string
 	LogLevel string
+	DevMode bool
 
 	// Konfigurasi JWT
 	JWTSecret             string
@@ -59,6 +60,7 @@ func LoadConfig() *Config {
 		// Konfigurasi Umum - membaca environment dan log level
 		AppEnv:   getEnvString("APP_ENV", "development"),
 		LogLevel: getEnvString("LOG_LEVEL", "info"),
+		DevMode:  getEnvBool("DEV_MODE", true),
 
 		// Konfigurasi JWT
 		JWTSecret:             getEnvString("JWT_SECRET", "swantara-gate-secret-key-change-in-production"),
@@ -89,4 +91,19 @@ func getEnvInt(key string, defaultValue int) int {
 	}
 	
 	return intValue
+}
+
+// getEnvBool membaca boolean dari environment, mengembalikan default jika tidak ada atau error
+func getEnvBool(key string, defaultValue bool) bool {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	
+	boolValue, err := strconv.ParseBool(value)
+	if err != nil {
+		return defaultValue
+	}
+	
+	return boolValue
 }

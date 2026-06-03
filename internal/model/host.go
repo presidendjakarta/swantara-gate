@@ -21,6 +21,7 @@ type CreateHostRequest struct {
 
 // UpdateHostRequest request untuk update host
 type UpdateHostRequest struct {
+	HostName    string `json:"host_name"`
 	Description string `json:"description"`
 	IsActive    bool   `json:"is_active"`
 }

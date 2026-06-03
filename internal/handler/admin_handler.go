@@ -199,6 +199,7 @@ func (h *HostHandler) GetHostByID(w http.ResponseWriter, r *http.Request) {
 func (h *HostHandler) GetAllHosts(w http.ResponseWriter, r *http.Request) {
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
+	search := r.URL.Query().Get("search")
 
 	page := 1
 	limit := 10
@@ -217,7 +218,7 @@ func (h *HostHandler) GetAllHosts(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	hosts, total, err := h.HostService.GetAllHosts(page, limit)
+	hosts, total, err := h.HostService.GetAllHosts(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar host")
 		return
@@ -248,6 +249,11 @@ func (h *HostHandler) UpdateHost(w http.ResponseWriter, r *http.Request) {
 	
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.BadRequest(w, "Request body tidak valid")
+		return
+	}
+
+	if req.HostName == "" {
+		response.BadRequest(w, "Host name wajib diisi")
 		return
 	}
 
@@ -337,6 +343,7 @@ func (h *VirtualHostHandler) GetVirtualHostByID(w http.ResponseWriter, r *http.R
 func (h *VirtualHostHandler) GetAllVirtualHosts(w http.ResponseWriter, r *http.Request) {
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
+	search := r.URL.Query().Get("search")
 
 	page := 1
 	limit := 10
@@ -355,7 +362,7 @@ func (h *VirtualHostHandler) GetAllVirtualHosts(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	vhosts, total, err := h.VHostService.GetAllVirtualHosts(page, limit)
+	vhosts, total, err := h.VHostService.GetAllVirtualHosts(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar virtual host")
 		return

@@ -1,0 +1,300 @@
+🚀 Starting Swantara Gate API Test Suite
+============================================================
+Base URL: http://localhost:8081
+
+🏷️  Test suffix: 1780472429
+
+📋 1. Health Check
+
+GET /api/health
+✅ Status: 200 (8.21ms)
+
+🔐 2. Authentication
+
+POST /api/admin/auth/login
+Request Body: {
+    "password": "admin1324",
+    "username": "testcli"
+  }
+✅ Status: 200 (50.23ms)
+🔑 Access Token extracted
+🔑 Refresh Token extracted
+
+GET /api/admin/auth/me
+✅ Status: 200 (0.51ms)
+
+POST /api/admin/auth/refresh
+Request Body: {
+    "refresh_token": "ffb85a023f89d25de3fe000cf2689728e1c3b4bf0a839a2040aa882ace0e234c"
+  }
+✅ Status: 200 (4.09ms)
+🔑 Access Token extracted
+🔑 Refresh Token extracted
+
+✅ Authentication tests completed, continuing with other endpoints...
+
+⚙️  3. Configuration
+
+POST /api/admin/config/reload
+✅ Status: 200 (4.35ms)
+
+👥 4. Users
+
+GET /api/admin/users
+✅ Status: 200 (0.00ms)
+
+POST /api/admin/users
+Request Body: {
+    "email": "apitest1780472429@example.com",
+    "full_name": "API Test User",
+    "is_active": true,
+    "password": "test123",
+    "role": "admin",
+    "username": "apitest_1780472429"
+  }
+✅ Status: 201 (48.31ms)
+
+GET /api/admin/users/1
+✅ Status: 200 (0.54ms)
+
+PUT /api/admin/users/1
+Request Body: {
+    "email": "updated@example.com",
+    "full_name": "Updated Name",
+    "is_active": true,
+    "role": "admin"
+  }
+✅ Status: 200 (2.13ms)
+
+🏢 5. API Consumers
+
+POST /api/admin/consumers
+Request Body: {
+    "consumer_name": "apitest-1780472429",
+    "contact_email": "apitest1780472429@app.com",
+    "description": "API Test Application",
+    "is_active": true
+  }
+✅ Status: 201 (1.88ms)
+🆔 Created Consumer ID: 6
+
+GET /api/admin/consumers
+✅ Status: 200 (0.50ms)
+
+GET /api/admin/consumers/6
+✅ Status: 200 (0.00ms)
+
+PUT /api/admin/consumers/6
+Request Body: {
+    "contact_email": "updated@app.com",
+    "description": "Updated App",
+    "is_active": true
+  }
+✅ Status: 200 (2.86ms)
+
+DELETE /api/admin/consumers/6
+✅ Status: 200 (2.13ms)
+
+🌐 6. Hosts
+
+POST /api/admin/hosts
+Request Body: {
+    "description": "API Test Host",
+    "host_name": "api1780472429.apitest.com",
+    "is_active": true
+  }
+✅ Status: 201 (1.51ms)
+🆔 Created Host ID: 8
+
+GET /api/admin/hosts
+✅ Status: 200 (0.00ms)
+
+GET /api/admin/hosts/8
+✅ Status: 200 (0.00ms)
+
+PUT /api/admin/hosts/8
+Request Body: {
+    "description": "Updated Host",
+    "is_active": true
+  }
+✅ Status: 200 (4.01ms)
+
+DELETE /api/admin/hosts/8
+✅ Status: 200 (2.52ms)
+
+🔀 7. Virtual Hosts
+
+POST /api/admin/virtual-hosts
+Request Body: {
+    "failover_mode": "active-active",
+    "host_id": 1,
+    "is_active": true,
+    "lb_algorithm": "round_robin",
+    "sticky_session": false,
+    "vhost_name": "vhost1780472429.apitest.com"
+  }
+✅ Status: 201 (2.74ms)
+🆔 Created VHost ID: 6
+
+GET /api/admin/virtual-hosts
+✅ Status: 200 (0.81ms)
+
+GET /api/admin/virtual-hosts/6
+✅ Status: 200 (0.00ms)
+
+PUT /api/admin/virtual-hosts/6
+Request Body: {
+    "failover_mode": "active-passive",
+    "is_active": true,
+    "lb_algorithm": "weighted_round_robin",
+    "sticky_session": true
+  }
+✅ Status: 200 (1.51ms)
+
+🛣️  8. Virtual Directories (Routes)
+
+POST /api/admin/virtual-directories
+Request Body: {
+    "auth_type": "none",
+    "cache_enabled": false,
+    "cache_ttl_seconds": 0,
+    "is_active": true,
+    "match_type": "prefix",
+    "max_request_size_mb": 10,
+    "preserve_host_header": false,
+    "proxy_timeout_seconds": 30,
+    "retry_count": 2,
+    "retry_delay_ms": 100,
+    "source_path": "/api/v1",
+    "strip_prefix": true,
+    "target_path": "/",
+    "virtual_host_id": 6,
+    "websocket_enabled": false
+  }
+✅ Status: 201 (3.13ms)
+🆔 Created VDir ID: 6
+
+GET /api/admin/virtual-directories
+✅ Status: 200 (0.90ms)
+
+GET /api/admin/virtual-directories/6
+✅ Status: 200 (0.00ms)
+
+PUT /api/admin/virtual-directories/6
+Request Body: {
+    "is_active": true,
+    "match_type": "prefix",
+    "source_path": "/api/v2",
+    "strip_prefix": true,
+    "target_path": "/v2"
+  }
+✅ Status: 200 (2.69ms)
+
+📊 9. Rate Limits
+
+POST /api/admin/rate-limits
+Request Body: {
+    "block_duration_seconds": 60,
+    "burst": 10,
+    "is_active": true,
+    "limit_by": "ip",
+    "requests_per_minute": 60,
+    "virtual_directory_id": 6
+  }
+✅ Status: 201 (2.32ms)
+🆔 Created RateLimit ID: 4
+
+GET /api/admin/rate-limits
+✅ Status: 200 (0.50ms)
+
+GET /api/admin/rate-limits/4
+✅ Status: 200 (0.51ms)
+
+PUT /api/admin/rate-limits/4
+Request Body: {
+    "burst": 20,
+    "is_active": true,
+    "requests_per_minute": 120
+  }
+✅ Status: 200 (1.96ms)
+
+DELETE /api/admin/rate-limits/4
+✅ Status: 200 (2.62ms)
+
+🔗 10. CORS Configs
+
+POST /api/admin/cors-configs
+Request Body: {
+    "allow_credentials": true,
+    "allowed_headers": "Content-Type,Authorization",
+    "allowed_methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "allowed_origins": "https://app.example.com",
+    "is_active": true,
+    "max_age_seconds": 3600,
+    "virtual_directory_id": 6
+  }
+✅ Status: 201 (2.13ms)
+🆔 Created CORS ID: 4
+
+GET /api/admin/cors-configs
+✅ Status: 200 (0.51ms)
+
+GET /api/admin/cors-configs/4
+✅ Status: 200 (0.00ms)
+
+PUT /api/admin/cors-configs/4
+Request Body: {
+    "allow_credentials": false,
+    "allowed_origins": "*",
+    "is_active": true
+  }
+✅ Status: 200 (1.60ms)
+
+DELETE /api/admin/cors-configs/4
+✅ Status: 200 (2.98ms)
+
+⚡ 11. Circuit Breakers
+
+POST /api/admin/circuit-breakers
+Request Body: {
+    "enabled": true,
+    "failure_threshold": 5,
+    "half_open_max_requests": 3,
+    "recovery_timeout_seconds": 30,
+    "virtual_directory_id": 6
+  }
+✅ Status: 201 (1.51ms)
+🆔 Created CircuitBreaker ID: 4
+
+GET /api/admin/circuit-breakers
+✅ Status: 200 (1.00ms)
+
+GET /api/admin/circuit-breakers/4
+✅ Status: 200 (0.00ms)
+
+PUT /api/admin/circuit-breakers/4
+Request Body: {
+    "enabled": true,
+    "failure_threshold": 10,
+    "half_open_max_requests": 5,
+    "recovery_timeout_seconds": 60
+  }
+✅ Status: 200 (2.02ms)
+
+DELETE /api/admin/circuit-breakers/4
+✅ Status: 200 (1.62ms)
+
+
+============================================================
+📊 TEST SUMMARY
+============================================================
+✅ Passed: 42
+❌ Failed: 0
+📝 Total:  42
+
+📄 Generating API Documentation...
+✅ Documentation saved to API_DOCUMENTATION.md
+✅ Test results saved to test_results.json
+
+📋 Failed Endpoints Detail:
+------------------------------------------------------------

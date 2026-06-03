@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/presidendjakarta/swantara-gate/internal/config"
 	"github.com/presidendjakarta/swantara-gate/internal/database"
@@ -12,6 +13,7 @@ import (
 	"github.com/presidendjakarta/swantara-gate/internal/proxy"
 	"github.com/presidendjakarta/swantara-gate/internal/repository"
 	"github.com/presidendjakarta/swantara-gate/internal/service"
+	"github.com/presidendjakarta/swantara-gate/internal/webui"
 	"github.com/joho/godotenv"
 )
 
@@ -66,6 +68,7 @@ func main() {
 	configVersionRepo := repository.NewConfigVersionRepository(db)
 	maintWindowRepo := repository.NewMaintenanceWindowRepository(db)
 	authRepo := repository.NewAuthRepository(db)
+	dashboardRepo := repository.NewDashboardRepository(db)
 
 	// Inisialisasi services
 	userService := service.NewUserService(userRepo)
@@ -95,6 +98,7 @@ func main() {
 	svcDiscoveryService := service.NewServiceDiscoveryService(svcDiscoveryRepo)
 	configVersionService := service.NewConfigVersionService(configVersionRepo)
 	maintWindowService := service.NewMaintenanceWindowService(maintWindowRepo)
+	dashboardService := service.NewDashboardService(dashboardRepo)
 	authService := service.NewAuthService(authRepo, cfg.JWTSecret, cfg.JWTAccessExpireMinutes, cfg.JWTRefreshExpireDays)
 
 	// Inisialisasi handlers
@@ -125,6 +129,7 @@ func main() {
 	svcDiscoveryHandler := handler.NewServiceDiscoveryHandler(svcDiscoveryService)
 	configVersionHandler := handler.NewConfigVersionHandler(configVersionService)
 	maintWindowHandler := handler.NewMaintenanceWindowHandler(maintWindowService)
+	dashboardHandler := handler.NewDashboardHandler(dashboardService)
 	authHandler := handler.NewAuthHandler(authService)
 
 	// Auth middleware & rate limiter
@@ -136,7 +141,10 @@ func main() {
 	proxyServer.Start()
 	defer proxyServer.Stop()
 
-	// Setup Admin Router
+	// Inisialisasi Admin UI
+	adminUI := webui.NewAdminUI("./web", cfg.DevMode, "http://localhost:"+toString(cfg.AdminHTTPPort))
+
+	// Setup Admin Router (API + Web UI)
 	adminMux := setupAdminRouter(
 		userHandler, consumerHandler, hostHandler, vhostHandler,
 		upstreamHandler, vdirHandler, credHandler, apiKeyHandler, accessHandler,
@@ -145,14 +153,17 @@ func main() {
 		reqHeaderHandler, resHeaderHandler, queryRewriteHandler,
 		acmeHandler, sslCertHandler, certDomainHandler, sslBindingHandler,
 		tlsOptionHandler, svcDiscoveryHandler, configVersionHandler, maintWindowHandler,
+		dashboardHandler,
 		authHandler, authMiddleware, loginRateLimiter,
 		proxyServer,
+		adminUI,
 	)
 
 	// Menjalankan Admin HTTP Server
 	go func() {
 		addr := ":" + toString(cfg.AdminHTTPPort)
 		log.Printf("🌐 Admin HTTP Server berjalan di %s", addr)
+		log.Printf("🎨 Admin Web UI: http://localhost:%s", toString(cfg.AdminHTTPPort))
 		if err := http.ListenAndServe(addr, adminMux); err != nil {
 			log.Fatalf("❌ Admin HTTP Server error: %v", err)
 		}
@@ -186,7 +197,7 @@ func main() {
 	select {}
 }
 
-// setupAdminRouter mengatur routes untuk Admin API
+// setupAdminRouter mengatur routes untuk Admin API + Web UI
 func setupAdminRouter(
 	userHandler *handler.UserHandler,
 	consumerHandler *handler.APIConsumerHandler,
@@ -215,10 +226,12 @@ func setupAdminRouter(
 	svcDiscoveryHandler *handler.ServiceDiscoveryHandler,
 	configVersionHandler *handler.ConfigVersionHandler,
 	maintWindowHandler *handler.MaintenanceWindowHandler,
+	dashboardHandler *handler.DashboardHandler,
 	authHandler *handler.AuthHandler,
 	authMiddleware *middleware.AuthMiddleware,
 	loginRateLimiter *middleware.LoginRateLimiter,
 	proxyServer *proxy.ProxyServer,
+	adminUI *webui.AdminUI,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -446,6 +459,9 @@ func setupAdminRouter(
 		w.Write([]byte(`{"status":"ok","message":"Proxy configuration reloaded successfully"}`))
 	})
 
+	// Routes untuk Dashboard Statistics
+	mux.HandleFunc("GET /api/admin/dashboard/stats", dashboardHandler.GetStats)
+
 	// Routes untuk Auth (public - tidak perlu token)
 	mux.Handle("POST /api/admin/auth/login", loginRateLimiter.RateLimit(http.HandlerFunc(authHandler.Login)))
 	mux.HandleFunc("POST /api/admin/auth/refresh", authHandler.Refresh)
@@ -463,7 +479,19 @@ func setupAdminRouter(
 		"/api/admin/auth/logout",
 	)
 
-	return middleware.LoggingMiddleware(middleware.CORSMiddleware(protectedHandler))
+	// Apply logging dan CORS middleware
+	handler := middleware.LoggingMiddleware(middleware.CORSMiddleware(protectedHandler))
+
+	// Web UI handler sebagai fallback untuk non-API routes
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Jika request adalah API route, gunakan handler yang sudah ada
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			handler.ServeHTTP(w, r)
+			return
+		}
+		// Jika bukan API route, serve Web UI
+		adminUI.Handler().ServeHTTP(w, r)
+	})
 }
 
 // toString mengubah int ke string

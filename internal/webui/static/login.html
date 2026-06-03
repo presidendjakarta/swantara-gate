@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Swantara Gate</title>
+    
+    <!-- Metro UI CSS -->
+    <link rel="stylesheet" href="https://cdn.metroui.org.ua/v4/css/metro-all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            max-width: 400px;
+            width: 100%;
+        }
+        .login-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 2rem;
+        }
+        .login-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-logo h1 {
+            margin: 0;
+            color: #667eea;
+            font-size: 2rem;
+        }
+        .login-logo p {
+            color: #666;
+            margin: 0.5rem 0 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                <h1>🚀 Swantara Gate</h1>
+                <p>API Gateway Admin Panel</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" class="input" placeholder="Enter username" required data-role="input">
+                </div>
+                
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" class="input" placeholder="Enter password" required data-role="input">
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="rememberMe" data-role="checkbox">
+                        <span class="check"></span>
+                        Remember me
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="button primary" id="loginBtn">
+                        Login
+                    </button>
+                </div>
+                
+                <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                    <span id="errorText"></span>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Metro UI JS -->
+    <script src="https://cdn.metroui.org.ua/v4/js/metro.min.js"></script>
+    
+    <script>
+        const API_BASE_URL = 'http://localhost:8081';
+        
+        $(document).ready(function() {
+            // Check if already logged in
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                window.location.href = '/dashboard.html';
+            }
+            
+            // Handle login form submission
+            $('#loginForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const username = $('#username').val();
+                const password = $('#password').val();
+                
+                // Disable button and show loading
+                $('#loginBtn').prop('disabled', true).text('Logging in...');
+                $('#errorMessage').hide();
+                
+                // Send login request
+                $.ajax({
+                    url: API_BASE_URL + '/api/admin/auth/login',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        username: username,
+                        password: password
+                    }),
+                    success: function(response) {
+                        if (response.data && response.data.access_token) {
+                            // Save tokens
+                            localStorage.setItem('access_token', response.data.access_token);
+                            localStorage.setItem('refresh_token', response.data.refresh_token);
+                            
+                            // Redirect to dashboard
+                            window.location.href = '/dashboard.html';
+                        } else {
+                            showError('Login failed: Invalid response');
+                        }
+                    },
+                    error: function(xhr) {
+                        let message = 'Login failed';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        } else if (xhr.status === 401) {
+                            message = 'Invalid username or password';
+                        }
+                        showError(message);
+                    },
+                    complete: function() {
+                        $('#loginBtn').prop('disabled', false).text('Login');
+                    }
+                });
+            });
+        });
+        
+        function showError(message) {
+            $('#errorText').text(message);
+            $('#errorMessage').fadeIn();
+        }
+    </script>
+</body>
+</html>
