@@ -128,12 +128,13 @@
                                         <th>Match</th>
                                         <th>Methods</th>
                                         <th>Auth</th>
+                                        <th>Auth Providers</th>
                                         <th style="width:80px;">Status</th>
                                         <th style="width:100px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="routeTableBody">
-                                    <tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-route"></i><h4>Select a Host</h4><p>Choose a host above to view its routes</p></div></td></tr>
+                                    <tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-route"></i><h4>Select a Host</h4><p>Choose a host above to view its routes</p></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -320,7 +321,7 @@
 
         function loadRoutes() {
             if (!currentHostId) return;
-            $('#routeTableBody').html('<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-tertiary);"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px;"></i>Loading...</td></tr>');
+            $('#routeTableBody').html('<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-tertiary);"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px;"></i>Loading...</td></tr>');
             $.ajax({ url: '/api/admin/hosts/' + currentHostId + '/virtual-directories', method: 'GET', headers: getHeaders(),
                 success: function(r) {
                     if (r.success && r.data) {
@@ -342,11 +343,18 @@
                 let methods = '';
                 if (d.methods && d.methods.length > 0) { d.methods.forEach(function(m) { methods += '<span class="method-badge '+m.toLowerCase()+'">'+m.toUpperCase()+'</span>'; }); }
                 else { methods = '<span style="font-size:11px;color:var(--text-tertiary);">All</span>'; }
+                
+                // Auth type badge
+                const authTypeBadge = d.auth_type && d.auth_type !== 'none' 
+                    ? '<span class="badge badge-warning" style="font-size:10px;">'+escapeHtml(d.auth_type)+'</span>'
+                    : '<span style="font-size:11px;color:var(--text-tertiary);">-</span>';
+                
                 html += '<tr><td>'+(i+1)+'</td>' +
                     '<td><span style="font-size:12px;color:var(--text-secondary);">'+escapeHtml(d.vhost_name||'-')+'</span></td>' +
                     '<td><div class="path-cell"><span class="path-source">'+escapeHtml(d.source_path)+'</span><span class="path-arrow"><i class="fa-solid fa-arrow-right"></i></span><span class="path-target">'+escapeHtml(d.target_path)+'</span>'+ws+ca+'</div></td>' +
                     '<td>'+match+'</td><td><div style="display:flex;gap:3px;flex-wrap:wrap;">'+methods+'</div></td>' +
-                    '<td><span style="font-size:12px;">'+escapeHtml(d.auth_type||'none')+'</span></td>' +
+                    '<td>'+authTypeBadge+'</td>' +
+                    '<td><div id="authProviders-'+d.id+'" style="display:flex;gap:4px;flex-wrap:wrap;"><span style="font-size:11px;color:var(--text-tertiary);">Loading...</span></div></td>' +
                     '<td>'+status+'</td>' +
                     '<td><div style="display:flex;gap:4px;">' +
                         '<button class="btn btn-sm btn-secondary" title="Edit" onclick="editRoute('+d.id+')"><i class="fa-solid fa-pen"></i></button>' +
@@ -355,11 +363,66 @@
             });
             $('#routeTableBody').html(html);
             $('#routeSubtitle').text(dirs.length + ' route(s) found');
+            
+            // Load auth providers for each route
+            dirs.forEach(function(d) {
+                loadAuthProvidersForRoute(d.id);
+            });
         }
 
         function renderEmpty() {
-            $('#routeTableBody').html('<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-route"></i><h4>No Routes Yet</h4><p>Click <strong>Add Route</strong> to create one</p></div></td></tr>');
+            $('#routeTableBody').html('<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-route"></i><h4>No Routes Yet</h4><p>Click <strong>Add Route</strong> to create one</p></div></td></tr>');
             $('#routeSubtitle').text('0 routes');
+        }
+
+        function loadAuthProvidersForRoute(vdirId) {
+            const container = $('#authProviders-' + vdirId);
+            let html = '';
+            let loadCount = 0;
+            const totalLoads = 2; // JWT + External Auth
+            
+            function checkComplete() {
+                loadCount++;
+                if (loadCount === totalLoads && html === '') {
+                    container.html('<span style="font-size:11px;color:var(--text-tertiary);">-</span>');
+                }
+            }
+            
+            // Load JWT Providers
+            $.ajax({
+                url: '/api/admin/virtual-directories/' + vdirId + '/jwt-providers',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data.providers && r.data.providers.length > 0) {
+                        r.data.providers.forEach(function(p) {
+                            html += '<span class="badge badge-info" style="font-size:10px;" title="JWT: '+escapeHtml(p.name)+'"><i class="fa-solid fa-key"></i> '+escapeHtml(p.name)+'</span>';
+                        });
+                    }
+                    checkComplete();
+                },
+                error: function() { checkComplete(); }
+            });
+            
+            // Load External Auth Providers
+            $.ajax({
+                url: '/api/admin/virtual-directories/' + vdirId + '/external-auth-providers',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data.providers && r.data.providers.length > 0) {
+                        r.data.providers.forEach(function(p) {
+                            html += '<span class="badge badge-success" style="font-size:10px;" title="External Auth: '+escapeHtml(p.name)+'"><i class="fa-solid fa-shield-halved"></i> '+escapeHtml(p.name)+'</span>';
+                        });
+                    }
+                    checkComplete();
+                },
+                error: function() { checkComplete(); }
+            });
+            
+            if (html) {
+                container.html(html);
+            }
         }
 
         function loadVHostsForForm() {
