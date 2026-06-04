@@ -1,0 +1,144 @@
+<aside class="app-sidebar" id="appSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fa-solid fa-cube"></i>
+            </div>
+            <span class="brand-text">Swantara Gate</span>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebarNav">
+        <ul class="nav-list">
+            <li class="nav-item active">
+                <a href="/dashboard.html" class="nav-link" data-tooltip="Dashboard">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            
+            <li class="nav-section">Proxy Configuration</li>
+            <li class="nav-item has-submenu">
+                <a href="#" class="nav-link" data-tooltip="Hosts">
+                    <i class="fa-solid fa-server"></i>
+                    <span>Hosts</span>
+                    <i class="fa-solid fa-chevron-right submenu-arrow"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/hosts.html" class="nav-link"><span>Host List</span></a></li>
+                    <li><a href="/virtual-hosts.html" class="nav-link"><span>Virtual Hosts</span></a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-submenu">
+                <a href="#" class="nav-link" data-tooltip="Routing">
+                    <i class="fa-solid fa-route"></i>
+                    <span>Routing</span>
+                    <i class="fa-solid fa-chevron-right submenu-arrow"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/upstreams.html" class="nav-link"><span>Upstream Servers</span></a></li>
+                    <li><a href="/routes.html" class="nav-link"><span>Virtual Directories</span></a></li>
+                </ul>
+            </li>
+
+            <li class="nav-section">Security</li>
+            <li class="nav-item has-submenu">
+                <a href="#" class="nav-link" data-tooltip="Consumers">
+                    <i class="fa-solid fa-users"></i>
+                    <span>API Consumers</span>
+                    <i class="fa-solid fa-chevron-right submenu-arrow"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/consumers.html" class="nav-link"><span>Consumer List</span></a></li>
+                    <li><a href="/api-keys.html" class="nav-link"><span>API Keys</span></a></li>
+                    <li><a href="/consumer-credentials.html" class="nav-link"><span>Credentials</span></a></li>
+                </ul>
+            </li>
+
+            <li class="nav-item has-submenu">
+                <a href="#" class="nav-link" data-tooltip="Auth">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Authentication</span>
+                    <i class="fa-solid fa-chevron-right submenu-arrow"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/jwt-config.html" class="nav-link"><span>JWT Config</span></a></li>
+                    <li><a href="/external-auth.html" class="nav-link"><span>External Auth</span></a></li>
+                </ul>
+            </li>
+
+            <li class="nav-section">Advanced</li>
+            <li class="nav-item">
+                <a href="/rate-limits.html" class="nav-link" data-tooltip="Rate Limits">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span>Rate Limits</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="/circuit-breakers.html" class="nav-link" data-tooltip="Circuit Breaker">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Circuit Breaker</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="/cors.html" class="nav-link" data-tooltip="CORS">
+                    <i class="fa-solid fa-globe"></i>
+                    <span>CORS Config</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="/header-rewrites.html" class="nav-link" data-tooltip="Header Rules">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Header Rules</span>
+                </a>
+            </li>
+
+            <li class="nav-section">SSL/TLS</li>
+            <li class="nav-item">
+                <a href="/certificates.html" class="nav-link" data-tooltip="Certificates">
+                    <i class="fa-solid fa-certificate"></i>
+                    <span>SSL Certificates</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="/acme.html" class="nav-link" data-tooltip="ACME">
+                    <i class="fa-solid fa-key"></i>
+                    <span>ACME Accounts</span>
+                </a>
+            </li>
+
+            <li class="nav-section">System</li>
+            <li class="nav-item">
+                <a href="/maintenance.html" class="nav-link" data-tooltip="Maintenance">
+                    <i class="fa-solid fa-wrench"></i>
+                    <span>Maintenance</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="/config-versions.html" class="nav-link" data-tooltip="Config History">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Config History</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-tooltip="Reload Config" onclick="event.preventDefault(); reloadConfig();">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>Reload Config</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+
+<!-- Sidebar Overlay (Mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>

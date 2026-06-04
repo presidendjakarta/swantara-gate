@@ -1,0 +1,1335 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hosts - Swantara Gate</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Metro UI -->
+    <link rel="stylesheet" href="https://cdn.metroui.org.ua/current/metro.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+    <!-- NProgress -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
+    
+    <!-- Select2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
+    
+    <!-- App Styles -->
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+    <link rel="stylesheet" href="/assets/css/datatables.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+    <link rel="stylesheet" href="/assets/css/dark.css">
+    <link rel="stylesheet" href="/assets/css/swal-custom.css">
+    
+    <style>
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: slideUp 0.25s ease;
+            overflow: hidden;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-header h3 i { color: var(--accent); }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: var(--transition-fast);
+        }
+        .modal-close:hover { background: var(--bg-secondary); color: var(--text-primary); }
+        .modal-body { padding: 24px; }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-subtle);
+            background: var(--bg-secondary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+        }
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+        .empty-state h4 {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .empty-state p { font-size: 13px; margin: 0; }
+
+        /* Switch Toggle */
+        .switch-toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+        .switch-toggle input { opacity: 0; width: 0; height: 0; }
+        .switch-slider {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 22px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        .switch-slider::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: var(--transition-fast);
+        }
+        .switch-toggle input:checked + .switch-slider { background: var(--success); }
+        .switch-toggle input:checked + .switch-slider::before { transform: translateX(18px); }
+
+        /* Pagination */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .pagination-info {
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+        .pagination-buttons {
+            display: flex;
+            gap: 4px;
+        }
+        .pagination-buttons button {
+            min-width: 34px;
+            height: 34px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13px;
+            transition: var(--transition-fast);
+        }
+        .pagination-buttons button:hover:not(:disabled) { background: var(--bg-secondary); }
+        .pagination-buttons button.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .pagination-buttons button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Loading Spinner */
+        .table-loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-tertiary);
+        }
+        .table-loading i {
+            font-size: 24px;
+            animation: fa-spin 1s linear infinite;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* VDir Modal (wider) */
+        .vdir-modal .modal-box { max-width: 900px; }
+        .vdir-vhost-selector {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+        }
+        .vdir-vhost-selector label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .vdir-vhost-selector label i { color: var(--accent); }
+        .vdir-vhost-selector select { flex: 1; height: 38px; }
+
+        /* VDir Table Compact */
+        .vdir-table-compact { width: 100%; }
+        .vdir-table-compact th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); font-weight: 600; padding: 10px 12px; }
+        .vdir-table-compact td { padding: 10px 12px; font-size: 13px; vertical-align: middle; }
+        .path-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 12px;
+        }
+        .path-arrow { color: var(--text-tertiary); font-size: 11px; }
+        .path-source { color: var(--accent); font-weight: 600; }
+        .path-target { color: var(--text-secondary); }
+
+        /* VDir Form Grid */
+        .vdir-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px 16px;
+        }
+        .vdir-form-grid .full-width { grid-column: 1 / -1; }
+        .vdir-form-grid .half-width { grid-column: span 2; }
+        .vdir-form-grid label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; display: block; }
+        .vdir-form-grid .form-control { height: 36px; font-size: 13px; }
+
+        /* Section Title */
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title i { font-size: 13px; color: var(--accent); }
+
+        /* Method Badges */
+        .method-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+        .method-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.3px;
+        }
+        .method-badge.get { background: #e3f2fd; color: #1565c0; }
+        .method-badge.post { background: #e8f5e9; color: #2e7d32; }
+        .method-badge.put { background: #fff3e0; color: #e65100; }
+        .method-badge.delete { background: #ffebee; color: #c62828; }
+        .method-badge.patch { background: #f3e5f5; color: #6a1b9a; }
+        .method-badge.options { background: #e0f2f1; color: #00695c; }
+        .method-badge.head { background: #fce4ec; color: #ad1457; }
+
+        /* VDir Actions */
+        .vdir-actions { display: flex; gap: 4px; }
+        .vdir-actions .btn-sm { min-width: 28px; height: 28px; padding: 0 6px; font-size: 11px; }
+    </style>
+</head>
+<body>
+    <!-- App Container -->
+    <div class="app-container">
+        
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content Area -->
+        <div class="app-main">
+            <!-- Top Navbar -->
+            <div id="navbar-container"></div>
+
+            <!-- Page Content -->
+            <main class="app-content">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div>
+                        <h1>Host Management</h1>
+                        <p>Manage primary hosts for the API Gateway</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="loadHosts()">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>Refresh</span>
+                        </button>
+                        <button class="btn btn-primary" onclick="openCreateModal()">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Add Host</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info Alert -->
+                <div class="content-card" style="margin-bottom: 24px; border-left: 4px solid var(--accent);">
+                    <div class="card-body" style="padding: 16px 20px;">
+                        <div style="display: flex; gap: 12px; align-items: start;">
+                            <i class="fa-solid fa-circle-info" style="color: var(--accent); font-size: 20px; margin-top: 2px;"></i>
+                            <div style="flex: 1;">
+                                <h4 style="margin-bottom: 4px; font-size: 14px;">What is a Host?</h4>
+                                <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">A host is the primary domain or address used by the API Gateway to receive incoming requests. Each host can contain multiple virtual hosts within it.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Host Table -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-header-left">
+                            <div class="card-icon bg-primary">
+                                <i class="fa-solid fa-server"></i>
+                            </div>
+                            <div>
+                                <h3>Host List</h3>
+                                <p class="card-subtitle">List of registered hosts</p>
+                            </div>
+                        </div>
+                        <div id="hostCountBadge"></div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Table Controls -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label style="font-size: 13px; color: var(--text-secondary);">Show</label>
+                                <select class="form-control" id="limitSelect" style="width: 70px; height: 36px; padding: 6px 12px;" onchange="changeLimit()">
+                                    <option value="10" selected>10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <label style="font-size: 13px; color: var(--text-secondary);">entries</label>
+                            </div>
+                            <div style="position: relative;">
+                                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-size: 14px; z-index: 1; pointer-events: none;"></i>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search hosts..." style="padding-left: 38px; min-width: 250px; height: 36px;" oninput="debounceSearch()">
+                            </div>
+                        </div>
+
+                        <!-- Table -->
+                        <div class="data-table-wrapper" id="tableWrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Host Name</th>
+                                        <th>Description</th>
+                                        <th style="width: 100px;">Status</th>
+                                        <th>Created</th>
+                                        <th style="width: 130px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hostTableBody">
+                                    <tr>
+                                        <td colspan="6">
+                                            <div class="table-loading">
+                                                <i class="fa-solid fa-spinner"></i>
+                                                Loading data...
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Pagination -->
+                        <div class="pagination-wrapper">
+                            <div class="pagination-info" id="paginationInfo">
+                                <i class="fa-solid fa-circle-info" style="margin-right: 6px;"></i>
+                                Loading data...
+                            </div>
+                            <div class="pagination-buttons" id="paginationButtons"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="modal-overlay" id="hostModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fa-solid fa-server"></i> <span>Add Host</span></h3>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="hostForm">
+                    <input type="hidden" id="hostId">
+                    <div class="form-group">
+                        <label>Host Name <span style="color: var(--danger);">*</span></label>
+                        <input type="text" class="form-control" id="hostName" placeholder="example: api.example.com" required>
+                        <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 4px;">
+                            <i class="fa-solid fa-circle-info"></i> Primary domain or hostname (e.g. api.example.com)
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="form-control" id="hostDescription" rows="3" placeholder="Describe this host..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+                            <label class="switch-toggle">
+                                <input type="checkbox" id="hostIsActive" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                            <span id="statusLabel" style="font-size: 13px; font-weight: 500; color: var(--success);">Active</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </button>
+                <button class="btn btn-primary" id="btnSaveHost" onclick="saveHost()">
+                    <i class="fa-solid fa-check"></i> <span id="btnSaveText">Save</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Virtual Directory Modal -->
+    <div class="modal-overlay vdir-modal" id="vdirModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-route"></i> <span>Virtual Directories</span>
+                    <span style="font-size:12px;color:var(--text-tertiary);margin-left:8px;" id="vdirHostName">-</span>
+                </h3>
+                <button class="modal-close" onclick="closeVDirModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Add/Edit Form (hidden by default) -->
+                <div id="vdirFormSection" style="display:none; margin-bottom: 20px; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius-md);">
+                    <div class="section-title"><i class="fa-solid fa-plus-circle"></i> <span id="vdirFormTitle">Add Virtual Directory</span></div>
+                    <form id="vdirForm" onsubmit="return false;">
+                        <input type="hidden" id="vdirId">
+                        <div class="form-group" style="margin-bottom:14px;">
+                            <label style="font-size:12px;font-weight:500;color:var(--text-secondary);">Virtual Host <span style="color:var(--danger);">*</span></label>
+                            <select class="form-control" id="vdirVHostSelect" style="height:36px;">
+                                <option value="">-- Select virtual host --</option>
+                            </select>
+                        </div>
+                        <div class="vdir-form-grid">
+                            <div class="form-group half-width">
+                                <label>Source Path <span style="color:var(--danger);">*</span></label>
+                                <input type="text" class="form-control" id="vdirSourcePath" placeholder="/api/v1/users">
+                            </div>
+                            <div class="form-group half-width">
+                                <label>Target Path <span style="color:var(--danger);">*</span></label>
+                                <input type="text" class="form-control" id="vdirTargetPath" placeholder="/users">
+                            </div>
+                            <div class="form-group">
+                                <label>Match Type</label>
+                                <select class="form-control" id="vdirMatchType">
+                                    <option value="prefix">Prefix</option>
+                                    <option value="exact">Exact</option>
+                                    <option value="regex">Regex</option>
+                                    <option value="rewrite">Rewrite</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Auth Type</label>
+                                <select class="form-control" id="vdirAuthType">
+                                    <option value="none">None</option>
+                                    <option value="jwt">JWT</option>
+                                    <option value="api_key">API Key</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Proxy Timeout (sec)</label>
+                                <input type="number" class="form-control" id="vdirTimeout" value="30" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Retry Count</label>
+                                <input type="number" class="form-control" id="vdirRetryCount" value="0" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Retry Delay (ms)</label>
+                                <input type="number" class="form-control" id="vdirRetryDelay" value="100" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Max Request Size (MB)</label>
+                                <input type="number" class="form-control" id="vdirMaxSize" value="10" min="1">
+                            </div>
+                        </div>
+                        <!-- Flags Row -->
+                        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <label class="switch-toggle"><input type="checkbox" id="vdirStripPrefix" checked><span class="switch-slider"></span></label>
+                                <span style="font-size:12px;color:var(--text-secondary);">Strip Prefix</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <label class="switch-toggle"><input type="checkbox" id="vdirPreserveHost"><span class="switch-slider"></span></label>
+                                <span style="font-size:12px;color:var(--text-secondary);">Preserve Host</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <label class="switch-toggle"><input type="checkbox" id="vdirWebsocket"><span class="switch-slider"></span></label>
+                                <span style="font-size:12px;color:var(--text-secondary);">WebSocket</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <label class="switch-toggle"><input type="checkbox" id="vdirCache"><span class="switch-slider"></span></label>
+                                <span style="font-size:12px;color:var(--text-secondary);">Cache</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <label class="switch-toggle"><input type="checkbox" id="vdirIsActive" checked><span class="switch-slider"></span></label>
+                                <span id="vdirStatusLabel" style="font-size:12px;font-weight:500;color:var(--success);">Active</span>
+                            </div>
+                        </div>
+                        <!-- HTTP Methods -->
+                        <div style="margin-top:14px;">
+                            <label style="font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;display:block;">Allowed HTTP Methods</label>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;" id="vdirMethodsGroup">
+                                <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="GET" checked> GET</label>
+                                <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="POST" checked> POST</label>
+                                <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="PUT" checked> PUT</label>
+                                <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="DELETE" checked> DELETE</label>
+                                <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="PATCH"> PATCH</label>
+                                <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="OPTIONS"> OPTIONS</label>
+                                <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="HEAD"> HEAD</label>
+                            </div>
+                        </div>
+                        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelVDirForm()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                            <button type="button" class="btn btn-primary btn-sm" id="btnSaveVDir" onclick="saveVDir()"><i class="fa-solid fa-check"></i> <span id="btnSaveVDirText">Save</span></button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- VDir List -->
+                <div class="section-title"><i class="fa-solid fa-list"></i> Directory Routes</div>
+                <div class="data-table-wrapper" style="max-height: 320px; overflow-y: auto;">
+                    <table class="vdir-table-compact">
+                        <thead>
+                            <tr>
+                                <th style="width:36px;">#</th>
+                                <th>VHost</th>
+                                <th>Path Mapping</th>
+                                <th>Match</th>
+                                <th>Methods</th>
+                                <th style="width:70px;">Status</th>
+                                <th style="width:90px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vdirTableBody">
+                            <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-tertiary);">Select a virtual host to view directories</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeVDirModal()"><i class="fa-solid fa-xmark"></i> Close</button>
+                <button class="btn btn-primary" id="btnAddVDir" onclick="openAddVDirForm()"><i class="fa-solid fa-plus"></i> Add Directory</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Command Palette -->
+    <div class="command-palette-overlay" id="commandPaletteOverlay">
+        <div class="command-palette" id="commandPalette">
+            <div class="command-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="commandInput" placeholder="Type a command or search...">
+                <kbd>ESC</kbd>
+            </div>
+            <div class="command-results" id="commandResults"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.metroui.org.ua/current/metro.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+    
+    <!-- SweetAlert2 Custom Config -->
+    <script src="/assets/js/swal-config.js"></script>
+    <script src="/assets/js/app.js"></script>
+    
+    <script>
+        // ========================
+        // State
+        // ========================
+        let currentPage = 1;
+        let currentLimit = 10;
+        let totalHosts = 0;
+        let searchTerm = '';
+        let searchTimeout = null;
+        let editingId = null;
+        let currentHostId = null;
+        let currentHostName = '';
+        let currentVHostId = null;
+        let editingVDirId = null;
+        let vhostsForHost = [];
+
+        const API_BASE = '/api/admin/hosts';
+        const VDIR_API = '/api/admin/virtual-directories';
+
+        // ========================
+        // Init
+        // ========================
+        $(document).ready(function() {
+            $('#sidebar-container').load('/components/sidebar.html', function() {
+                // Set active menu
+                $(this).find('.nav-item').removeClass('active');
+                $(this).find('a[href="/hosts.html"]').closest('.nav-item').addClass('active');
+                $(this).find('a[href="/hosts.html"]').closest('.has-submenu').addClass('open');
+            });
+            $('#navbar-container').load('/components/navbar.html');
+
+            // Auth check
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            loadHosts();
+
+            // Toggle switch label
+            $('#hostIsActive').on('change', function() {
+                const isActive = $(this).is(':checked');
+                $('#statusLabel').text(isActive ? 'Active' : 'Inactive')
+                    .css('color', isActive ? 'var(--success)' : 'var(--text-tertiary)');
+            });
+
+            // Close modal on overlay click
+            $('#hostModal').on('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+
+            // ESC to close modal
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape') { closeModal(); closeVDirModal(); }
+            });
+
+            // VDir form toggle listeners
+            $('#vdirIsActive').on('change', function() {
+                const v = $(this).is(':checked');
+                $('#vdirStatusLabel').text(v ? 'Active' : 'Inactive').css('color', v ? 'var(--success)' : 'var(--text-tertiary)');
+            });
+
+            // Close vdir modal on overlay click
+            $('#vdirModal').on('click', function(e) { if (e.target === this) closeVDirModal(); });
+
+            // Initialize Select2
+            $('#limitSelect').select2({ theme: 'default', width: '70px' });
+        });
+
+        function getHeaders() {
+            return { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') };
+        }
+
+        // ========================
+        // Load Hosts
+        // ========================
+        function loadHosts() {
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: currentLimit
+            });
+            if (searchTerm) params.append('search', searchTerm);
+
+            $('#hostTableBody').html('<tr><td colspan="6"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Memuat data...</div></td></tr>');
+
+            $.ajax({
+                url: API_BASE + '?' + params.toString(),
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(response) {
+                    if (response.success && response.data) {
+                        const hosts = response.data.hosts || [];
+                        const pagination = response.data.pagination || {};
+                        totalHosts = pagination.total || 0;
+                        renderTable(hosts);
+                        renderPagination(pagination);
+                        $('#hostCountBadge').html('<span class="badge badge-primary"><i class="fa-solid fa-server" style="margin-right:4px"></i>' + totalHosts + ' hosts</span>');
+                    } else {
+                        renderEmpty();
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 401) {
+                        window.location.href = '/login.html';
+                        return;
+                    }
+                    $('#hostTableBody').html('<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><h4>Error</h4><p>Gagal memuat data host</p></div></td></tr>');
+                }
+            });
+        }
+
+        // ========================
+        // Render Table
+        // ========================
+        function renderTable(hosts) {
+            if (!hosts || hosts.length === 0) {
+                renderEmpty();
+                return;
+            }
+
+            let html = '';
+            hosts.forEach(function(host, index) {
+                const num = (currentPage - 1) * currentLimit + index + 1;
+                const statusBadge = host.is_active
+                    ? '<span class="badge badge-success"><i class="fa-solid fa-check-circle" style="margin-right:4px"></i>Active</span>'
+                    : '<span class="badge badge-danger"><i class="fa-solid fa-times-circle" style="margin-right:4px"></i>Inactive</span>';
+
+                const createdDate = moment(host.created_at).format('YYYY-MM-DD');
+                const createdTime = moment(host.created_at).format('HH:mm');
+
+                const initial = (host.host_name || '?').charAt(0).toUpperCase();
+                const colors = ['0078D4', '16C60C', 'FFB900', 'E81123', '8764B8', '00B294'];
+                const bgColor = colors[num % colors.length];
+
+                html += '<tr>' +
+                    '<td>' + num + '</td>' +
+                    '<td>' +
+                        '<div style="display:flex;align-items:center;gap:12px;">' +
+                            '<div style="width:38px;height:38px;border-radius:8px;background:#' + bgColor + ';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:14px;flex-shrink:0;">' + initial + '</div>' +
+                            '<div>' +
+                                '<div style="font-weight:600;margin-bottom:2px;">' + escapeHtml(host.host_name) + '</div>' +
+                                '<div style="font-size:12px;color:var(--text-tertiary);">ID: ' + host.id + '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td><span style="color:var(--text-secondary);font-size:13px;">' + (host.description ? escapeHtml(host.description) : '<span style="color:var(--text-disabled);font-style:italic;">No description</span>') + '</span></td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td>' +
+                        '<div style="font-size:13px;">' + createdDate + '</div>' +
+                        '<div style="font-size:11px;color:var(--text-tertiary);">' + createdTime + '</div>' +
+                    '</td>' +
+                    '<td>' +
+                        '<div style="display:flex;gap:6px;">' +
+                            '<button class="btn btn-sm btn-secondary" title="Edit" onclick="openEditModal(' + host.id + ')"><i class="fa-solid fa-pen"></i></button>' +
+                            '<button class="btn btn-sm btn-success" title="Virtual Directories" onclick="openVDirModal(' + host.id + ', \'' + escapeHtml(host.host_name) + '\')"><i class="fa-solid fa-route"></i></button>' +
+                            '<button class="btn btn-sm btn-danger" title="Delete" onclick="deleteHost(' + host.id + ', \'' + escapeHtml(host.host_name) + '\')"><i class="fa-solid fa-trash"></i></button>' +
+                        '</div>' +
+                    '</td>' +
+                '</tr>';
+            });
+
+            $('#hostTableBody').html(html);
+        }
+
+        function renderEmpty() {
+            $('#hostTableBody').html(
+                '<tr><td colspan="6">' +
+                    '<div class="empty-state">' +
+                        '<i class="fa-solid fa-server"></i>' +
+                        '<h4>No Hosts Yet</h4>' +
+                        '<p>Click the <strong>Add Host</strong> button to add a new host</p>' +
+                    '</div>' +
+                '</td></tr>'
+            );
+            $('#paginationInfo').html('<i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>No data');
+            $('#paginationButtons').html('');
+        }
+
+        // ========================
+        // Pagination
+        // ========================
+        function renderPagination(pagination) {
+            const page = pagination.page || 1;
+            const limit = pagination.limit || 10;
+            const total = pagination.total || 0;
+            const totalPages = Math.ceil(total / limit);
+            const start = total === 0 ? 0 : (page - 1) * limit + 1;
+            const end = Math.min(page * limit, total);
+
+            $('#paginationInfo').html(
+                '<i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>' +
+                'Showing <strong>' + start + '</strong> to <strong>' + end + '</strong> of <strong>' + total + '</strong> entries'
+            );
+
+            if (totalPages <= 1) {
+                $('#paginationButtons').html('');
+                return;
+            }
+
+            let html = '';
+            // Previous
+            html += '<button ' + (page <= 1 ? 'disabled' : 'onclick="goToPage(' + (page - 1) + ')"') + '><i class="fa-solid fa-chevron-left"></i></button>';
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (totalPages > 7) {
+                    if (i === 1 || i === totalPages || (i >= page - 1 && i <= page + 1)) {
+                        html += '<button class="' + (i === page ? 'active' : '') + '" onclick="goToPage(' + i + ')">' + i + '</button>';
+                    } else if (i === page - 2 || i === page + 2) {
+                        html += '<button disabled>...</button>';
+                    }
+                } else {
+                    html += '<button class="' + (i === page ? 'active' : '') + '" onclick="goToPage(' + i + ')">' + i + '</button>';
+                }
+            }
+
+            // Next
+            html += '<button ' + (page >= totalPages ? 'disabled' : 'onclick="goToPage(' + (page + 1) + ')"') + '><i class="fa-solid fa-chevron-right"></i></button>';
+
+            $('#paginationButtons').html(html);
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            loadHosts();
+        }
+
+        function changeLimit() {
+            currentLimit = parseInt($('#limitSelect').val());
+            currentPage = 1;
+            loadHosts();
+        }
+
+        // ========================
+        // Search
+        // ========================
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                searchTerm = $('#searchInput').val().trim();
+                currentPage = 1;
+                loadHosts();
+            }, 400);
+        }
+
+        // ========================
+        // Modal
+        // ========================
+        function openCreateModal() {
+            editingId = null;
+            $('#modalTitle span').text('Add Host');
+            $('#modalTitle i').attr('class', 'fa-solid fa-plus');
+            $('#hostId').val('');
+            $('#hostName').val('').prop('disabled', false);
+            $('#hostDescription').val('');
+            $('#hostIsActive').prop('checked', true).trigger('change');
+            $('#btnSaveText').text('Save');
+            $('#btnSaveHost').removeClass('btn-warning').addClass('btn-primary');
+            $('#hostModal').addClass('active');
+            setTimeout(() => $('#hostName').focus(), 200);
+        }
+
+        function openEditModal(id) {
+            $.ajax({
+                url: API_BASE + '/' + id,
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(response) {
+                    if (response.success && response.data) {
+                        const host = response.data;
+                        editingId = id;
+                        $('#modalTitle span').text('Edit Host');
+                        $('#modalTitle i').attr('class', 'fa-solid fa-pen');
+                        $('#hostId').val(host.id);
+                        $('#hostName').val(host.host_name).prop('disabled', false);
+                        $('#hostDescription').val(host.description || '');
+                        $('#hostIsActive').prop('checked', host.is_active).trigger('change');
+                        $('#btnSaveText').text('Update');
+                        $('#btnSaveHost').removeClass('btn-primary').addClass('btn-warning');
+                        $('#hostModal').addClass('active');
+                    }
+                },
+                error: function(xhr) {
+                    showError('Error', 'Failed to load host data');
+                }
+            });
+        }
+
+        function closeModal() {
+            $('#hostModal').removeClass('active');
+            editingId = null;
+        }
+
+        // ========================
+        // Save (Create / Update)
+        // ========================
+        function saveHost() {
+            const hostName = $('#hostName').val().trim();
+            const description = $('#hostDescription').val().trim();
+            const isActive = $('#hostIsActive').is(':checked');
+
+            if (!hostName) {
+                showWarning('Validation', 'Host name is required');
+                $('#hostName').focus();
+                return;
+            }
+
+            const btn = $('#btnSaveHost');
+            const originalHtml = btn.html();
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Saving...');
+
+            if (editingId) {
+                // Update
+                $.ajax({
+                    url: API_BASE + '/' + editingId,
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    contentType: 'application/json',
+                    data: JSON.stringify({ host_name: hostName, description: description, is_active: isActive }),
+                    success: function() {
+                        closeModal();
+                        showToast('Host updated successfully', 'success');
+                        loadHosts();
+                    },
+                    error: function(xhr) {
+                        showError('Error', xhr.responseJSON?.message || 'Failed to update host');
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).html(originalHtml);
+                    }
+                });
+            } else {
+                // Create
+                $.ajax({
+                    url: API_BASE,
+                    method: 'POST',
+                    headers: getHeaders(),
+                    contentType: 'application/json',
+                    data: JSON.stringify({ host_name: hostName, description: description, is_active: isActive }),
+                    success: function() {
+                        closeModal();
+                        showToast('Host added successfully', 'success');
+                        currentPage = 1;
+                        loadHosts();
+                    },
+                    error: function(xhr) {
+                        showError('Error', xhr.responseJSON?.message || 'Failed to create host');
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).html(originalHtml);
+                    }
+                });
+            }
+        }
+
+        // ========================
+        // Delete
+        // ========================
+        function deleteHost(id, name) {
+            showConfirm('Delete Host', 'Are you sure you want to delete host "' + name + '"?', 'Yes, Delete', 'Cancel').then(function(result) {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: API_BASE + '/' + id,
+                        method: 'DELETE',
+                        headers: getHeaders(),
+                        success: function() {
+                            showToast('Host deleted successfully', 'success');
+                            loadHosts();
+                        },
+                        error: function(xhr) {
+                            showError('Error', xhr.responseJSON?.message || 'Failed to delete host');
+                        }
+                    });
+                }
+            });
+        }
+
+        // ========================
+        // Helpers
+        // ========================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        function logout() {
+            $.ajax({
+                url: '/api/admin/auth/logout',
+                method: 'POST',
+                headers: getHeaders(),
+                complete: function() {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    window.location.href = '/login.html';
+                }
+            });
+        }
+
+        function reloadConfig() {
+            $.ajax({
+                url: '/api/admin/config/reload',
+                method: 'POST',
+                headers: getHeaders(),
+                success: function() {
+                    showToast('Proxy configuration reloaded successfully', 'success');
+                },
+                error: function(xhr) {
+                    showError('Error', xhr.responseJSON?.message || 'Failed to reload configuration');
+                }
+            });
+        }
+
+        // ========================
+        // VIRTUAL DIRECTORY MANAGEMENT
+        // ========================
+        function openVDirModal(hostId, hostName) {
+            currentHostId = hostId;
+            currentHostName = hostName;
+            editingVDirId = null;
+            $('#vdirHostName').text(hostName);
+            $('#vdirFormSection').hide();
+            $('#vdirTableBody').html('<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-tertiary);"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px;"></i>Loading...</td></tr>');
+            $('#vdirModal').addClass('active');
+            loadVHostsForForm(hostId);
+            loadVDirsByHost(hostId);
+        }
+
+        function closeVDirModal() {
+            $('#vdirModal').removeClass('active');
+            currentHostId = null;
+            currentHostName = '';
+            currentVHostId = null;
+            editingVDirId = null;
+            $('#vdirFormSection').hide();
+        }
+
+        function loadVHostsForForm(hostId) {
+            $.ajax({
+                url: '/api/admin/virtual-hosts?limit=200',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(response) {
+                    if (response.success && response.data) {
+                        const allVHosts = response.data.virtual_hosts || [];
+                        vhostsForHost = allVHosts.filter(function(vh) { return vh.host_id == hostId; });
+                        const $select = $('#vdirVHostSelect');
+                        $select.find('option:not(:first)').remove();
+                        vhostsForHost.forEach(function(vh) {
+                            $select.append('<option value="' + vh.id + '">' + escapeHtml(vh.vhost_name) + '</option>');
+                        });
+                        if (vhostsForHost.length > 0) {
+                            $select.val(vhostsForHost[0].id);
+                            currentVHostId = vhostsForHost[0].id;
+                        }
+                        // Refresh Select2
+                        $select.trigger('change.select2');
+                    }
+                }
+            });
+        }
+
+        function loadVDirsByHost(hostId) {
+            $.ajax({
+                url: '/api/admin/hosts/' + hostId + '/virtual-directories',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(response) {
+                    if (response.success && response.data) {
+                        const dirs = Array.isArray(response.data) ? response.data : [];
+                        renderVDirTable(dirs);
+                    } else {
+                        renderVDirEmpty();
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 401) { window.location.href = '/login.html'; return; }
+                    $('#vdirTableBody').html('<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--danger);">Failed to load directories</td></tr>');
+                }
+            });
+        }
+
+        function renderVDirTable(dirs) {
+            if (!dirs || dirs.length === 0) { renderVDirEmpty(); return; }
+            let html = '';
+            dirs.forEach(function(dir, i) {
+                const statusBadge = dir.is_active
+                    ? '<span class="badge badge-success" style="font-size:11px;">Active</span>'
+                    : '<span class="badge badge-danger" style="font-size:11px;">Inactive</span>';
+                const matchBadge = '<span class="badge badge-primary" style="font-size:10px;">' + escapeHtml(dir.match_type || 'prefix') + '</span>';
+                const wsIcon = dir.websocket_enabled ? '<i class="fa-solid fa-plug" style="color:var(--accent);font-size:10px;margin-left:4px;" title="WebSocket enabled"></i>' : '';
+                const cacheIcon = dir.cache_enabled ? '<i class="fa-solid fa-database" style="color:var(--warning);font-size:10px;margin-left:4px;" title="Cache enabled"></i>' : '';
+
+                // Render methods badges directly from response
+                let methodsBadges = '';
+                if (dir.methods && dir.methods.length > 0) {
+                    dir.methods.forEach(function(m) {
+                        const method = m.toUpperCase();
+                        const cls = method.toLowerCase();
+                        methodsBadges += '<span class="method-badge ' + cls + '">' + method + '</span>';
+                    });
+                } else {
+                    methodsBadges = '<span style="font-size:11px;color:var(--text-tertiary);">All</span>';
+                }
+
+                html += '<tr>' +
+                    '<td>' + (i + 1) + '</td>' +
+                    '<td><span style="font-size:12px;color:var(--text-secondary);">' + escapeHtml(dir.vhost_name || '-') + '</span></td>' +
+                    '<td><div class="path-cell">' +
+                        '<span class="path-source">' + escapeHtml(dir.source_path) + '</span>' +
+                        '<span class="path-arrow"><i class="fa-solid fa-arrow-right"></i></span>' +
+                        '<span class="path-target">' + escapeHtml(dir.target_path) + '</span>' +
+                        wsIcon + cacheIcon +
+                    '</div></td>' +
+                    '<td>' + matchBadge + '</td>' +
+                    '<td><div class="method-badges">' + methodsBadges + '</div></td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td><div class="vdir-actions">' +
+                        '<button class="btn btn-sm btn-secondary" title="Edit" onclick="editVDir(' + dir.id + ')"><i class="fa-solid fa-pen"></i></button>' +
+                        '<button class="btn btn-sm btn-danger" title="Delete" onclick="deleteVDir(' + dir.id + ', \'' + escapeHtml(dir.source_path) + '\')"><i class="fa-solid fa-trash"></i></button>' +
+                    '</div></td>' +
+                '</tr>';
+            });
+            $('#vdirTableBody').html(html);
+        }
+
+        function renderVDirEmpty() {
+            $('#vdirTableBody').html(
+                '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-tertiary);">' +
+                    '<i class="fa-solid fa-route" style="font-size:28px;opacity:0.3;display:block;margin-bottom:8px;"></i>' +
+                    'No virtual directories yet<br><span style="font-size:12px;">Click <strong>Add Directory</strong> to add one</span>' +
+                '</td></tr>'
+            );
+        }
+
+        function openAddVDirForm() {
+            editingVDirId = null;
+            // Init Select2 on form selects if not already
+            if (!$('#vdirMatchType').hasClass('select2-hidden-accessible')) {
+                $('#vdirMatchType').select2({ theme: 'default' });
+                $('#vdirAuthType').select2({ theme: 'default' });
+                $('#vdirVHostSelect').select2({ theme: 'default', placeholder: '-- Select virtual host --' });
+            }
+            $('#vdirFormTitle').text('Add Virtual Directory');
+            $('#vdirId').val('');
+            $('#vdirSourcePath').val('');
+            $('#vdirTargetPath').val('');
+            $('#vdirMatchType').val('prefix');
+            $('#vdirAuthType').val('none');
+            $('#vdirTimeout').val(30);
+            $('#vdirRetryCount').val(0);
+            $('#vdirRetryDelay').val(100);
+            $('#vdirMaxSize').val(10);
+            $('#vdirStripPrefix').prop('checked', true);
+            $('#vdirPreserveHost').prop('checked', false);
+            $('#vdirWebsocket').prop('checked', false);
+            $('#vdirCache').prop('checked', false);
+            $('#vdirIsActive').prop('checked', true).trigger('change');
+            // Reset methods checkboxes
+            $('#vdirMethodsGroup input[type=checkbox]').each(function() {
+                const val = $(this).val();
+                $(this).prop('checked', ['GET','POST','PUT','DELETE'].indexOf(val) >= 0);
+            });
+            $('#btnSaveVDirText').text('Save');
+            $('#btnSaveVDir').removeClass('btn-warning').addClass('btn-primary');
+            $('#vdirFormSection').slideDown(200);
+        }
+
+        function editVDir(id) {
+            // Init Select2 on form selects if not already
+            if (!$('#vdirMatchType').hasClass('select2-hidden-accessible')) {
+                $('#vdirMatchType').select2({ theme: 'default' });
+                $('#vdirAuthType').select2({ theme: 'default' });
+                $('#vdirVHostSelect').select2({ theme: 'default', placeholder: '-- Select virtual host --' });
+            }
+            $.ajax({
+                url: VDIR_API + '/' + id,
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(response) {
+                    if (response.success && response.data) {
+                        const dir = response.data;
+                        editingVDirId = id;
+                        // Set vhost selector to the dir's vhost
+                        $('#vdirVHostSelect').val(dir.virtual_host_id).trigger('change.select2');
+                        currentVHostId = dir.virtual_host_id;
+                        $('#vdirFormTitle').text('Edit Virtual Directory');
+                        $('#vdirId').val(dir.id);
+                        $('#vdirSourcePath').val(dir.source_path);
+                        $('#vdirTargetPath').val(dir.target_path);
+                        $('#vdirMatchType').val(dir.match_type || 'prefix').trigger('change.select2');
+                        $('#vdirAuthType').val(dir.auth_type || 'none').trigger('change.select2');
+                        $('#vdirTimeout').val(dir.proxy_timeout_seconds || 30);
+                        $('#vdirRetryCount').val(dir.retry_count || 0);
+                        $('#vdirRetryDelay').val(dir.retry_delay_ms || 100);
+                        $('#vdirMaxSize').val(dir.max_request_size_mb || 10);
+                        $('#vdirStripPrefix').prop('checked', dir.strip_prefix);
+                        $('#vdirPreserveHost').prop('checked', dir.preserve_host_header);
+                        $('#vdirWebsocket').prop('checked', dir.websocket_enabled);
+                        $('#vdirCache').prop('checked', dir.cache_enabled);
+                        $('#vdirIsActive').prop('checked', dir.is_active).trigger('change');
+                        $('#btnSaveVDirText').text('Update');
+                        $('#btnSaveVDir').removeClass('btn-primary').addClass('btn-warning');
+                        // Set methods checkboxes directly from response
+                        const methods = (dir.methods || []).map(function(m) { return m.toUpperCase(); });
+                        $('#vdirMethodsGroup input[type=checkbox]').each(function() {
+                            $(this).prop('checked', methods.indexOf($(this).val()) >= 0);
+                        });
+                        $('#vdirFormSection').slideDown(200);
+                    }
+                },
+                error: function() { showError('Error', 'Failed to load directory data'); }
+            });
+        }
+
+        function cancelVDirForm() {
+            $('#vdirFormSection').slideUp(200);
+            editingVDirId = null;
+        }
+
+        function saveVDir() {
+            const sourcePath = $('#vdirSourcePath').val().trim();
+            const targetPath = $('#vdirTargetPath').val().trim();
+            if (!sourcePath) { showWarning('Validation', 'Source path is required'); $('#vdirSourcePath').focus(); return; }
+            if (!targetPath) { showWarning('Validation', 'Target path is required'); $('#vdirTargetPath').focus(); return; }
+
+            const methods = [];
+            $('#vdirMethodsGroup input[type=checkbox]:checked').each(function() { methods.push($(this).val()); });
+
+            const payload = {
+                virtual_host_id: parseInt($('#vdirVHostSelect').val()),
+                source_path: sourcePath,
+                target_path: targetPath,
+                match_type: $('#vdirMatchType').val(),
+                strip_prefix: $('#vdirStripPrefix').is(':checked'),
+                preserve_host_header: $('#vdirPreserveHost').is(':checked'),
+                auth_type: $('#vdirAuthType').val(),
+                is_active: $('#vdirIsActive').is(':checked'),
+                proxy_timeout_seconds: parseInt($('#vdirTimeout').val()) || 30,
+                retry_count: parseInt($('#vdirRetryCount').val()) || 0,
+                retry_delay_ms: parseInt($('#vdirRetryDelay').val()) || 100,
+                max_request_size_mb: parseInt($('#vdirMaxSize').val()) || 10,
+                websocket_enabled: $('#vdirWebsocket').is(':checked'),
+                cache_enabled: $('#vdirCache').is(':checked'),
+                cache_ttl_seconds: 60
+            };
+
+            const btn = $('#btnSaveVDir');
+            const origHtml = btn.html();
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Saving...');
+
+            const doSave = function(dirId) {
+                if (editingVDirId) {
+                    delete payload.virtual_host_id;
+                    $.ajax({
+                        url: VDIR_API + '/' + editingVDirId,
+                        method: 'PUT',
+                        headers: getHeaders(),
+                        contentType: 'application/json',
+                        data: JSON.stringify(payload),
+                        success: function() {
+                            // Save methods
+                            $.ajax({
+                                url: VDIR_API + '/' + editingVDirId + '/methods',
+                                method: 'PUT',
+                                headers: getHeaders(),
+                                contentType: 'application/json',
+                                data: JSON.stringify({ methods: methods }),
+                                complete: function() { cancelVDirForm(); showToast('Virtual directory updated successfully', 'success'); loadVDirsByHost(currentHostId); }
+                            });
+                        },
+                        error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to update directory'); },
+                        complete: function() { btn.prop('disabled', false).html(origHtml); }
+                    });
+                } else {
+                    $.ajax({
+                        url: VDIR_API,
+                        method: 'POST',
+                        headers: getHeaders(),
+                        contentType: 'application/json',
+                        data: JSON.stringify(payload),
+                        success: function(resp) {
+                            const newId = resp.data?.id;
+                            if (newId && methods.length > 0) {
+                                // Save methods for new dir
+                                $.ajax({
+                                    url: VDIR_API + '/' + newId + '/methods',
+                                    method: 'PUT',
+                                    headers: getHeaders(),
+                                    contentType: 'application/json',
+                                    data: JSON.stringify({ methods: methods }),
+                                    complete: function() { cancelVDirForm(); showToast('Virtual directory added successfully', 'success'); loadVDirsByHost(currentHostId); }
+                                });
+                            } else {
+                                cancelVDirForm(); showToast('Virtual directory added successfully', 'success'); loadVDirsByHost(currentHostId);
+                            }
+                        },
+                        error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to create directory'); },
+                        complete: function() { btn.prop('disabled', false).html(origHtml); }
+                    });
+                }
+            };
+            doSave();
+        }
+
+        function deleteVDir(id, path) {
+            showConfirm('Delete Virtual Directory', 'Are you sure you want to delete directory "' + path + '"?', 'Yes, Delete', 'Cancel').then(function(result) {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: VDIR_API + '/' + id,
+                        method: 'DELETE',
+                        headers: getHeaders(),
+                        success: function() { showToast('Virtual directory deleted successfully', 'success'); loadVDirsByHost(currentHostId); },
+                        error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to delete directory'); }
+                    });
+                }
+            });
+        }
+    </script>
+    
+</body>
+</html>

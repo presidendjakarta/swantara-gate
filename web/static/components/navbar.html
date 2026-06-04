@@ -1,0 +1,167 @@
+<header class="app-navbar" id="appNavbar">
+    <div class="navbar-left">
+        <button class="mobile-toggle" id="mobileToggle">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="breadcrumb-area">
+            <span class="breadcrumb-current" id="pageTitle">Dashboard</span>
+        </div>
+    </div>
+    <div class="navbar-right">
+        <div class="navbar-search" id="navbarSearch">
+            <button class="search-trigger" id="searchTrigger" title="Pencarian (Ctrl+K)">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span class="search-shortcut">Ctrl+K</span>
+            </button>
+        </div>
+        <div class="navbar-dropdown-wrapper" id="notifDropdown">
+            <button class="navbar-btn" id="notifBtn" title="Notifikasi">
+                <i class="fa-solid fa-bell"></i>
+                <span class="notif-badge">3</span>
+            </button>
+            <div class="navbar-dropdown notif-dropdown">
+                <div class="dropdown-header">
+                    <h4>Notifikasi</h4>
+                    <button class="btn-link" onclick="MetroAdmin.showToast('Semua sudah dibaca', 'success')">Tandai semua dibaca</button>
+                </div>
+                <div class="dropdown-body">
+                    <div class="dropdown-item unread">
+                        <div class="item-icon bg-primary"><i class="fa-solid fa-user-plus"></i></div>
+                        <div class="item-content">
+                            <p class="item-title">Pengguna baru terdaftar</p>
+                            <p class="item-desc"><strong>Budi Santoso</strong> baru saja mendaftar</p>
+                            <span class="item-time">2 menit lalu</span>
+                        </div>
+                    </div>
+                    <div class="dropdown-item unread">
+                        <div class="item-icon bg-success"><i class="fa-solid fa-check-circle"></i></div>
+                        <div class="item-content">
+                            <p class="item-title">Pembayaran dikonfirmasi</p>
+                            <p class="item-desc">Pesanan <strong>#ORD-2847</strong> berhasil diproses</p>
+                            <span class="item-time">15 menit lalu</span>
+                        </div>
+                    </div>
+                    <div class="dropdown-item unread">
+                        <div class="item-icon bg-warning"><i class="fa-solid fa-exclamation-triangle"></i></div>
+                        <div class="item-content">
+                            <p class="item-title">Stok produk rendah</p>
+                            <p class="item-desc">Stok <strong>Mouse Wireless</strong> tersisa 5 unit</p>
+                            <span class="item-time">1 jam lalu</span>
+                        </div>
+                    </div>
+                    <div class="dropdown-item">
+                        <div class="item-icon bg-info"><i class="fa-solid fa-info-circle"></i></div>
+                        <div class="item-content">
+                            <p class="item-title">Update sistem</p>
+                            <p class="item-desc">Versi 2.5.0 telah tersedia</p>
+                            <span class="item-time">3 jam lalu</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dropdown-footer">
+                    <a href="#" class="btn-link">Lihat semua notifikasi</a>
+                </div>
+            </div>
+        </div>
+        <div class="navbar-dropdown-wrapper" id="msgDropdown">
+            <button class="navbar-btn" id="msgBtn" title="Pesan">
+                <i class="fa-solid fa-envelope"></i>
+                <span class="notif-badge">7</span>
+            </button>
+            <div class="navbar-dropdown msg-dropdown">
+                <div class="dropdown-header">
+                    <h4>Pesan</h4>
+                    <span class="badge badge-primary">7 belum dibaca</span>
+                </div>
+                <div class="dropdown-body">
+                    <div class="dropdown-item unread">
+                        <img src="https://ui-avatars.com/api/?name=Andi+Wijaya&background=0078D4&color=fff&size=40" class="item-avatar">
+                        <div class="item-content">
+                            <div class="item-header">
+                                <p class="item-title">Andi Wijaya</p>
+                                <span class="item-time">5 menit lalu</span>
+                            </div>
+                            <p class="item-desc">Halo, apakah pesanan saya sudah diproses?</p>
+                        </div>
+                    </div>
+                    <div class="dropdown-item unread">
+                        <img src="https://ui-avatars.com/api/?name=Siti+Rahayu&background=16C60C&color=fff&size=40" class="item-avatar">
+                        <div class="item-content">
+                            <div class="item-header">
+                                <p class="item-title">Siti Rahayu</p>
+                                <span class="item-time">1 jam lalu</span>
+                            </div>
+                            <p class="item-desc">Terima kasih atas responnya...</p>
+                        </div>
+                    </div>
+                    <div class="dropdown-item">
+                        <img src="https://ui-avatars.com/api/?name=Rudi+Hartono&background=FFB900&color=fff&size=40" class="item-avatar">
+                        <div class="item-content">
+                            <div class="item-header">
+                                <p class="item-title">Rudi Hartono</p>
+                                <span class="item-time">3 jam lalu</span>
+                            </div>
+                            <p class="item-desc">Apakah ada diskon untuk pembelian grosir?</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="dropdown-footer">
+                    <a href="#" class="btn-link">Lihat semua pesan</a>
+                </div>
+            </div>
+        </div>
+        <div class="navbar-divider"></div>
+        <button class="navbar-btn" id="themeToggle" title="Ganti Tema">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+        <button class="navbar-btn" id="fullscreenToggle" title="Fullscreen">
+            <i class="fa-solid fa-expand"></i>
+        </button>
+        <div class="navbar-dropdown-wrapper" id="userDropdownWrapper">
+            <div class="navbar-user" id="userDropdown">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=0078D4&color=fff&size=36" alt="User" class="user-avatar" id="userAvatar">
+                <div class="user-info">
+                    <span class="user-name" id="userName">Loading...</span>
+                    <span class="user-role">Administrator</span>
+                </div>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="navbar-dropdown user-dropdown">
+                <div class="dropdown-header">
+                    <div class="user-profile-header">
+                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=0078D4&color=fff&size=48" class="user-profile-avatar">
+                        <div class="user-profile-info">
+                            <h4 id="userDisplayName">Loading...</h4>
+                            <p id="userDisplayEmail">Loading...</p>
+                            <span class="badge badge-primary">Administrator</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dropdown-body">
+                    <a href="#" class="dropdown-menu-item">
+                        <i class="fa-solid fa-user"></i>
+                        <span>Profil Saya</span>
+                    </a>
+                    <a href="#" class="dropdown-menu-item">
+                        <i class="fa-solid fa-gear"></i>
+                        <span>Pengaturan</span>
+                    </a>
+                    <a href="#" class="dropdown-menu-item">
+                        <i class="fa-solid fa-credit-card"></i>
+                        <span>Billing & Subscription</span>
+                    </a>
+                    <a href="#" class="dropdown-menu-item">
+                        <i class="fa-solid fa-question-circle"></i>
+                        <span>Bantuan & Support</span>
+                    </a>
+                </div>
+                <div class="dropdown-footer">
+                    <a href="#" class="btn-logout" onclick="event.preventDefault(); logout();">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
