@@ -230,6 +230,14 @@
                             <small style="color: var(--text-tertiary); font-size: 11px;">Hold Ctrl/Cmd to select multiple</small>
                         </div>
 
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label>Allowed API Consumers</label>
+                            <select class="form-control" id="routeAllowedConsumers" multiple style="min-height: 80px;">
+                                <option value="">-- No consumer restriction --</option>
+                            </select>
+                            <small style="color: var(--text-tertiary); font-size: 11px;">Hold Ctrl/Cmd to select multiple. Leave empty to allow all consumers.</small>
+                        </div>
+
                         <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <label class="switch-toggle"><input type="checkbox" id="routeRequireApiKey"><span class="switch-slider"></span></label>
@@ -524,6 +532,28 @@
                     }
                 }
             });
+            
+            // Load API Consumers
+            $.ajax({
+                url: '/api/admin/consumers?limit=200',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        const consumers = r.data.consumers || [];
+                        const $select = $('#routeAllowedConsumers');
+                        $select.find('option').remove();
+                        if (consumers.length === 0) {
+                            $select.append('<option value="">-- No consumers available --</option>');
+                        } else {
+                            consumers.forEach(function(c) {
+                                $select.append('<option value="'+c.id+'">'+escapeHtml(c.consumer_name)+' ('+escapeHtml(c.consumer_code)+')</option>');
+                            });
+                        }
+                        $select.trigger('change.select2');
+                    }
+                }
+            });
         }
 
         function loadCurrentAuthProviders(vdirId) {
@@ -549,6 +579,19 @@
                     if (r.success && r.data.providers) {
                         const providerIds = r.data.providers.map(function(p) { return p.id; });
                         $('#routeExternalAuthProviders').val(providerIds).trigger('change.select2');
+                    }
+                }
+            });
+            
+            // Load current allowed consumers
+            $.ajax({
+                url: '/api/admin/virtual-directories/' + vdirId + '/allowed-consumers',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data.consumers) {
+                        const consumerIds = r.data.consumers.map(function(c) { return c.id; });
+                        $('#routeAllowedConsumers').val(consumerIds).trigger('change.select2');
                     }
                 }
             });
@@ -666,6 +709,7 @@
             function handleAuthProviders(vdirId, callback) {
                 const selectedJwtProviders = $('#routeJwtProviders').val() || [];
                 const selectedExtAuthProviders = $('#routeExternalAuthProviders').val() || [];
+                const selectedConsumers = $('#routeAllowedConsumers').val() || [];
                 
                 // Get current providers
                 $.ajax({
@@ -742,7 +786,7 @@
                                 complete: function() {
                                     removeCount--;
                                     if (removeCount === 0 && extAuthToAdd.length === 0) {
-                                        if (callback) callback();
+                                        handleConsumers(vdirId, callback);
                                     }
                                 }
                             });
@@ -760,12 +804,65 @@
                                     complete: function() {
                                         addCount--;
                                         if (addCount === 0 && removeCount === 0) {
-                                            if (callback) callback();
+                                            handleConsumers(vdirId, callback);
                                         }
                                     }
                                 });
                             });
                         } else if (extAuthToRemove.length === 0) {
+                            handleConsumers(vdirId, callback);
+                        }
+                    }
+                });
+            }
+            
+            function handleConsumers(vdirId, callback) {
+                const selectedConsumers = $('#routeAllowedConsumers').val() || [];
+                
+                // Get current consumers
+                $.ajax({
+                    url: '/api/admin/virtual-directories/' + vdirId + '/allowed-consumers',
+                    method: 'GET',
+                    headers: getHeaders(),
+                    success: function(r) {
+                        const currentConsumerIds = (r.success && r.data.consumers) ? r.data.consumers.map(function(c) { return c.id; }) : [];
+                        
+                        const consumersToRemove = currentConsumerIds.filter(function(id) { return selectedConsumers.indexOf(String(id)) === -1; });
+                        const consumersToAdd = selectedConsumers.filter(function(id) { return currentConsumerIds.indexOf(parseInt(id)) === -1; });
+                        
+                        let removeCount = consumersToRemove.length;
+                        consumersToRemove.forEach(function(consumerId) {
+                            $.ajax({
+                                url: '/api/admin/virtual-directories/' + vdirId + '/consumers/' + consumerId,
+                                method: 'DELETE',
+                                headers: getHeaders(),
+                                complete: function() {
+                                    removeCount--;
+                                    if (removeCount === 0 && consumersToAdd.length === 0) {
+                                        if (callback) callback();
+                                    }
+                                }
+                            });
+                        });
+                        
+                        if (consumersToAdd.length > 0) {
+                            let addCount = consumersToAdd.length;
+                            consumersToAdd.forEach(function(consumerId) {
+                                $.ajax({
+                                    url: '/api/admin/virtual-directories/' + vdirId + '/consumers',
+                                    method: 'POST',
+                                    headers: getHeaders(),
+                                    contentType: 'application/json',
+                                    data: JSON.stringify({ consumer_id: parseInt(consumerId) }),
+                                    complete: function() {
+                                        addCount--;
+                                        if (addCount === 0 && removeCount === 0) {
+                                            if (callback) callback();
+                                        }
+                                    }
+                                });
+                            });
+                        } else if (consumersToRemove.length === 0) {
                             if (callback) callback();
                         }
                     }
