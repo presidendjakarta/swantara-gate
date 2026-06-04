@@ -1,0 +1,1075 @@
+/**
+ * Custom SweetAlert2 Styling
+ * Fluent Design - Metro Admin Theme
+ */
+
+/* ==================== */
+/* Main Popup Container */
+/* ==================== */
+
+.swal2-popup.custom-swal {
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 16px !important;
+    padding: 32px 24px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.3) !important;
+    font-family: 'Segoe UI', 'Inter', sans-serif !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+.swal2-popup.custom-swal .swal2-title {
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    margin-bottom: 8px !important;
+    padding: 0 !important;
+}
+
+.swal2-popup.custom-swal .swal2-html-container {
+    font-size: 14px !important;
+    color: #666 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+.swal2-popup.custom-swal {
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+}
+
+/* ==================== */
+/* Icon Styling         */
+/* ==================== */
+
+.swal2-popup.custom-swal .swal2-icon {
+    width: 64px !important;
+    height: 64px !important;
+    margin: 0 auto 20px !important;
+    border-width: 3px !important;
+    animation: swalIconPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.swal2-popup.custom-swal .swal2-icon.swal2-success {
+    border-color: #107C10 !important;
+    animation: swalSuccess 0.5s ease-out !important;
+}
+.swal2-popup.custom-swal .swal2-icon.swal2-success [class^='swal2-success-line'] {
+    background-color: #107C10 !important;
+}
+.swal2-popup.custom-swal .swal2-icon.swal2-success .swal2-success-ring {
+    border-color: rgba(16, 124, 16, 0.2) !important;
+}
+
+.swal2-popup.custom-swal .swal2-icon.swal2-error {
+    border-color: #E81123 !important;
+    animation: swalError 0.4s ease-out !important;
+}
+.swal2-popup.custom-swal .swal2-icon.swal2-error [class^='swal2-x-mark-line'] {
+    background-color: #E81123 !important;
+}
+
+.swal2-popup.custom-swal .swal2-icon.swal2-warning {
+    border-color: #FF8C00 !important;
+    animation: swalWarning 0.4s ease-out !important;
+}
+
+.swal2-popup.custom-swal .swal2-icon.swal2-info {
+    border-color: #0078D4 !important;
+}
+
+.swal2-popup.custom-swal .swal2-icon.swal2-question {
+    border-color: #8764B8 !important;
+}
+
+/* ==================== */
+/* Buttons              */
+/* ==================== */
+
+.swal2-popup.custom-swal .swal2-actions {
+    margin-top: 24px !important;
+}
+
+.swal2-popup.custom-swal .swal2-confirm {
+    background: linear-gradient(135deg, #0078D4 0%, #005a9e 100%) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 12px 32px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    font-family: 'Segoe UI', 'Inter', sans-serif !important;
+    box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+.swal2-popup.custom-swal .swal2-confirm:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(0, 120, 212, 0.4) !important;
+}
+.swal2-popup.custom-swal .swal2-confirm:active {
+    transform: translateY(0) !important;
+}
+
+.swal2-popup.custom-swal .swal2-cancel {
+    background: #f3f3f3 !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 12px 32px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #333 !important;
+    font-family: 'Segoe UI', 'Inter', sans-serif !important;
+    transition: all 0.2s ease !important;
+}
+.swal2-popup.custom-swal .swal2-cancel:hover {
+    background: #e8e8e8 !important;
+}
+
+.swal2-popup.custom-swal .swal2-deny {
+    background: linear-gradient(135deg, #E81123 0%, #c50f1f 100%) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 12px 32px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #fff !important;
+    font-family: 'Segoe UI', 'Inter', sans-serif !important;
+    box-shadow: 0 4px 12px rgba(232, 17, 35, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+.swal2-popup.custom-swal .swal2-deny:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(232, 17, 35, 0.4) !important;
+}
+
+.swal2-popup.custom-swal .swal2-styled:focus {
+    box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.2) !important;
+    outline: none !important;
+}
+
+/* ==================== */
+/* Misc Elements        */
+/* ==================== */
+
+.swal2-backdrop {
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+}
+
+.swal2-popup.custom-swal .swal2-input,
+.swal2-popup.custom-swal .swal2-textarea,
+.swal2-popup.custom-swal .swal2-select,
+.swal2-popup.custom-swal .swal2-radio,
+.swal2-popup.custom-swal .swal2-checkbox {
+    border: 2px solid #e8e8e8 !important;
+    border-radius: 10px !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    font-family: 'Segoe UI', 'Inter', sans-serif !important;
+    transition: all 0.25s ease !important;
+    outline: none !important;
+}
+.swal2-popup.custom-swal .swal2-input:focus,
+.swal2-popup.custom-swal .swal2-textarea:focus {
+    border-color: #0078D4 !important;
+    box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1) !important;
+}
+.swal2-popup.custom-swal .swal2-input::placeholder,
+.swal2-popup.custom-swal .swal2-textarea::placeholder {
+    color: #999 !important;
+}
+
+.swal2-popup.custom-swal .swal2-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    margin-top: 20px !important;
+    padding-top: 16px !important;
+    color: #666 !important;
+    font-size: 13px !important;
+}
+
+.swal2-popup.custom-swal .swal2-close {
+    font-size: 32px !important;
+    color: #999 !important;
+    transition: color 0.2s ease !important;
+    font-family: sans-serif !important;
+}
+.swal2-popup.custom-swal .swal2-close:hover {
+    color: #333 !important;
+    transform: none !important;
+}
+
+.swal2-popup.custom-swal .swal2-progress-steps { margin-bottom: 20px !important; }
+.swal2-popup.custom-swal .swal2-progress-step { background: #0078D4 !important; color: #fff !important; }
+.swal2-popup.custom-swal .swal2-progress-step.swal2-active-progress-step { background: linear-gradient(135deg, #0078D4 0%, #005a9e 100%) !important; }
+.swal2-popup.custom-swal .swal2-progress-step-line { background: #0078D4 !important; }
+.swal2-popup.custom-swal .swal2-progress-step.swal2-completed-progress-step { background: #107C10 !important; }
+.swal2-popup.custom-swal .swal2-loader { border-color: #0078D4 transparent #0078D4 transparent !important; }
+
+/* ==================== */
+/* Icon Animations      */
+/* ==================== */
+
+@keyframes swalIconPop {
+    0%   { transform: scale(0) rotate(-45deg); opacity: 0; }
+    50%  { transform: scale(1.1) rotate(0deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes swalSuccess {
+    0%   { transform: scale(0); }
+    50%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+@keyframes swalError {
+    0%   { transform: scale(0) rotate(-180deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes swalWarning {
+    0%   { transform: scale(0) rotate(-90deg); opacity: 0; }
+    50%  { transform: scale(1.1); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ==================== */
+/* Dark Mode — Popup    */
+/* ==================== */
+
+[data-theme="dark"] .swal2-popup.custom-swal {
+    background: rgba(32, 32, 32, 0.98) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] .swal2-popup.custom-swal .swal2-title { color: #ffffff !important; }
+[data-theme="dark"] .swal2-popup.custom-swal .swal2-html-container { color: #b0b0b0 !important; }
+[data-theme="dark"] .swal2-popup.custom-swal .swal2-cancel { background: #3a3a3a !important; color: #e0e0e0 !important; }
+[data-theme="dark"] .swal2-popup.custom-swal .swal2-cancel:hover { background: #4a4a4a !important; }
+[data-theme="dark"] .swal2-popup.custom-swal .swal2-input,
+[data-theme="dark"] .swal2-popup.custom-swal .swal2-textarea {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+}
+[data-theme="dark"] .swal2-popup.custom-swal .swal2-input:focus,
+[data-theme="dark"] .swal2-popup.custom-swal .swal2-textarea:focus {
+    border-color: #4CC2FF !important;
+    box-shadow: 0 0 0 3px rgba(76, 194, 255, 0.15) !important;
+}
+[data-theme="dark"] .swal2-popup.custom-swal .swal2-footer { border-top-color: rgba(255, 255, 255, 0.1) !important; color: #b0b0b0 !important; }
+[data-theme="dark"] .swal2-popup.custom-swal .swal2-close { color: #b0b0b0 !important; }
+[data-theme="dark"] .swal2-popup.custom-swal .swal2-close:hover { color: #ffffff !important; }
+[data-theme="dark"] .swal2-backdrop { background: rgba(0, 0, 0, 0.6) !important; }
+
+/* ==================== */
+/* Responsive — Popup   */
+/* ==================== */
+
+@media (max-width: 480px) {
+    .swal2-popup.custom-swal { padding: 24px 20px !important; margin: 16px !important; }
+    .swal2-popup.custom-swal .swal2-title { font-size: 20px !important; }
+    .swal2-popup.custom-swal .swal2-html-container { font-size: 13px !important; }
+    .swal2-popup.custom-swal .swal2-icon { width: 56px !important; height: 56px !important; }
+    .swal2-popup.custom-swal .swal2-confirm,
+    .swal2-popup.custom-swal .swal2-cancel,
+    .swal2-popup.custom-swal .swal2-deny { padding: 10px 24px !important; font-size: 13px !important; }
+    .swal2-popup.custom-swal .swal2-actions { flex-direction: column-reverse !important; gap: 8px !important; }
+    .swal2-popup.custom-swal .swal2-confirm,
+    .swal2-popup.custom-swal .swal2-cancel,
+    .swal2-popup.custom-swal .swal2-deny { width: 100% !important; margin: 0 !important; }
+}
+
+
+/* ============================================================
+   Metro UI — Toast
+   FIX: pakai grid-template-areas karena ada banyak elemen
+   hidden di antara .toast-accent-bar, .swal2-icon, .swal2-title
+   Struktur HTML asli SweetAlert2 toast:
+     [accent-bar] [close*] [progress-steps*] [loader*]
+     [icon] [image*] [title] [html*] [input*] [file*]
+     [range*] [select*] [radio*] [checkbox*] [textarea*]
+     [validation*] [actions*] [footer*] [timer-progress-bar]
+   (* = hidden, tapi tetap ada di DOM dan mempengaruhi grid)
+   Solusi: named grid-template-areas, tiap elemen diberi area.
+============================================================ */
+
+.custom-swal-toast.swal2-popup {
+    background: #ffffff !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    min-width: 300px !important;
+    max-width: 420px !important;
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+
+    /* Grid layout dengan named areas */
+    display: grid !important;
+    grid-template-columns: 5px 56px 1fr !important;
+    grid-template-rows: 56px 3px !important;
+    grid-template-areas:
+        "accent icon title"
+        "bar    bar   bar  " !important;
+    align-items: center !important;
+}
+
+/* Sembunyikan semua elemen SweetAlert2 yang tidak dipakai di toast */
+.custom-swal-toast .swal2-close,
+.custom-swal-toast .swal2-progress-steps,
+.custom-swal-toast .swal2-loader,
+.custom-swal-toast .swal2-image,
+.custom-swal-toast .swal2-html-container,
+.custom-swal-toast .swal2-input,
+.custom-swal-toast .swal2-file,
+.custom-swal-toast .swal2-range,
+.custom-swal-toast .swal2-select,
+.custom-swal-toast .swal2-radio,
+.custom-swal-toast .swal2-checkbox,
+.custom-swal-toast .swal2-textarea,
+.custom-swal-toast .swal2-validation-message,
+.custom-swal-toast .swal2-actions,
+.custom-swal-toast .swal2-footer {
+    display: none !important;
+}
+
+/* Accent bar — area "accent" */
+.custom-swal-toast .toast-accent-bar {
+    grid-area: accent !important;
+    align-self: stretch !important;
+    width: 5px !important;
+}
+
+/* Icon — area "icon" */
+.custom-swal-toast .swal2-icon {
+    grid-area: icon !important;
+    width: 36px !important;
+    height: 36px !important;
+    margin: 0 auto !important;
+    border-width: 2px !important;
+    font-size: 14px !important;
+    justify-self: center !important;
+    align-self: center !important;
+    /* Matikan semua animasi popup agar tidak bentrok */
+    animation: none !important;
+    transform: none !important;
+}
+
+.custom-swal-toast .swal2-icon.swal2-success,
+.custom-swal-toast .swal2-icon.swal2-error,
+.custom-swal-toast .swal2-icon.swal2-warning,
+.custom-swal-toast .swal2-icon.swal2-info {
+    animation: none !important;
+    transform: none !important;
+}
+
+/*
+ * FIX icon success toast:
+ * SweetAlert2 inject background-color via inline style="background-color: rgb(255,255,255)"
+ * pada 3 elemen dekoratif ini. Inline style menang atas class CSS biasa,
+ * jadi harus di-override dengan background-color + !important.
+ * Warnanya disesuaikan dengan background icon success toast (#f0fff0).
+ */
+.custom-swal-toast .swal2-icon.swal2-success .swal2-success-circular-line-left,
+.custom-swal-toast .swal2-icon.swal2-success .swal2-success-circular-line-right,
+.custom-swal-toast .swal2-icon.swal2-success .swal2-success-fix {
+    background-color: #f0fff0 !important;
+}
+
+/* Title — area "title" */
+.custom-swal-toast .swal2-title {
+    grid-area: title !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em !important;
+    color: #1a1a1a !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    align-self: center !important;
+}
+
+/* Progress bar container — area "bar" */
+.custom-swal-toast .swal2-timer-progress-bar-container {
+    grid-area: bar !important;
+    height: 3px !important;
+    align-self: stretch !important;
+    background: rgba(0, 0, 0, 0.08) !important;
+}
+
+.custom-swal-toast .swal2-timer-progress-bar {
+    height: 3px !important;
+    border-radius: 0 !important;
+}
+
+/* ==================== */
+/* Warna per tipe       */
+/* ==================== */
+
+/* SUCCESS */
+.custom-swal-toast.swal2-icon-success .toast-accent-bar {
+    background: #107C10 !important;
+}
+.custom-swal-toast.swal2-icon-success .swal2-icon.swal2-success {
+    border-color: #107C10 !important;
+    background: #f0fff0 !important;
+}
+.custom-swal-toast.swal2-icon-success .swal2-success-ring {
+    border-color: rgba(16, 124, 16, 0.3) !important;
+}
+.custom-swal-toast.swal2-icon-success [class^='swal2-success-line'] {
+    background: #107C10 !important;
+}
+.custom-swal-toast.swal2-icon-success .swal2-timer-progress-bar {
+    background: #107C10 !important;
+}
+
+/* ERROR */
+.custom-swal-toast.swal2-icon-error .toast-accent-bar {
+    background: #E81123 !important;
+}
+.custom-swal-toast.swal2-icon-error .swal2-icon.swal2-error {
+    border-color: #E81123 !important;
+    background: #fff2f2 !important;
+}
+.custom-swal-toast.swal2-icon-error .swal2-x-mark-line-left,
+.custom-swal-toast.swal2-icon-error .swal2-x-mark-line-right {
+    background: #E81123 !important;
+}
+.custom-swal-toast.swal2-icon-error .swal2-timer-progress-bar {
+    background: #E81123 !important;
+}
+
+/* WARNING */
+.custom-swal-toast.swal2-icon-warning .toast-accent-bar {
+    background: #FF8C00 !important;
+}
+.custom-swal-toast.swal2-icon-warning .swal2-icon.swal2-warning {
+    border-color: #FF8C00 !important;
+    background: #fffbf0 !important;
+    color: #FF8C00 !important;
+}
+.custom-swal-toast.swal2-icon-warning .swal2-timer-progress-bar {
+    background: #FF8C00 !important;
+}
+
+/* INFO */
+.custom-swal-toast.swal2-icon-info .toast-accent-bar {
+    background: #0078D4 !important;
+}
+.custom-swal-toast.swal2-icon-info .swal2-icon.swal2-info {
+    border-color: #0078D4 !important;
+    background: #f0f8ff !important;
+    color: #0078D4 !important;
+}
+.custom-swal-toast.swal2-icon-info .swal2-timer-progress-bar {
+    background: #0078D4 !important;
+}
+
+/* ==================== */
+/* Dark Mode — Toast    */
+/* ==================== */
+
+[data-theme="dark"] .custom-swal-toast.swal2-popup {
+    background: #1f1f1f !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+[data-theme="dark"] .custom-swal-toast .swal2-title {
+    color: #f0f0f0 !important;
+}
+[data-theme="dark"] .custom-swal-toast .swal2-timer-progress-bar-container {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="dark"] .custom-swal-toast.swal2-icon-success .swal2-icon.swal2-success { background: #0a2e0a !important; }
+[data-theme="dark"] .custom-swal-toast .swal2-icon.swal2-success .swal2-success-circular-line-left,
+[data-theme="dark"] .custom-swal-toast .swal2-icon.swal2-success .swal2-success-circular-line-right,
+[data-theme="dark"] .custom-swal-toast .swal2-icon.swal2-success .swal2-success-fix {
+    background-color: #0a2e0a !important;
+}
+[data-theme="dark"] .custom-swal-toast.swal2-icon-error .swal2-icon.swal2-error { background: #2e0a0a !important; }
+[data-theme="dark"] .custom-swal-toast.swal2-icon-warning .swal2-icon.swal2-warning { background: #2e1e00 !important; }
+[data-theme="dark"] .custom-swal-toast.swal2-icon-info .swal2-icon.swal2-info { background: #002a4a !important; }
+
+/* ==================== */
+/* Responsive — Toast   */
+/* ==================== */
+
+@media (max-width: 480px) {
+    .custom-swal-toast.swal2-popup {
+        min-width: 260px !important;
+        max-width: calc(100vw - 24px) !important;
+    }
+    .custom-swal-toast .swal2-title {
+        font-size: 13px !important;
+        white-space: normal !important;
+    }
+}
+
+/* ==================== */
+/* Custom Toast Notification - Fluent Design */
+/* ==================== */
+
+.custom-notifications {
+    position: fixed;
+    top: 30px;
+    right: 20px;
+    z-index: 9999;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.custom-notifications.position-top-left {
+    right: auto;
+    left: 20px;
+}
+
+.custom-notifications.position-top {
+    right: 50%;
+    transform: translateX(50%);
+}
+
+.custom-notifications.position-bottom-right {
+    top: auto;
+    bottom: 30px;
+    right: 20px;
+}
+
+.custom-notifications.position-bottom-left {
+    top: auto;
+    bottom: 30px;
+    right: auto;
+    left: 20px;
+}
+
+.custom-notifications.position-bottom {
+    top: auto;
+    bottom: 30px;
+    right: 50%;
+    transform: translateX(50%);
+}
+
+.custom-notifications.position-center {
+    top: 50%;
+    right: 50%;
+    transform: translate(50%, -50%);
+}
+
+.custom-notifications.position-top-right {
+    top: 30px;
+    right: 20px;
+    left: auto;
+}
+
+.custom-toast {
+    width: 420px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    padding: 0;
+    margin-bottom: 12px;
+    background: #ffffff;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    display: flex;
+    align-items: stretch;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 
+                0 2px 8px rgba(0, 0, 0, 0.04),
+                0 0 0 1px rgba(0, 0, 0, 0.04);
+    animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+@keyframes slideInRight {
+    0% {
+        transform: translateX(100%) scale(0.95);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.custom-toast.hide {
+    animation: slideOutRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideOutRight {
+    0% {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(100%) scale(0.95);
+        opacity: 0;
+    }
+}
+
+/* Accent Bar (Left Side) */
+.custom-toast::before {
+    position: absolute;
+    content: "";
+    width: 4px;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+/* Progress Bar (Bottom) */
+.custom-toast::after {
+    position: absolute;
+    content: "";
+    height: 3px;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    animation: progress 4s linear forwards;
+    z-index: 3;
+}
+
+@keyframes progress {
+    100% {
+        width: 0%;
+    }
+}
+
+/* Success Toast - Professional Green Theme */
+.custom-toast.success {
+    background: linear-gradient(135deg, #f6ffed 0%, #f0f9e8 100%);
+    border-color: rgba(22, 198, 12, 0.15);
+}
+
+.custom-toast.success::before {
+    background: linear-gradient(180deg, #16C60C 0%, #14ad0a 100%);
+}
+
+.custom-toast.success::after {
+    background: linear-gradient(90deg, #16C60C 0%, #14ad0a 100%);
+}
+
+.custom-toast.success .toast-icon {
+    background: linear-gradient(135deg, #16C60C 0%, #14ad0a 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(22, 198, 12, 0.25);
+}
+
+.custom-toast.success .toast-message {
+    color: #0e6e0e;
+}
+
+/* Error Toast - Professional Red Theme */
+.custom-toast.error {
+    background: linear-gradient(135deg, #fff1f0 0%, #ffe6e5 100%);
+    border-color: rgba(232, 17, 35, 0.15);
+}
+
+.custom-toast.error::before {
+    background: linear-gradient(180deg, #E81123 0%, #c70f1f 100%);
+}
+
+.custom-toast.error::after {
+    background: linear-gradient(90deg, #E81123 0%, #c70f1f 100%);
+}
+
+.custom-toast.error .toast-icon {
+    background: linear-gradient(135deg, #E81123 0%, #c70f1f 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(232, 17, 35, 0.25);
+}
+
+.custom-toast.error .toast-message {
+    color: #c70f1f;
+}
+
+/* Warning Toast - Professional Yellow Theme */
+.custom-toast.warning {
+    background: linear-gradient(135deg, #fffbe6 0%, #fff7cc 100%);
+    border-color: rgba(255, 185, 0, 0.15);
+}
+
+.custom-toast.warning::before {
+    background: linear-gradient(180deg, #FFB900 0%, #e6a700 100%);
+}
+
+.custom-toast.warning::after {
+    background: linear-gradient(90deg, #FFB900 0%, #e6a700 100%);
+}
+
+.custom-toast.warning .toast-icon {
+    background: linear-gradient(135deg, #FFB900 0%, #e6a700 100%);
+    color: #000000;
+    box-shadow: 0 2px 8px rgba(255, 185, 0, 0.25);
+}
+
+.custom-toast.warning .toast-message {
+    color: #b8860b;
+}
+
+/* Info Toast - Professional Blue Theme */
+.custom-toast.info {
+    background: linear-gradient(135deg, #e6f7ff 0%, #ccf0ff 100%);
+    border-color: rgba(0, 188, 242, 0.15);
+}
+
+.custom-toast.info::before {
+    background: linear-gradient(180deg, #00BCF2 0%, #00a8d9 100%);
+}
+
+.custom-toast.info::after {
+    background: linear-gradient(90deg, #00BCF2 0%, #00a8d9 100%);
+}
+
+.custom-toast.info .toast-icon {
+    background: linear-gradient(135deg, #00BCF2 0%, #00a8d9 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 188, 242, 0.25);
+}
+
+.custom-toast.info .toast-message {
+    color: #006cbd;
+}
+
+/* Icon Area */
+.custom-toast .toast-column {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    flex: 1;
+    gap: 14px;
+}
+
+.custom-toast .toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: bold;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.custom-toast .toast-message {
+    font-size: 0.95rem;
+    color: #1a1a1a;
+    font-weight: 500;
+    line-height: 1.5;
+    flex: 1;
+    letter-spacing: 0.01em;
+}
+
+/* Success Toast - Dark text on light background */
+.custom-toast.success .toast-message {
+    color: #0e6e0e;
+}
+
+/* Error Toast - Dark red text */
+.custom-toast.error .toast-message {
+    color: #c70f1f;
+}
+
+/* Warning Toast - Dark yellow/orange text */
+.custom-toast.warning .toast-message {
+    color: #b8860b;
+}
+
+/* Info Toast - Dark blue text */
+.custom-toast.info .toast-message {
+    color: #006cbd;
+}
+
+/* Close Button */
+.custom-toast .toast-close {
+    color: #000000;
+    cursor: pointer;
+    font-size: 1.5rem;
+    font-weight: 300;
+    padding: 16px 20px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.custom-toast .toast-close:hover {
+    color: #666666;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.custom-toast .toast-close:active {
+    transform: scale(0.95);
+}
+
+/* Dark Mode Support - Professional Dark Theme */
+[data-theme="dark"] .custom-toast {
+    background: #2b2d30;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* Dark Mode - Success */
+[data-theme="dark"] .custom-toast.success {
+    background: linear-gradient(135deg, #1a2e1a 0%, #162616 100%);
+    border-color: rgba(22, 198, 12, 0.2);
+}
+
+[data-theme="dark"] .custom-toast.success .toast-message {
+    color: #52c41a;
+}
+
+/* Dark Mode - Error */
+[data-theme="dark"] .custom-toast.error {
+    background: linear-gradient(135deg, #2e1a1a 0%, #261616 100%);
+    border-color: rgba(232, 17, 35, 0.2);
+}
+
+[data-theme="dark"] .custom-toast.error .toast-message {
+    color: #ff4d4f;
+}
+
+/* Dark Mode - Warning */
+[data-theme="dark"] .custom-toast.warning {
+    background: linear-gradient(135deg, #2e2a1a 0%, #262316 100%);
+    border-color: rgba(255, 185, 0, 0.2);
+}
+
+[data-theme="dark"] .custom-toast.warning .toast-message {
+    color: #ffc53d;
+}
+
+/* Dark Mode - Info */
+[data-theme="dark"] .custom-toast.info {
+    background: linear-gradient(135deg, #1a2a2e 0%, #162326 100%);
+    border-color: rgba(0, 188, 242, 0.2);
+}
+
+[data-theme="dark"] .custom-toast.info .toast-message {
+    color: #40c9ff;
+}
+
+[data-theme="dark"] .custom-toast .toast-message {
+    color: #e8e8e8;
+}
+
+[data-theme="dark"] .custom-toast .toast-close {
+    color: #666;
+}
+
+[data-theme="dark"] .custom-toast .toast-close:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Hover Effect */
+.custom-toast:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 
+                0 4px 12px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] .custom-toast:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 
+                0 4px 12px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Responsive */
+@media screen and (max-width: 530px) {
+    .custom-notifications {
+        width: calc(100% - 24px);
+        right: 12px;
+        left: 12px;
+    }
+
+    .custom-notifications.position-top-left,
+    .custom-notifications.position-bottom-left {
+        left: 12px;
+        right: 12px;
+    }
+
+    .custom-notifications.position-top-right,
+    .custom-notifications.position-bottom-right {
+        right: 12px;
+        left: 12px;
+    }
+
+    .custom-notifications.position-top,
+    .custom-notifications.position-bottom,
+    .custom-notifications.position-center {
+        width: calc(100% - 24px);
+    }
+
+    .custom-toast {
+        width: 100%;
+        font-size: 0.9rem;
+    }
+
+    .custom-toast .toast-column {
+        padding: 14px 16px;
+    }
+
+    .custom-toast .toast-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.2rem;
+    }
+
+    .custom-toast .toast-message {
+        font-size: 0.9rem;
+    }
+
+    .custom-toast .toast-close {
+        padding: 14px 16px;
+    }
+}
+
+/* ==================== */
+/* Metro UI Notify Custom Styling */
+/* ==================== */
+
+/* Base Notify Container */
+.notify-container {
+    z-index: 9999 !important;
+}
+
+/* Notify Base Styling */
+.notify {
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 8px !important;
+    padding: 16px 20px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    font-family: 'Segoe UI', 'Inter', sans-serif !important;
+    min-width: 300px !important;
+    max-width: 400px !important;
+}
+
+/* Notify Title */
+.notify .notify-title {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    margin-bottom: 8px !important;
+    padding: 0 !important;
+}
+
+/* Notify Message */
+.notify .notify-message {
+    font-size: 13px !important;
+    color: #666 !important;
+    line-height: 1.5 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Notify Close Button */
+.notify .notify-close {
+    opacity: 0.6 !important;
+    transition: opacity 0.2s ease !important;
+}
+
+.notify .notify-close:hover {
+    opacity: 1 !important;
+}
+
+/* Success Notify */
+.notify.success {
+    border-left: 4px solid #107C10 !important;
+}
+
+.notify.success .notify-title {
+    color: #107C10 !important;
+}
+
+/* Alert/Error Notify */
+.notify.alert {
+    border-left: 4px solid #E81123 !important;
+}
+
+.notify.alert .notify-title {
+    color: #E81123 !important;
+}
+
+/* Warning Notify */
+.notify.warning {
+    border-left: 4px solid #FF8C00 !important;
+}
+
+.notify.warning .notify-title {
+    color: #FF8C00 !important;
+}
+
+/* Info Notify */
+.notify.info {
+    border-left: 4px solid #0078D4 !important;
+}
+
+.notify.info .notify-title {
+    color: #0078D4 !important;
+}
+
+/* Dialog Notify (for confirmations) */
+.notify.dialog-notify {
+    min-width: 400px !important;
+    max-width: 450px !important;
+}
+
+/* Loading Notify */
+.notify.loading-notify {
+    min-width: 300px !important;
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .notify {
+    background: rgba(32, 32, 32, 0.98) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme="dark"] .notify .notify-title {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .notify .notify-message {
+    color: #b0b0b0 !important;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .notify {
+        min-width: 260px !important;
+        max-width: calc(100vw - 32px) !important;
+        padding: 12px 16px !important;
+    }
+
+    .notify .notify-title {
+        font-size: 14px !important;
+    }
+
+    .notify .notify-message {
+        font-size: 12px !important;
+    }
+
+    .notify.dialog-notify {
+        min-width: 280px !important;
+        max-width: calc(100vw - 32px) !important;
+    }
+}
+
+body.swal2-shown .swal2-container {
+    z-index: 10000 !important;
+}

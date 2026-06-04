@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
     <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="stylesheet" href="/assets/css/components.css">
     <link rel="stylesheet" href="/assets/css/datatables.css">
@@ -259,6 +260,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
     <script src="/assets/js/swal-config.js"></script>
     <script src="/assets/js/app.js"></script>
     <script>
@@ -285,6 +287,9 @@
             });
             $('#routeModal').on('click', function(e) { if (e.target === this) closeModal(); });
             $(document).on('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+
+            // Initialize Select2
+            $('#hostSelect').select2({ theme: 'default', placeholder: '-- Select host --' });
         });
 
         function loadHosts() {
@@ -295,6 +300,8 @@
                         const $s = $('#hostSelect');
                         $s.find('option:not(:first)').remove();
                         hosts.forEach(function(h) { $s.append('<option value="'+h.id+'">'+escapeHtml(h.host_name)+'</option>'); });
+                        // Refresh Select2
+                        $s.trigger('change.select2');
                     }
                 }, error: function(xhr) { if (xhr.status === 401) window.location.href = '/login.html'; }
             });
@@ -365,6 +372,8 @@
                         $s.find('option').remove();
                         vhostsForHost.forEach(function(v) { $s.append('<option value="'+v.id+'">'+escapeHtml(v.vhost_name)+'</option>'); });
                         if (vhostsForHost.length > 0) $s.val(vhostsForHost[0].id);
+                        // Refresh Select2
+                        $s.trigger('change.select2');
                     }
                 }
             });
@@ -372,6 +381,12 @@
 
         function openAddForm() {
             editingId = null;
+            // Init Select2 on form selects if not already
+            if (!$('#routeMatchType').hasClass('select2-hidden-accessible')) {
+                $('#routeMatchType').select2({ theme: 'default' });
+                $('#routeAuthType').select2({ theme: 'default' });
+                $('#routeVHostSelect').select2({ theme: 'default', placeholder: '-- Select virtual host --' });
+            }
             $('#modalTitle').text('Add Route');
             $('#routeId').val('');
             $('#routeSourcePath').val('');
@@ -395,6 +410,12 @@
         }
 
         function editRoute(id) {
+            // Init Select2 on form selects if not already
+            if (!$('#routeMatchType').hasClass('select2-hidden-accessible')) {
+                $('#routeMatchType').select2({ theme: 'default' });
+                $('#routeAuthType').select2({ theme: 'default' });
+                $('#routeVHostSelect').select2({ theme: 'default', placeholder: '-- Select virtual host --' });
+            }
             loadVHostsForForm();
             $.ajax({ url: '/api/admin/virtual-directories/' + id, method: 'GET', headers: getHeaders(),
                 success: function(r) {
@@ -403,11 +424,11 @@
                         editingId = id;
                         $('#modalTitle').text('Edit Route');
                         $('#routeId').val(d.id);
-                        $('#routeVHostSelect').val(d.virtual_host_id);
+                        $('#routeVHostSelect').val(d.virtual_host_id).trigger('change.select2');
                         $('#routeSourcePath').val(d.source_path);
                         $('#routeTargetPath').val(d.target_path);
-                        $('#routeMatchType').val(d.match_type || 'prefix');
-                        $('#routeAuthType').val(d.auth_type || 'none');
+                        $('#routeMatchType').val(d.match_type || 'prefix').trigger('change.select2');
+                        $('#routeAuthType').val(d.auth_type || 'none').trigger('change.select2');
                         $('#routeTimeout').val(d.proxy_timeout_seconds || 30);
                         $('#routeRetryCount').val(d.retry_count || 0);
                         $('#routeRetryDelay').val(d.retry_delay_ms || 100);

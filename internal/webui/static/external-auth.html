@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>External Auth - Swantara Gate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.metroui.org.ua/current/metro.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+    <link rel="stylesheet" href="/assets/css/datatables.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+    <link rel="stylesheet" href="/assets/css/dark.css">
+    <link rel="stylesheet" href="/assets/css/swal-custom.css">
+    <style>
+        .content-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); overflow: hidden; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-secondary); }
+        .card-header-left { display: flex; align-items: center; gap: 12px; }
+        .card-icon { width: 40px; height: 40px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .card-icon.bg-info { background: rgba(21, 101, 192, 0.12); color: #1565c0; }
+        .card-header h3 { margin: 0; font-size: 14px; font-weight: 600; }
+        .card-subtitle { margin: 0; font-size: 12px; color: var(--text-tertiary); }
+        .card-body { padding: 0; }
+        .data-table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--bg-secondary); }
+        th { padding: 12px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); text-align: left; white-space: nowrap; }
+        td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+        tbody tr:hover { background: var(--bg-secondary); }
+        tbody tr:last-child td { border-bottom: none; }
+        .provider-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: white; }
+        .provider-icon.oauth2 { background: linear-gradient(135deg, #4285f4, #34a853); }
+        .provider-icon.ldap { background: linear-gradient(135deg, #1a73e8, #0d47a1); }
+        .provider-icon.saml { background: linear-gradient(135deg, #ff6d00, #e65100); }
+        .provider-icon.custom { background: linear-gradient(135deg, #9c27b0, #6a1b9a); }
+        .provider-info { display: flex; align-items: center; gap: 12px; }
+        .provider-details h4 { font-size: 13px; font-weight: 600; margin: 0; }
+        .provider-details p { font-size: 11px; color: var(--text-tertiary); margin: 2px 0 0; }
+        .endpoint-url { font-family: 'SF Mono', 'Consolas', monospace; font-size: 11px; color: var(--text-secondary); background: var(--bg-secondary); padding: 4px 8px; border-radius: 4px; display: inline-block; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+        .badge-warning { background: #fff3e0; color: #e65100; }
+        .badge-primary { background: #e3f2fd; color: #1565c0; }
+        .badge-info { background: #e3f2fd; color: #0277bd; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9999; display: none; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 560px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: slideUp 0.25s ease; overflow: hidden; }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-secondary); }
+        .modal-header h3 { margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .modal-header h3 i { color: var(--accent); }
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--border-subtle); background: var(--bg-secondary); }
+        .form-row { margin-bottom: 16px; }
+        .form-row:last-child { margin-bottom: 0; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+        .form-group .form-control { height: 38px; font-size: 13px; }
+        .form-group textarea.form-control { height: auto; min-height: 80px; resize: vertical; }
+        .form-row-inline { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-full { grid-column: 1 / -1; }
+        .switch-toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .switch-toggle input { opacity: 0; width: 0; height: 0; }
+        .switch-slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; cursor: pointer; transition: var(--transition-fast); }
+        .switch-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: var(--transition-fast); }
+        .switch-toggle input:checked + .switch-slider { background: var(--success); }
+        .switch-toggle input:checked + .switch-slider::before { transform: translateX(18px); }
+        .switch-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+        .switch-row:last-child { border-bottom: none; }
+        .switch-row span { font-size: 13px; color: var(--text-primary); }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-tertiary); }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+        .empty-state h4 { font-size: 16px; color: var(--text-secondary); margin-bottom: 6px; }
+        .empty-state p { font-size: 13px; margin: 0; }
+        .table-loading { text-align: center; padding: 40px; color: var(--text-tertiary); }
+        .table-loading i { font-size: 24px; animation: fa-spin 1s linear infinite; margin-bottom: 10px; display: block; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        <div class="app-main">
+            <div id="navbar-container"></div>
+            <main class="app-content">
+                <div class="page-header">
+                    <div>
+                        <h1>External Authentication</h1>
+                        <p>Configure external identity providers for API authentication</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="loadExternalAuths()"><i class="fa-solid fa-arrows-rotate"></i> <span>Refresh</span></button>
+                        <button class="btn btn-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Provider</button>
+                    </div>
+                </div>
+
+                <!-- External Auth Table -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-header-left">
+                            <div class="card-icon bg-info"><i class="fa-solid fa-shield-halved"></i></div>
+                            <div>
+                                <h3>Provider List</h3>
+                                <p class="card-subtitle" id="authSubtitle">Loading...</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <select id="filterType" class="form-control" style="height: 36px; width: 140px;" onchange="loadExternalAuths(1)">
+                                <option value="">All Types</option>
+                                <option value="oauth2">OAuth 2.0</option>
+                                <option value="ldap">LDAP</option>
+                                <option value="saml">SAML</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            <div style="position: relative;">
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search providers..." style="padding-left: 36px; width: 220px; height: 36px; font-size: 13px;" onkeyup="handleSearch()">
+                                <i class="fa-solid fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-size: 13px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="data-table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:50px;">#</th>
+                                        <th>Provider</th>
+                                        <th>Type</th>
+                                        <th>Endpoint</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th style="width:110px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="authTableBody">
+                                    <tr><td colspan="7"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading...</div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding: 12px 0;">
+                    <div class="pagination-info" id="paginationInfo">Showing 0 - 0 of 0</div>
+                    <div class="pagination-buttons" id="paginationButtons"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-shield-halved"></i> <span id="modalTitle">Add Provider</span></h3>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="authForm">
+                    <input type="hidden" id="authId">
+                    <div class="form-row form-row-inline">
+                        <div class="form-group">
+                            <label>Provider Name <span style="color:var(--danger);">*</span></label>
+                            <input type="text" class="form-control" id="authName" placeholder="e.g., Google OAuth">
+                        </div>
+                        <div class="form-group">
+                            <label>Provider Type <span style="color:var(--danger);">*</span></label>
+                            <select class="form-control" id="authType">
+                                <option value="oauth2">OAuth 2.0</option>
+                                <option value="ldap">LDAP</option>
+                                <option value="saml">SAML</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Provider URL</label>
+                            <input type="text" class="form-control" id="authProviderUrl" placeholder="https://auth.example.com">
+                        </div>
+                    </div>
+                    <div class="form-row form-row-inline">
+                        <div class="form-group">
+                            <label>Client ID / Username</label>
+                            <input type="text" class="form-control" id="authClientId" placeholder="Client ID or Bind DN">
+                        </div>
+                        <div class="form-group">
+                            <label>Client Secret / Password</label>
+                            <input type="password" class="form-control" id="authClientSecret" placeholder="Client secret or bind password">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Authorization Endpoint</label>
+                            <input type="text" class="form-control" id="authAuthEndpoint" placeholder="https://auth.example.com/oauth/authorize">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Token Endpoint</label>
+                            <input type="text" class="form-control" id="authTokenEndpoint" placeholder="https://auth.example.com/oauth/token">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>User Info Endpoint</label>
+                            <input type="text" class="form-control" id="authUserInfoEndpoint" placeholder="https://auth.example.com/oauth/userinfo">
+                        </div>
+                    </div>
+                    <div class="form-row form-row-inline">
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <input type="number" class="form-control" id="authPriority" value="1" min="1" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label>Timeout (sec)</label>
+                            <input type="number" class="form-control" id="authTimeout" value="30" min="5" max="300">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Scopes (comma separated)</label>
+                            <input type="text" class="form-control" id="authScopes" placeholder="e.g., openid, profile, email">
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top: 16px;">
+                        <div class="switch-row">
+                            <span>Active</span>
+                            <label class="switch-toggle">
+                                <input type="checkbox" id="authIsActive" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+                        <div class="switch-row">
+                            <span>Auto Provision Users</span>
+                            <label class="switch-toggle">
+                                <input type="checkbox" id="authAutoProvision">
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+                        <div class="switch-row">
+                            <span>Strict Certificate Validation</span>
+                            <label class="switch-toggle">
+                                <input type="checkbox" id="authStrictCert" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                <button class="btn btn-primary" id="btnSaveAuth" onclick="saveAuth()"><i class="fa-solid fa-check"></i> <span id="btnSaveText">Save</span></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.metroui.org.ua/current/metro.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+    <script src="/assets/js/swal-config.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script>
+        const AUTH_API = '/api/admin/external-auth';
+        let editingId = null;
+        let currentPage = 1;
+        let totalPages = 1;
+        let searchTimeout = null;
+
+        function getHeaders() { return { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }; }
+        function escapeHtml(t) { if (!t) return ''; return t.replace(/[&<>"']/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]; }); }
+
+        $(document).ready(function() {
+            $('#sidebar-container').load('/components/sidebar.html', function() {
+                $(this).find('.nav-item').removeClass('active');
+                $(this).find('a[href="/external-auth.html"]').closest('.nav-item').addClass('active');
+                $(this).find('a[href="/external-auth.html"]').closest('.has-submenu').addClass('open');
+            });
+            $('#navbar-container').load('/components/navbar.html');
+            if (!localStorage.getItem('access_token')) { window.location.href = '/login.html'; return; }
+
+            // Initialize Select2
+            $('#authType').select2({ theme: 'default' });
+            $('#filterType').select2({ theme: 'default', placeholder: 'All Types' });
+
+            loadExternalAuths();
+
+            // Close modal on backdrop click
+            $('#authModal').on('click', function(e) { if (e.target === this) closeModal(); });
+            $(document).on('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+        });
+
+        function loadExternalAuths(page = 1) {
+            currentPage = page;
+            $('#authTableBody').html('<tr><td colspan="7"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading...</div></td></tr>');
+
+            const search = $('#searchInput').val() || '';
+            const type = $('#filterType').val() || '';
+            const limit = 10;
+
+            let url = AUTH_API + '?page=' + currentPage + '&limit=' + limit;
+            if (search) url += '&search=' + encodeURIComponent(search);
+            if (type) url += '&type=' + type;
+
+            $.ajax({
+                url: url,
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        const data = Array.isArray(r.data) ? r.data : r.data.external_auths || [];
+                        const pagination = r.data.pagination || {};
+                        const total = pagination.total || 0;
+
+                        renderTable(data);
+                        renderPagination(pagination);
+                        $('#authSubtitle').text(data.length + ' provider(s) found');
+                    } else {
+                        renderEmpty();
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 401) { window.location.href = '/login.html'; return; }
+                    $('#authTableBody').html('<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--danger);">Failed to load providers</td></tr>');
+                }
+            });
+        }
+
+        function renderTable(auths) {
+            if (!auths || auths.length === 0) { renderEmpty(); return; }
+
+            let html = '';
+            auths.forEach(function(a, i) {
+                const statusBadge = a.is_active
+                    ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Active</span>'
+                    : '<span class="badge badge-danger"><i class="fa-solid fa-times"></i> Inactive</span>';
+
+                const typeBadge = getTypeBadge(a.auth_type);
+                const providerInitials = a.name ? a.name.substring(0, 2).toUpperCase() : 'EX';
+
+                html += '<tr>' +
+                    '<td>' + ((currentPage - 1) * 10 + i + 1) + '</td>' +
+                    '<td><div class="provider-info">' +
+                        '<div class="provider-icon ' + (a.auth_type || 'custom') + '">' + providerInitials + '</div>' +
+                        '<div class="provider-details">' +
+                            '<h4>' + escapeHtml(a.name || '-') + '</h4>' +
+                            '<p>' + escapeHtml(a.provider_url || 'No URL') + '</p>' +
+                        '</div>' +
+                    '</div></td>' +
+                    '<td>' + typeBadge + '</td>' +
+                    '<td><span class="endpoint-url" title="' + escapeHtml(a.auth_endpoint || a.token_endpoint || '-') + '">' + escapeHtml(a.auth_endpoint || a.token_endpoint || '-') + '</span></td>' +
+                    '<td><span style="font-weight:600;color:var(--accent);">' + (a.priority || 1) + '</span></td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td><div style="display:flex;gap:6px;">' +
+                        '<button class="btn btn-sm btn-secondary" title="Edit" onclick="editAuth(' + a.id + ')"><i class="fa-solid fa-pen"></i></button>' +
+                        '<button class="btn btn-sm btn-danger" title="Delete" onclick="deleteAuth(' + a.id + ',\'' + escapeHtml(a.name) + '\')"><i class="fa-solid fa-trash"></i></button>' +
+                    '</div></td>' +
+                '</tr>';
+            });
+
+            $('#authTableBody').html(html);
+        }
+
+        function renderEmpty() {
+            $('#authTableBody').html('<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-shield-halved"></i><h4>No Providers Yet</h4><p>Click <strong>Add Provider</strong> to configure an external auth</p></div></td></tr>');
+            $('#authSubtitle').text('0 providers');
+            $('#paginationButtons').html('');
+            $('#paginationInfo').text('Showing 0 - 0 of 0');
+        }
+
+        function renderPagination(pagination) {
+            const page = pagination.page || 1;
+            const total = pagination.total || 0;
+            const limit = pagination.limit || 10;
+            totalPages = Math.ceil(total / limit);
+
+            const from = total === 0 ? 0 : (page - 1) * limit + 1;
+            const to = Math.min(page * limit, total);
+
+            $('#paginationInfo').text('Showing ' + from + ' - ' + to + ' of ' + total);
+
+            let html = '';
+            if (totalPages > 1) {
+                html += '<button ' + (page <= 1 ? 'disabled' : '') + ' onclick="loadExternalAuths(' + (page - 1) + ')"><i class="fa-solid fa-chevron-left"></i></button>';
+                for (let p = 1; p <= totalPages; p++) {
+                    if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
+                        html += '<button class="' + (p === page ? 'active' : '') + '" onclick="loadExternalAuths(' + p + ')">' + p + '</button>';
+                    } else if (p === page - 2 || p === page + 2) {
+                        html += '<span style="padding:0 8px;color:var(--text-tertiary);">...</span>';
+                    }
+                }
+                html += '<button ' + (page >= totalPages ? 'disabled' : '') + ' onclick="loadExternalAuths(' + (page + 1) + ')"><i class="fa-solid fa-chevron-right"></i></button>';
+            }
+            $('#paginationButtons').html(html);
+        }
+
+        function getTypeBadge(type) {
+            const badges = {
+                'oauth2': '<span class="badge badge-info">OAuth 2.0</span>',
+                'ldap': '<span class="badge badge-primary">LDAP</span>',
+                'saml': '<span class="badge badge-warning">SAML</span>',
+                'custom': '<span class="badge badge-success">Custom</span>'
+            };
+            return badges[type] || '<span class="badge badge-info">' + escapeHtml(type || 'Custom') + '</span>';
+        }
+
+        function handleSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                loadExternalAuths(1);
+            }, 300);
+        }
+
+        function openAddModal() {
+            editingId = null;
+
+            // Init Select2 if not already
+            if (!$('#authType').hasClass('select2-hidden-accessible')) {
+                $('#authType').select2({ theme: 'default' });
+            }
+
+            $('#modalTitle').text('Add Provider');
+            $('#authId').val('');
+            $('#authName').val('');
+            $('#authType').val('oauth2').trigger('change.select2');
+            $('#authProviderUrl').val('');
+            $('#authClientId').val('');
+            $('#authClientSecret').val('');
+            $('#authAuthEndpoint').val('');
+            $('#authTokenEndpoint').val('');
+            $('#authUserInfoEndpoint').val('');
+            $('#authPriority').val(1);
+            $('#authTimeout').val(30);
+            $('#authScopes').val('');
+            $('#authIsActive').prop('checked', true);
+            $('#authAutoProvision').prop('checked', false);
+            $('#authStrictCert').prop('checked', true);
+            $('#btnSaveText').text('Save');
+            $('#btnSaveAuth').removeClass('btn-warning').addClass('btn-primary');
+
+            $('#authModal').addClass('active');
+        }
+
+        function editAuth(id) {
+            // Init Select2 if not already
+            if (!$('#authType').hasClass('select2-hidden-accessible')) {
+                $('#authType').select2({ theme: 'default' });
+            }
+
+            $.ajax({
+                url: AUTH_API + '/' + id,
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        const a = r.data;
+                        editingId = id;
+                        $('#modalTitle').text('Edit Provider');
+                        $('#authId').val(a.id);
+                        $('#authName').val(a.name || '');
+                        $('#authType').val(a.auth_type || 'oauth2').trigger('change.select2');
+                        $('#authProviderUrl').val(a.provider_url || '');
+                        $('#authClientId').val(a.client_id || '');
+                        $('#authClientSecret').val('').attr('placeholder', '•••••••• (leave blank to keep current)');
+                        $('#authAuthEndpoint').val(a.auth_endpoint || '');
+                        $('#authTokenEndpoint').val(a.token_endpoint || '');
+                        $('#authUserInfoEndpoint').val(a.userinfo_endpoint || '');
+                        $('#authPriority').val(a.priority || 1);
+                        $('#authTimeout').val(a.timeout_seconds || 30);
+                        $('#authScopes').val(a.scopes || '');
+                        $('#authIsActive').prop('checked', a.is_active !== false);
+                        $('#authAutoProvision').prop('checked', a.auto_provision === true);
+                        $('#authStrictCert').prop('checked', a.strict_cert_validation !== false);
+                        $('#btnSaveText').text('Update');
+                        $('#btnSaveAuth').removeClass('btn-primary').addClass('btn-warning');
+                        $('#authModal').addClass('active');
+                    }
+                },
+                error: function() { showError('Error', 'Failed to load provider data'); }
+            });
+        }
+
+        function closeModal() {
+            $('#authModal').removeClass('active');
+            editingId = null;
+        }
+
+        function saveAuth() {
+            const name = $('#authName').val().trim();
+            if (!name) { showWarning('Provider name is required'); $('#authName').focus(); return; }
+
+            const secret = $('#authClientSecret').val().trim();
+
+            const payload = {
+                name: name,
+                auth_type: $('#authType').val(),
+                provider_url: $('#authProviderUrl').val().trim(),
+                client_id: $('#authClientId').val().trim(),
+                auth_endpoint: $('#authAuthEndpoint').val().trim(),
+                token_endpoint: $('#authTokenEndpoint').val().trim(),
+                userinfo_endpoint: $('#authUserInfoEndpoint').val().trim(),
+                priority: parseInt($('#authPriority').val()) || 1,
+                timeout_seconds: parseInt($('#authTimeout').val()) || 30,
+                scopes: $('#authScopes').val().trim(),
+                is_active: $('#authIsActive').is(':checked'),
+                auto_provision: $('#authAutoProvision').is(':checked'),
+                strict_cert_validation: $('#authStrictCert').is(':checked')
+            };
+
+            // Only include client_secret if provided
+            if (secret) {
+                payload.client_secret = secret;
+            }
+
+            const btn = $('#btnSaveAuth');
+            const orig = btn.html();
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Saving...');
+
+            const method = editingId ? 'PUT' : 'POST';
+            const url = editingId ? AUTH_API + '/' + editingId : AUTH_API;
+
+            $.ajax({
+                url: url,
+                method: method,
+                headers: getHeaders(),
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function() {
+                    closeModal();
+                    showToast(editingId ? 'Provider updated successfully' : 'Provider created successfully', 'success');
+                    loadExternalAuths(currentPage);
+                },
+                error: function(xhr) {
+                    showError('Error', xhr.responseJSON?.message || 'Failed to save');
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html(orig);
+                }
+            });
+        }
+
+        function deleteAuth(id, name) {
+            showConfirm('Delete Provider', 'Are you sure you want to delete "' + name + '"? This action cannot be undone.', 'Yes, Delete', 'Cancel').then(function(result) {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: AUTH_API + '/' + id,
+                        method: 'DELETE',
+                        headers: getHeaders(),
+                        success: function() { showToast('Provider deleted', 'success'); loadExternalAuths(currentPage); },
+                        error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to delete'); }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

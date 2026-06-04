@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Configuration - Swantara Gate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.metroui.org.ua/current/metro.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+    <link rel="stylesheet" href="/assets/css/datatables.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+    <link rel="stylesheet" href="/assets/css/dark.css">
+    <link rel="stylesheet" href="/assets/css/swal-custom.css">
+    <style>
+        .config-section { margin-bottom: 28px; }
+        .config-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); overflow: hidden; }
+        .config-header { padding: 18px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); }
+        .config-header h3 { margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .config-header h3 i { color: var(--accent); }
+        .config-body { padding: 24px; }
+        .config-footer { padding: 16px 24px; border-top: 1px solid var(--border-subtle); background: var(--bg-secondary); display: flex; justify-content: flex-end; gap: 10px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .stat-card { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 16px; text-align: center; }
+        .stat-card .stat-value { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+        .stat-card .stat-label { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 20px; margin-bottom: 20px; }
+        .form-row.full-width { grid-template-columns: 1fr; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .form-group label i { color: var(--accent); font-size: 11px; }
+        .form-group .form-control { height: 38px; font-size: 13px; }
+        .input-with-action { display: flex; gap: 8px; }
+        .input-with-action .form-control { flex: 1; }
+        .btn-generate { height: 38px; padding: 0 16px; background: var(--warning); color: white; border: none; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: var(--transition-fast); white-space: nowrap; }
+        .btn-generate:hover { background: #e69500; }
+        .helper-text { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; }
+        .section-divider { margin: 24px 0; border: none; border-top: 1px dashed var(--border-subtle); }
+        .switch-group { display: flex; flex-direction: column; gap: 10px; }
+        .switch-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg-secondary); border-radius: var(--radius-md); }
+        .switch-item .switch-info { flex: 1; }
+        .switch-item .switch-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+        .switch-item .switch-desc { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+        .switch-toggle { position: relative; display: inline-block; width: 40px; height: 22px; margin-left: 12px; }
+        .switch-toggle input { opacity: 0; width: 0; height: 0; }
+        .switch-slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; cursor: pointer; transition: var(--transition-fast); }
+        .switch-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: var(--transition-fast); }
+        .switch-toggle input:checked + .switch-slider { background: var(--success); }
+        .switch-toggle input:checked + .switch-slider::before { transform: translateX(18px); }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-badge.active { background: #e8f5e9; color: #2e7d32; }
+        .status-badge.inactive { background: #ffebee; color: #c62828; }
+        .test-result { padding: 16px; border-radius: var(--radius-md); margin-top: 16px; display: none; }
+        .test-result.success { background: #e8f5e9; border: 1px solid #a5d6a7; }
+        .test-result.error { background: #ffebee; border: 1px solid #ef9a9a; }
+        .test-result .result-title { font-weight: 600; font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .test-result .result-message { font-size: 12px; color: var(--text-secondary); font-family: 'SF Mono', 'Consolas', monospace; word-break: break-all; line-height: 1.6; }
+        .info-row { display: flex; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { font-size: 12px; color: var(--text-tertiary); width: 140px; flex-shrink: 0; }
+        .info-value { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+        @media (max-width: 768px) {
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        <div class="app-main">
+            <div id="navbar-container"></div>
+            <main class="app-content">
+                <div class="page-header">
+                    <div>
+                        <h1>JWT Configuration</h1>
+                        <p>Configure JSON Web Token settings for API authentication</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="loadConfig()"><i class="fa-solid fa-arrows-rotate"></i> <span>Refresh</span></button>
+                    </div>
+                </div>
+
+                <!-- Status Card -->
+                <div class="config-card" style="margin-bottom: 24px;">
+                    <div class="config-header">
+                        <h3><i class="fa-solid fa-shield-halved"></i> Configuration Status</h3>
+                        <span class="status-badge" id="jwtStatus">
+                            <i class="fa-solid fa-circle"></i> <span id="jwtStatusText">Loading...</span>
+                        </span>
+                    </div>
+                    <div class="config-body">
+                        <div class="stat-grid" id="configStats">
+                            <div class="stat-card">
+                                <div class="stat-value" id="statAlgorithm">-</div>
+                                <div class="stat-label">Algorithm</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="statExpiration">-</div>
+                                <div class="stat-label">Expiration (min)</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="statIssuer">-</div>
+                                <div class="stat-label">Issuer</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="statAudience">-</div>
+                                <div class="stat-label">Audience</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Form -->
+                <div class="config-card">
+                    <div class="config-header">
+                        <h3><i class="fa-solid fa-gear"></i> JWT Settings</h3>
+                    </div>
+                    <div class="config-body">
+                        <form id="jwtForm">
+                            <!-- Secret Key Section -->
+                            <div class="config-section">
+                                <div class="form-group full-width">
+                                    <label><i class="fa-solid fa-key"></i> JWT Secret Key <span style="color: var(--danger);">*</span></label>
+                                    <div class="input-with-action">
+                                        <input type="password" class="form-control" id="jwtSecret" placeholder="Enter your secret key (minimum 32 characters)" style="font-family: monospace;">
+                                        <button type="button" class="btn-generate" onclick="generateSecret()">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate
+                                        </button>
+                                    </div>
+                                    <span class="helper-text">Minimum 32 characters recommended. Keep this secret safe and never share it!</span>
+                                </div>
+                            </div>
+
+                            <hr class="section-divider">
+
+                            <!-- Security Settings -->
+                            <div class="config-section">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-code"></i> Algorithm</label>
+                                        <select class="form-control" id="jwtAlgorithm">
+                                            <option value="HS256">HS256 (HMAC SHA-256)</option>
+                                            <option value="HS384">HS384 (HMAC SHA-384)</option>
+                                            <option value="HS512">HS512 (HMAC SHA-512)</option>
+                                        </select>
+                                        <span class="helper-text">HMAC symmetric algorithm</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-clock"></i> Token Expiration</label>
+                                        <input type="number" class="form-control" id="jwtExpiration" value="60" min="1" max="10080" style="font-family: monospace;">
+                                        <span class="helper-text">In minutes (max: 10080 = 7 days)</span>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-rotate"></i> Refresh Token Expiration</label>
+                                        <input type="number" class="form-control" id="refreshExpiration" value="7" min="1" max="90" style="font-family: monospace;">
+                                        <span class="helper-text">In days (max: 90)</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-redo"></i> Max Refresh Attempts</label>
+                                        <input type="number" class="form-control" id="maxRefreshAttempts" value="5" min="1" max="100" style="font-family: monospace;">
+                                        <span class="helper-text">Before requiring re-login</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="section-divider">
+
+                            <!-- Token Claims -->
+                            <div class="config-section">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-building"></i> Issuer (iss)</label>
+                                        <input type="text" class="form-control" id="jwtIssuer" placeholder="e.g., swantara-gate">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-users"></i> Audience (aud)</label>
+                                        <input type="text" class="form-control" id="jwtAudience" placeholder="e.g., swantara-api">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-fingerprint"></i> Subject (sub)</label>
+                                        <input type="text" class="form-control" id="jwtSubject" placeholder="e.g., user">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="section-divider">
+
+                            <!-- Security Options -->
+                            <div class="config-section">
+                                <div class="switch-group">
+                                    <div class="switch-item">
+                                        <div class="switch-info">
+                                            <div class="switch-label">Require Token Expiration</div>
+                                            <div class="switch-desc">Tokens must have an expiration time (exp claim)</div>
+                                        </div>
+                                        <label class="switch-toggle">
+                                            <input type="checkbox" id="requireExp" checked>
+                                            <span class="switch-slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="switch-item">
+                                        <div class="switch-info">
+                                            <div class="switch-label">Allow Refresh Tokens</div>
+                                            <div class="switch-desc">Enable refresh token functionality</div>
+                                        </div>
+                                        <label class="switch-toggle">
+                                            <input type="checkbox" id="allowRefresh" checked>
+                                            <span class="switch-slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="switch-item">
+                                        <div class="switch-info">
+                                            <div class="switch-label">Include User Claims</div>
+                                            <div class="switch-desc">Include user_id, role, and permissions in token</div>
+                                        </div>
+                                        <label class="switch-toggle">
+                                            <input type="checkbox" id="includeUserClaims" checked>
+                                            <span class="switch-slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="switch-item">
+                                        <div class="switch-info">
+                                            <div class="switch-label">Strict Audience Validation</div>
+                                            <div class="switch-desc">Reject tokens with unrecognised audience</div>
+                                        </div>
+                                        <label class="switch-toggle">
+                                            <input type="checkbox" id="strictAudience" checked>
+                                            <span class="switch-slider"></span>
+                                        </label>
+                                    </div>
+                                    <div class="switch-item">
+                                        <div class="switch-info">
+                                            <div class="switch-label">Enable Blacklisting</div>
+                                            <div class="switch-desc">Allow token revocation before expiration</div>
+                                        </div>
+                                        <label class="switch-toggle">
+                                            <input type="checkbox" id="enableBlacklist">
+                                            <span class="switch-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Test Result -->
+                            <div class="test-result" id="testResult">
+                                <div class="result-title" id="testResultTitle"></div>
+                                <div class="result-message" id="testResultMessage"></div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="config-footer">
+                        <button type="button" class="btn btn-secondary" onclick="testConfig()">
+                            <i class="fa-solid fa-flask"></i> Test Configuration
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="saveConfig()" id="saveBtn">
+                            <i class="fa-solid fa-check"></i> Save Configuration
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.metroui.org.ua/current/metro.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+    <script src="/assets/js/swal-config.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script>
+        // JWT Config uses plural form in API: /api/admin/jwt-configs
+        const JWT_CONFIG_API = '/api/admin/jwt-configs';
+
+        function getHeaders() { return { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }; }
+        function escapeHtml(t) { if (!t) return ''; return t.replace(/[&<>"']/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]; }); }
+
+        $(document).ready(function() {
+            $('#sidebar-container').load('/components/sidebar.html', function() {
+                $(this).find('.nav-item').removeClass('active');
+                $(this).find('a[href="/jwt-config.html"]').closest('.nav-item').addClass('active');
+                $(this).find('a[href="/jwt-config.html"]').closest('.has-submenu').addClass('open');
+            });
+            $('#navbar-container').load('/components/navbar.html');
+            if (!localStorage.getItem('access_token')) { window.location.href = '/login.html'; return; }
+
+            // Initialize Select2
+            $('#jwtAlgorithm').select2({ theme: 'default' });
+
+            loadConfig();
+        });
+
+        function loadConfig() {
+            $.ajax({
+                url: JWT_CONFIG_API,
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        const cfg = r.data;
+                        
+                        // Update status
+                        const hasSecret = cfg.jwt_secret && cfg.jwt_secret.length >= 32;
+                        $('#jwtStatus').removeClass('active inactive').addClass(hasSecret ? 'active' : 'inactive');
+                        $('#jwtStatusText').text(hasSecret ? 'Configured' : 'Not Configured');
+                        
+                        // Update stat cards
+                        $('#statAlgorithm').text(cfg.algorithm || '-');
+                        $('#statExpiration').text(cfg.token_expiration_minutes || '-');
+                        $('#statIssuer').text(cfg.issuer || '-');
+                        $('#statAudience').text(cfg.audience || '-');
+
+                        // Fill form
+                        if (cfg.jwt_secret) {
+                            $('#jwtSecret').val('').attr('placeholder', '•••••••••••••••• (configured)');
+                        }
+                        $('#jwtAlgorithm').val(cfg.algorithm || 'HS256').trigger('change.select2');
+                        $('#jwtExpiration').val(cfg.token_expiration_minutes || 60);
+                        $('#refreshExpiration').val(cfg.refresh_token_expiration_days || 7);
+                        $('#maxRefreshAttempts').val(cfg.max_refresh_attempts || 5);
+                        $('#jwtIssuer').val(cfg.issuer || '');
+                        $('#jwtAudience').val(cfg.audience || '');
+                        $('#jwtSubject').val(cfg.subject || '');
+                        $('#requireExp').prop('checked', cfg.require_expiration !== false);
+                        $('#allowRefresh').prop('checked', cfg.allow_refresh_tokens !== false);
+                        $('#includeUserClaims').prop('checked', cfg.include_user_claims !== false);
+                        $('#strictAudience').prop('checked', cfg.strict_audience_validation !== false);
+                        $('#enableBlacklist').prop('checked', cfg.enable_blacklist === true);
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 401) { window.location.href = '/login.html'; return; }
+                    showError('Error', 'Failed to load JWT configuration');
+                }
+            });
+        }
+
+        function generateSecret() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            let secret = '';
+            for (let i = 0; i < 64; i++) {
+                secret += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            $('#jwtSecret').val(secret).attr('type', 'text');
+            showToast('Secret key generated!', 'success');
+        }
+
+        function saveConfig() {
+            const secret = $('#jwtSecret').val().trim();
+            
+            if (!secret) {
+                showWarning('JWT Secret Key is required');
+                return;
+            }
+            
+            if (secret.length < 32 && !secret.includes('••••')) {
+                showWarning('Secret key should be at least 32 characters for security');
+                return;
+            }
+
+            const payload = {
+                algorithm: $('#jwtAlgorithm').val(),
+                token_expiration_minutes: parseInt($('#jwtExpiration').val()) || 60,
+                refresh_token_expiration_days: parseInt($('#refreshExpiration').val()) || 7,
+                max_refresh_attempts: parseInt($('#maxRefreshAttempts').val()) || 5,
+                issuer: $('#jwtIssuer').val().trim(),
+                audience: $('#jwtAudience').val().trim(),
+                subject: $('#jwtSubject').val().trim(),
+                require_expiration: $('#requireExp').is(':checked'),
+                allow_refresh_tokens: $('#allowRefresh').is(':checked'),
+                include_user_claims: $('#includeUserClaims').is(':checked'),
+                strict_audience_validation: $('#strictAudience').is(':checked'),
+                enable_blacklist: $('#enableBlacklist').is(':checked')
+            };
+
+            // Only include secret if it's a new value (not placeholder)
+            if (!secret.includes('••••')) {
+                payload.jwt_secret = secret;
+            }
+
+            const btn = $('#saveBtn');
+            const orig = btn.html();
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Saving...');
+
+            $.ajax({
+                url: JWT_CONFIG_API,
+                method: 'PUT',
+                headers: getHeaders(),
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function() {
+                    showToast('JWT configuration saved successfully', 'success');
+                    loadConfig();
+                },
+                error: function(xhr) {
+                    showError('Error', xhr.responseJSON?.message || 'Failed to save configuration');
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html(orig);
+                }
+            });
+        }
+
+        function testConfig() {
+            const $result = $('#testResult');
+            const $title = $('#testResultTitle');
+            const $message = $('#testResultMessage');
+
+            $result.hide();
+
+            $.ajax({
+                url: JWT_CONFIG_API + '/test',
+                method: 'POST',
+                headers: getHeaders(),
+                success: function(r) {
+                    $result.removeClass('error').addClass('success').show();
+                    $title.html('<i class="fa-solid fa-check-circle" style="color: #2e7d32;"></i> Test Successful');
+                    $message.html('Token generated and validated successfully!<br><br>Sample Token:<br><code>' + escapeHtml(r.data?.token || 'N/A') + '</code>');
+                },
+                error: function(xhr) {
+                    $result.removeClass('success').addClass('error').show();
+                    $title.html('<i class="fa-solid fa-times-circle" style="color: #c62828;"></i> Test Failed');
+                    $message.html(xhr.responseJSON?.message || 'Configuration test failed');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

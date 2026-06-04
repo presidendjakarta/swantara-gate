@@ -25,6 +25,9 @@
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
     
+    <!-- Select2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
+    
     <!-- App Styles -->
     <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="stylesheet" href="/assets/css/components.css">
@@ -613,6 +616,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
     
     <!-- SweetAlert2 Custom Config -->
     <script src="/assets/js/swal-config.js"></script>
@@ -695,6 +699,13 @@
 
             // Close upstream modal on overlay click
             $('#upstreamModal').on('click', function(e) { if (e.target === this) closeUpstreamModal(); });
+
+            // Initialize Select2
+            $('#limitSelect').select2({ theme: 'default', width: '70px' });
+            $('#vhostHostId').select2({ theme: 'default', placeholder: 'Select a host...' });
+            $('#vhostLBAlgorithm').select2({ theme: 'default' });
+            $('#vhostFailoverMode').select2({ theme: 'default' });
+            $('#upstreamProtocol').select2({ theme: 'default' });
         });
 
         function getHeaders() {
@@ -717,6 +728,8 @@
                         hostsList.forEach(function(host) {
                             $select.append(`<option value="${host.id}">${escapeHtml(host.host_name)}</option>`);
                         });
+                        // Refresh Select2
+                        $select.trigger('change.select2');
                     }
                 },
                 error: function(xhr) {
@@ -905,7 +918,7 @@
             }, 400);
         }
 
-        // ========================
+        // ========================dd
         // Modal
         // ========================
         function openCreateModal() {
@@ -926,6 +939,11 @@
         }
 
         function openEditModal(id) {
+            // Init Select2 on form selects if not already (but skip disabled ones)
+            if (!$('#vhostLBAlgorithm').hasClass('select2-hidden-accessible')) {
+                $('#vhostLBAlgorithm').select2({ theme: 'default' });
+                $('#vhostFailoverMode').select2({ theme: 'default' });
+            }
             $.ajax({
                 url: API_BASE + '/' + id,
                 method: 'GET',
@@ -937,10 +955,10 @@
                         $('#modalTitle span').text('Edit Virtual Host');
                         $('#modalTitle i').attr('class', 'fa-solid fa-pen');
                         $('#vhostId').val(vhost.id);
-                        $('#vhostHostId').val(vhost.host_id).prop('disabled', true);
+                        $('#vhostHostId').val(vhost.host_id).prop('disabled', true).trigger('change.select2');
                         $('#vhostName').val(vhost.vhost_name).prop('disabled', true);
-                        $('#vhostLBAlgorithm').val(vhost.lb_algorithm || 'round_robin');
-                        $('#vhostFailoverMode').val(vhost.failover_mode || 'active-active');
+                        $('#vhostLBAlgorithm').val(vhost.lb_algorithm || 'round_robin').trigger('change.select2');
+                        $('#vhostFailoverMode').val(vhost.failover_mode || 'active-active').trigger('change.select2');
                         $('#vhostStickySession').prop('checked', vhost.sticky_session).trigger('change');
                         $('#vhostIsActive').prop('checked', vhost.is_active).trigger('change');
                         $('#btnSaveText').text('Update');
@@ -1110,6 +1128,10 @@
         // UPSTREAM MANAGEMENT
         // ========================
         function openUpstreamModal(vhostId, vhostName) {
+            // Init Select2 on upstream form selects if not already
+            if (!$('#upstreamProtocol').hasClass('select2-hidden-accessible')) {
+                $('#upstreamProtocol').select2({ theme: 'default' });
+            }
             currentVHostId = vhostId;
             editingUpstreamId = null;
             $('#upstreamVHostName').text(vhostName);
@@ -1231,7 +1253,7 @@
                         $('#upstreamId').val(us.id);
                         $('#upstreamTargetHost').val(us.target_host);
                         $('#upstreamTargetPort').val(us.target_port);
-                        $('#upstreamProtocol').val(us.protocol || 'http');
+                        $('#upstreamProtocol').val(us.protocol || 'http').trigger('change.select2');
                         $('#upstreamPriority').val(us.priority);
                         $('#upstreamWeight').val(us.weight);
                         $('#upstreamMaxFails').val(us.max_fails);

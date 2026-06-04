@@ -25,6 +25,9 @@
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
     
+    <!-- Select2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
+    
     <!-- App Styles -->
     <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="stylesheet" href="/assets/css/components.css">
@@ -479,6 +482,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
     
     <!-- SweetAlert2 Custom Config -->
     <script src="/assets/js/swal-config.js"></script>
@@ -531,6 +535,10 @@
             $(document).on('keydown', function(e) {
                 if (e.key === 'Escape') closeModal();
             });
+
+            // Initialize Select2
+            $('#vhostSelect').select2({ theme: 'default', placeholder: '-- Choose a virtual host --' });
+            $('#protocol').select2({ theme: 'default' });
         });
 
         function getHeaders() {
@@ -553,6 +561,8 @@
                         vhostsList.forEach(function(vh) {
                             $select.append('<option value="' + vh.id + '" data-lb="' + escapeHtml(vh.lb_algorithm) + '" data-fm="' + escapeHtml(vh.failover_mode) + '">' + escapeHtml(vh.vhost_name) + '</option>');
                         });
+                        // Refresh Select2
+                        $select.trigger('change.select2');
                     }
                 },
                 error: function(xhr) {
@@ -718,6 +728,10 @@
         }
 
         function openEditForm(id) {
+            // Init Select2 on form selects if not already
+            if (!$('#protocol').hasClass('select2-hidden-accessible')) {
+                $('#protocol').select2({ theme: 'default' });
+            }
             $.ajax({
                 url: UPSTREAM_API + '/' + id,
                 method: 'GET',
@@ -731,7 +745,7 @@
                         $('#upstreamId').val(us.id);
                         $('#targetHost').val(us.target_host);
                         $('#targetPort').val(us.target_port);
-                        $('#protocol').val(us.protocol || 'http');
+                        $('#protocol').val(us.protocol || 'http').trigger('change.select2');
                         $('#priority').val(us.priority);
                         $('#weight').val(us.weight);
                         $('#maxFails').val(us.max_fails);

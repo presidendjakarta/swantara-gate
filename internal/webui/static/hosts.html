@@ -25,6 +25,9 @@
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
     
+    <!-- Select2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
+    
     <!-- App Styles -->
     <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="stylesheet" href="/assets/css/components.css">
@@ -601,6 +604,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
     
     <!-- SweetAlert2 Custom Config -->
     <script src="/assets/js/swal-config.js"></script>
@@ -671,6 +675,9 @@
 
             // Close vdir modal on overlay click
             $('#vdirModal').on('click', function(e) { if (e.target === this) closeVDirModal(); });
+
+            // Initialize Select2
+            $('#limitSelect').select2({ theme: 'default', width: '70px' });
         });
 
         function getHeaders() {
@@ -1059,6 +1066,8 @@
                             $select.val(vhostsForHost[0].id);
                             currentVHostId = vhostsForHost[0].id;
                         }
+                        // Refresh Select2
+                        $select.trigger('change.select2');
                     }
                 }
             });
@@ -1139,6 +1148,12 @@
 
         function openAddVDirForm() {
             editingVDirId = null;
+            // Init Select2 on form selects if not already
+            if (!$('#vdirMatchType').hasClass('select2-hidden-accessible')) {
+                $('#vdirMatchType').select2({ theme: 'default' });
+                $('#vdirAuthType').select2({ theme: 'default' });
+                $('#vdirVHostSelect').select2({ theme: 'default', placeholder: '-- Select virtual host --' });
+            }
             $('#vdirFormTitle').text('Add Virtual Directory');
             $('#vdirId').val('');
             $('#vdirSourcePath').val('');
@@ -1165,6 +1180,12 @@
         }
 
         function editVDir(id) {
+            // Init Select2 on form selects if not already
+            if (!$('#vdirMatchType').hasClass('select2-hidden-accessible')) {
+                $('#vdirMatchType').select2({ theme: 'default' });
+                $('#vdirAuthType').select2({ theme: 'default' });
+                $('#vdirVHostSelect').select2({ theme: 'default', placeholder: '-- Select virtual host --' });
+            }
             $.ajax({
                 url: VDIR_API + '/' + id,
                 method: 'GET',
@@ -1174,14 +1195,14 @@
                         const dir = response.data;
                         editingVDirId = id;
                         // Set vhost selector to the dir's vhost
-                        $('#vdirVHostSelect').val(dir.virtual_host_id);
+                        $('#vdirVHostSelect').val(dir.virtual_host_id).trigger('change.select2');
                         currentVHostId = dir.virtual_host_id;
                         $('#vdirFormTitle').text('Edit Virtual Directory');
                         $('#vdirId').val(dir.id);
                         $('#vdirSourcePath').val(dir.source_path);
                         $('#vdirTargetPath').val(dir.target_path);
-                        $('#vdirMatchType').val(dir.match_type || 'prefix');
-                        $('#vdirAuthType').val(dir.auth_type || 'none');
+                        $('#vdirMatchType').val(dir.match_type || 'prefix').trigger('change.select2');
+                        $('#vdirAuthType').val(dir.auth_type || 'none').trigger('change.select2');
                         $('#vdirTimeout').val(dir.proxy_timeout_seconds || 30);
                         $('#vdirRetryCount').val(dir.retry_count || 0);
                         $('#vdirRetryDelay').val(dir.retry_delay_ms || 100);

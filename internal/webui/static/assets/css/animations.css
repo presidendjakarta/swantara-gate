@@ -1,0 +1,237 @@
+/* ============================================
+   Animations - GSAP-ready & CSS Transitions
+   ============================================ */
+
+/* Page Transitions */
+.page-enter {
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+.page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 350ms ease, transform 350ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-exit {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.page-exit-active {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.99);
+    transition: opacity 200ms ease, transform 200ms ease;
+}
+
+/* Fade animations */
+.fade-in {
+    animation: fadeIn 0.35s ease forwards;
+}
+
+.fade-out {
+    animation: fadeOut 0.2s ease forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-6px); }
+}
+
+/* Slide animations */
+.slide-up {
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.slide-down {
+    animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scale animations */
+.scale-in {
+    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Counter animation helper */
+.counter-animate {
+    display: inline-block;
+}
+
+/* Stagger children */
+.stagger-children > * {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.stagger-children.visible > *:nth-child(1) { animation: fadeIn 0.3s ease 0.05s forwards; }
+.stagger-children.visible > *:nth-child(2) { animation: fadeIn 0.3s ease 0.1s forwards; }
+.stagger-children.visible > *:nth-child(3) { animation: fadeIn 0.3s ease 0.15s forwards; }
+.stagger-children.visible > *:nth-child(4) { animation: fadeIn 0.3s ease 0.2s forwards; }
+.stagger-children.visible > *:nth-child(5) { animation: fadeIn 0.3s ease 0.25s forwards; }
+.stagger-children.visible > *:nth-child(6) { animation: fadeIn 0.3s ease 0.3s forwards; }
+.stagger-children.visible > *:nth-child(7) { animation: fadeIn 0.3s ease 0.35s forwards; }
+.stagger-children.visible > *:nth-child(8) { animation: fadeIn 0.3s ease 0.4s forwards; }
+.stagger-children.visible > *:nth-child(9) { animation: fadeIn 0.3s ease 0.45s forwards; }
+.stagger-children.visible > *:nth-child(10) { animation: fadeIn 0.3s ease 0.5s forwards; }
+
+/* Hover micro-interactions */
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-elevated);
+}
+
+.hover-scale {
+    transition: transform 0.15s ease;
+}
+
+.hover-scale:hover {
+    transform: scale(1.02);
+}
+
+/* Pulse animation for badges */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.animate-pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Ripple effect */
+.ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+}
+
+.ripple:active::after {
+    width: 200px;
+    height: 200px;
+}
+
+/* Chart loading */
+.chart-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.chart-loading::after {
+    content: '';
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Toast notification */
+.toast-notification {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    box-shadow: var(--shadow-dropdown);
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10000;
+    animation: toastIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    max-width: 380px;
+}
+
+.toast-notification.exit {
+    animation: toastOut 0.3s ease forwards;
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toastOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(8px) scale(0.95);
+    }
+}
+
+/* Skeleton variants */
+.skeleton-text {
+    height: 14px;
+    background: linear-gradient(90deg, var(--surface-active) 25%, var(--border-subtle) 50%, var(--surface-active) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.skeleton-text.w-50 { width: 50%; }
+.skeleton-text.w-75 { width: 75%; }
+.skeleton-text.w-100 { width: 100%; }
+
+.skeleton-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, var(--surface-active) 25%, var(--border-subtle) 50%, var(--surface-active) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
