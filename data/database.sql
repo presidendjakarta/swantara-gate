@@ -887,3 +887,55 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
         REFERENCES users(id)
         ON DELETE CASCADE
 );
+
+-- =========================================================
+-- TABLE jwt_providers
+-- Master data untuk JWT providers (reusable)
+-- =========================================================
+CREATE TABLE jwt_providers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    name TEXT NOT NULL,
+
+    description TEXT,
+
+    algorithm TEXT DEFAULT 'HS256',
+
+    jwt_secret TEXT NOT NULL,
+
+    issuer TEXT,
+
+    audience TEXT,
+
+    expired_in_seconds INTEGER DEFAULT 3600,
+
+    require_exp INTEGER DEFAULT 1,
+
+    require_iat INTEGER DEFAULT 1,
+
+    is_active INTEGER DEFAULT 1,
+
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================================================
+-- TABLE virtual_directory_jwt_providers
+-- Junction table untuk mapping virtual directory ke JWT provider
+-- =========================================================
+CREATE TABLE virtual_directory_jwt_providers (
+    virtual_directory_id INTEGER NOT NULL,
+    jwt_provider_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (virtual_directory_id, jwt_provider_id),
+
+    FOREIGN KEY (virtual_directory_id)
+        REFERENCES virtual_directories(id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (jwt_provider_id)
+        REFERENCES jwt_providers(id)
+        ON DELETE CASCADE
+);

@@ -2,7 +2,68 @@ package model
 
 import "time"
 
-// JWTConfig merepresentasikan konfigurasi JWT per route
+// JWTProvider merepresentasikan master data provider JWT (reusable)
+type JWTProvider struct {
+	ID               int64     `json:"id"`
+	Name             string    `json:"name"`
+	Description      string    `json:"description,omitempty"`
+	Algorithm        string    `json:"algorithm"`
+	JWTSecret        string    `json:"jwt_secret"`
+	Issuer           string    `json:"issuer,omitempty"`
+	Audience         string    `json:"audience,omitempty"`
+	ExpiredInSeconds int       `json:"expired_in_seconds"`
+	RequireExp       bool      `json:"require_exp"`
+	RequireIat       bool      `json:"require_iat"`
+	IsActive         bool      `json:"is_active"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+
+	// Statistics
+	UsedByCount int64 `json:"used_by_count,omitempty"` // Jumlah vdir yang menggunakan provider ini
+}
+
+// CreateJWTProviderRequest request untuk membuat JWT provider baru
+type CreateJWTProviderRequest struct {
+	Name             string `json:"name" validate:"required"`
+	Description      string `json:"description"`
+	Algorithm        string `json:"algorithm"`
+	JWTSecret        string `json:"jwt_secret" validate:"required"`
+	Issuer           string `json:"issuer"`
+	Audience         string `json:"audience"`
+	ExpiredInSeconds int    `json:"expired_in_seconds"`
+	RequireExp       bool   `json:"require_exp"`
+	RequireIat       bool   `json:"require_iat"`
+	IsActive         bool   `json:"is_active"`
+}
+
+// UpdateJWTProviderRequest request untuk update JWT provider
+type UpdateJWTProviderRequest struct {
+	Name             string `json:"name"`
+	Description      string `json:"description"`
+	Algorithm        string `json:"algorithm"`
+	JWTSecret        string `json:"jwt_secret"`
+	Issuer           string `json:"issuer"`
+	Audience         string `json:"audience"`
+	ExpiredInSeconds int    `json:"expired_in_seconds"`
+	RequireExp       bool   `json:"require_exp"`
+	RequireIat       bool   `json:"require_iat"`
+	IsActive         bool   `json:"is_active"`
+}
+
+// VirtualDirectoryJWTProviderMapping mapping antara virtual directory dan JWT provider
+type VirtualDirectoryJWTProviderMapping struct {
+	VirtualDirectoryID int64     `json:"virtual_directory_id"`
+	JWTProviderID      int64     `json:"jwt_provider_id"`
+	CreatedAt          time.Time `json:"created_at"`
+
+	// Data join
+	SourcePath   string `json:"source_path,omitempty"`
+	TargetPath   string `json:"target_path,omitempty"`
+	ProviderName string `json:"provider_name,omitempty"`
+	Algorithm    string `json:"algorithm,omitempty"`
+}
+
+// JWTConfig merepresentasikan konfigurasi JWT per route (legacy)
 type JWTConfig struct {
 	ID                 int64     `json:"id"`
 	VirtualDirectoryID int64     `json:"virtual_directory_id"`

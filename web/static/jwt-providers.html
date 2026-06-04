@@ -1,0 +1,840 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Providers - Swantara Gate</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Metro UI -->
+    <link rel="stylesheet" href="https://cdn.metroui.org.ua/current/metro.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+    <!-- NProgress -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
+    
+    <!-- Select2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
+    
+    <!-- App Styles -->
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+    <link rel="stylesheet" href="/assets/css/datatables.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+    <link rel="stylesheet" href="/assets/css/dark.css">
+    <link rel="stylesheet" href="/assets/css/swal-custom.css">
+    
+    <style>
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 640px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: slideUp 0.25s ease;
+            overflow: hidden;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-header h3 i { color: var(--accent); }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: var(--transition-fast);
+        }
+        .modal-close:hover { background: var(--bg-secondary); color: var(--text-primary); }
+        .modal-body { padding: 24px; max-height: 65vh; overflow-y: auto; }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-subtle);
+            background: var(--bg-secondary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+        }
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+        .empty-state h4 {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .empty-state p { font-size: 13px; margin: 0; }
+
+        /* Switch Toggle */
+        .switch-toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+        .switch-toggle input { opacity: 0; width: 0; height: 0; }
+        .switch-slider {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 22px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        .switch-slider::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: var(--transition-fast);
+        }
+        .switch-toggle input:checked + .switch-slider { background: var(--success); }
+        .switch-toggle input:checked + .switch-slider::before { transform: translateX(18px); }
+
+        /* Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+        .badge-success { background: rgba(34,197,94,0.1); color: #16a34a; }
+        .badge-danger { background: rgba(239,68,68,0.1); color: #dc2626; }
+        .badge-info { background: rgba(59,130,246,0.1); color: #2563eb; }
+    </style>
+</head>
+<body class="theme-light">
+    <div id="app">
+        <!-- Sidebar -->
+        <div class="sidebar"></div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="breadcrumb">
+                    <a href="/"><i class="fas fa-home"></i></a>
+                    <span>JWT Providers</span>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-primary" id="btnAddProvider">
+                        <i class="fas fa-plus"></i>
+                        <span>New JWT Provider</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Info Card -->
+            <div class="info-card animate__animated animate__fadeIn">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <h4>JWT Providers (Master Data)</h4>
+                    <p>Definisikan JWT provider sekali, gunakan di banyak route. Update secret di satu tempat, semua route yang menggunakan provider ini akan terupdate otomatis.</p>
+                </div>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="filter-card animate__animated animate__fadeInUp">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search providers by name or description..." class="form-control">
+                </div>
+            </div>
+
+            <!-- Providers Table -->
+            <div class="card animate__animated animate__fadeInUp">
+                <div class="table-responsive">
+                    <table id="providersTable">
+                        <thead>
+                            <tr>
+                                <th width="60">#</th>
+                                <th>Nama Provider</th>
+                                <th>Deskripsi</th>
+                                <th width="120">Algorithm</th>
+                                <th width="120">Expiration</th>
+                                <th width="100">Usage</th>
+                                <th width="100">Status</th>
+                                <th width="180" class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="providersTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="emptyState" class="empty-state" style="display:none;">
+                    <i class="fas fa-key"></i>
+                    <h4>Belum ada JWT Provider</h4>
+                    <p>Klik tombol "New JWT Provider" untuk membuat provider baru</p>
+                </div>
+                <div id="paginationContainer" class="pagination-wrapper"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Provider Modal -->
+    <div id="providerModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fas fa-key"></i> <span id="modalTitle">New JWT Provider</span></h3>
+                <button class="modal-close" onclick="closeProviderModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="providerId">
+                
+                <div class="form-group">
+                    <label>Nama Provider <span style="color:red">*</span></label>
+                    <input type="text" id="providerName" class="form-control" placeholder="e.g., Main Auth JWT, Internal API JWT" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea id="providerDescription" class="form-control" rows="2" placeholder="Deskripsi singkat tentang provider ini..."></textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Algorithm</label>
+                            <select id="providerAlgorithm" class="form-control">
+                                <option value="HS256">HS256 (Recommended)</option>
+                                <option value="HS384">HS384</option>
+                                <option value="HS512">HS512</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Expiration (seconds)</label>
+                            <input type="number" id="providerExpiration" class="form-control" value="3600" min="60" max="86400">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>JWT Secret <span style="color:red">*</span> <small>(min 32 characters)</small></label>
+                    <div class="input-group">
+                        <input type="text" id="providerSecret" class="form-control" placeholder="Min 32 characters" required>
+                        <button type="button" class="btn btn-secondary" onclick="generateSecret()" title="Generate random secret">
+                            <i class="fas fa-magic"></i> Generate
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Issuer (optional)</label>
+                            <input type="text" id="providerIssuer" class="form-control" placeholder="e.g., swantara-gate">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Audience (optional)</label>
+                            <input type="text" id="providerAudience" class="form-control" placeholder="e.g., api-users">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="d-flex align-items-center justify-content-between">
+                                <span>Require Exp</span>
+                                <label class="switch-toggle">
+                                    <input type="checkbox" id="providerRequireExp" checked>
+                                    <span class="switch-slider"></span>
+                                </label>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="d-flex align-items-center justify-content-between">
+                                <span>Require Iat</span>
+                                <label class="switch-toggle">
+                                    <input type="checkbox" id="providerRequireIat" checked>
+                                    <span class="switch-slider"></span>
+                                </label>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="d-flex align-items-center justify-content-between">
+                                <span>Active</span>
+                                <label class="switch-toggle">
+                                    <input type="checkbox" id="providerIsActive" checked>
+                                    <span class="switch-slider"></span>
+                                </label>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeProviderModal()">Cancel</button>
+                <button class="btn btn-primary" id="btnSaveProvider">
+                    <i class="fas fa-save"></i> Save Provider
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign Modal -->
+    <div id="assignModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fas fa-link"></i> <span>Assign Provider to Virtual Directory</span></h3>
+                <button class="modal-close" onclick="closeAssignModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="assignProviderId">
+                
+                <div class="form-group">
+                    <label>Pilih Virtual Directory</label>
+                    <select id="assignVDirSelect" class="form-control"></select>
+                </div>
+
+                <button class="btn btn-primary btn-block" id="btnAssign" onclick="assignProvider()">
+                    <i class="fas fa-plus"></i> Assign Provider
+                </button>
+
+                <hr>
+
+                <h5><i class="fas fa-list"></i> Assigned Virtual Directories</h5>
+                <div id="assignedVDirsList"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAssignModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/metroui/4/current/metro.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+    <script src="/assets/js/app.js"></script>
+    
+    <script>
+        // ==================== STATE MANAGEMENT ====================
+        let currentPage = 1;
+        const perPage = 10;
+        let currentSearch = '';
+        let providerIdForAssign = null;
+
+        // ==================== CONSTANTS ====================
+        const API_BASE = '/api/admin';
+        const JWT_PROVIDERS_API = API_BASE + '/jwt-providers';
+        const VDIRS_API = API_BASE + '/virtual-directories';
+
+        // ==================== INITIALIZATION ====================
+        $(document).ready(function() {
+            loadProviders();
+            $('#searchInput').on('keyup', function() {
+                clearTimeout(window.searchTimeout);
+                window.searchTimeout = setTimeout(() => {
+                    currentSearch = $(this).val();
+                    currentPage = 1;
+                    loadProviders();
+                }, 500);
+            });
+        });
+
+        // ==================== PROVIDER CRUD ====================
+        function loadProviders() {
+            $.ajax({
+                url: JWT_PROVIDERS_API,
+                method: 'GET',
+                data: {
+                    page: currentPage,
+                    limit: perPage,
+                    search: currentSearch
+                },
+                success: function(response) {
+                    const providers = response.data.providers || [];
+                    const pagination = response.data.pagination || {};
+                    renderProviders(providers);
+                    renderPagination(pagination);
+                },
+                error: function() {
+                    Swal.fire('Error', 'Gagal memuat daftar providers', 'error');
+                }
+            });
+        }
+
+        function renderProviders(providers) {
+            const tbody = $('#providersTableBody');
+            tbody.empty();
+
+            if (providers.length === 0) {
+                $('#emptyState').show();
+                $('#providersTable').hide();
+                return;
+            }
+
+            $('#emptyState').hide();
+            $('#providersTable').show();
+
+            providers.forEach((provider, index) => {
+                const rowNum = (currentPage - 1) * perPage + index + 1;
+                const statusBadge = provider.is_active 
+                    ? '<span class="badge badge-success"><i class="fas fa-check"></i> Active</span>'
+                    : '<span class="badge badge-danger"><i class="fas fa-times"></i> Inactive</span>';
+                
+                const usageBadge = provider.used_by_count > 0
+                    ? `<span class="badge badge-info"><i class="fas fa-link"></i> ${provider.used_by_count} routes</span>`
+                    : '<span class="text-muted">0 routes</span>';
+
+                const algoBadge = `<span class="badge badge-info">${provider.algorithm}</span>`;
+
+                const row = `
+                    <tr>
+                        <td>${rowNum}</td>
+                        <td>
+                            <div class="text-semibold">${escapeHtml(provider.name)}</div>
+                        </td>
+                        <td>
+                            <div class="text-muted text-small">${escapeHtml(provider.description || '-')}</div>
+                        </td>
+                        <td>${algoBadge}</td>
+                        <td>
+                            <div class="text-small">${formatDuration(provider.expired_in_seconds)}</div>
+                        </td>
+                        <td>${usageBadge}</td>
+                        <td>${statusBadge}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-info" onclick="openAssignModal(${provider.id})" title="Assign to routes">
+                                <i class="fas fa-link"></i>
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="editProvider(${provider.id})" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteProvider(${provider.id}, '${escapeHtml(provider.name)}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+
+        function renderPagination(pagination) {
+            const container = $('#paginationContainer');
+            container.empty();
+
+            if (!pagination.total || pagination.total <= perPage) return;
+
+            const totalPages = Math.ceil(pagination.total / perPage);
+            let html = '<div class="pagination">';
+            
+            if (currentPage > 1) {
+                html += `<button onclick="goToPage(${currentPage - 1})" class="btn btn-sm btn-secondary"><i class="fas fa-chevron-left"></i></button>`;
+            }
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === currentPage) {
+                    html += `<button class="btn btn-sm btn-primary">${i}</button>`;
+                } else {
+                    html += `<button onclick="goToPage(${i})" class="btn btn-sm btn-secondary">${i}</button>`;
+                }
+            }
+
+            if (currentPage < totalPages) {
+                html += `<button onclick="goToPage(${currentPage + 1})" class="btn btn-sm btn-secondary"><i class="fas fa-chevron-right"></i></button>`;
+            }
+
+            html += `</div><div class="text-center text-muted text-small mt-2">Total ${pagination.total} providers</div>`;
+            container.html(html);
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            loadProviders();
+        }
+
+        // ==================== ADD/EDIT PROVIDER ====================
+        $('#btnAddProvider').click(function() {
+            openProviderModal();
+        });
+
+        function openProviderModal(id = null) {
+            $('#providerModal').addClass('active');
+            $('#modalTitle').text(id ? 'Edit JWT Provider' : 'New JWT Provider');
+            $('#btnSaveProvider').html('<i class="fas fa-save"></i> Save Provider');
+            
+            if (!id) {
+                // Reset form
+                $('#providerId').val('');
+                $('#providerName').val('');
+                $('#providerDescription').val('');
+                $('#providerAlgorithm').val('HS256');
+                $('#providerSecret').val('');
+                $('#providerIssuer').val('');
+                $('#providerAudience').val('');
+                $('#providerExpiration').val('3600');
+                $('#providerRequireExp').prop('checked', true);
+                $('#providerRequireIat').prop('checked', true);
+                $('#providerIsActive').prop('checked', true);
+            }
+        }
+
+        function closeProviderModal() {
+            $('#providerModal').removeClass('active');
+        }
+
+        function editProvider(id) {
+            $.ajax({
+                url: JWT_PROVIDERS_API + '/' + id,
+                method: 'GET',
+                success: function(response) {
+                    const provider = response.data;
+                    openProviderModal(id);
+                    
+                    $('#providerId').val(provider.id);
+                    $('#providerName').val(provider.name);
+                    $('#providerDescription').val(provider.description || '');
+                    $('#providerAlgorithm').val(provider.algorithm);
+                    $('#providerSecret').val(provider.jwt_secret);
+                    $('#providerIssuer').val(provider.issuer || '');
+                    $('#providerAudience').val(provider.audience || '');
+                    $('#providerExpiration').val(provider.expired_in_seconds);
+                    $('#providerRequireExp').prop('checked', provider.require_exp);
+                    $('#providerRequireIat').prop('checked', provider.require_iat);
+                    $('#providerIsActive').prop('checked', provider.is_active);
+                },
+                error: function() {
+                    Swal.fire('Error', 'Gagal memuat data provider', 'error');
+                }
+            });
+        }
+
+        $('#btnSaveProvider').click(function() {
+            const id = $('#providerId').val();
+            const name = $('#providerName').val().trim();
+            const secret = $('#providerSecret').val().trim();
+
+            if (!name) {
+                Swal.fire('Error', 'Nama provider wajib diisi', 'error');
+                return;
+            }
+            if (!secret || secret.length < 32) {
+                Swal.fire('Error', 'JWT secret minimal 32 karakter', 'error');
+                return;
+            }
+
+            const data = {
+                name: name,
+                description: $('#providerDescription').val(),
+                algorithm: $('#providerAlgorithm').val(),
+                jwt_secret: secret,
+                issuer: $('#providerIssuer').val(),
+                audience: $('#providerAudience').val(),
+                expired_in_seconds: parseInt($('#providerExpiration').val()) || 3600,
+                require_exp: $('#providerRequireExp').is(':checked'),
+                require_iat: $('#providerRequireIat').is(':checked'),
+                is_active: $('#providerIsActive').is(':checked')
+            };
+
+            const url = id ? JWT_PROVIDERS_API + '/' + id : JWT_PROVIDERS_API;
+            const method = id ? 'PUT' : 'POST';
+
+            $('#btnSaveProvider').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+            $.ajax({
+                url: url,
+                method: method,
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function() {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: id ? 'Provider berhasil diupdate' : 'Provider berhasil dibuat',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    closeProviderModal();
+                    loadProviders();
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Gagal menyimpan provider';
+                    Swal.fire('Error', msg, 'error');
+                },
+                complete: function() {
+                    $('#btnSaveProvider').prop('disabled', false).html('<i class="fas fa-save"></i> Save Provider');
+                }
+            });
+        });
+
+        function deleteProvider(id, name) {
+            Swal.fire({
+                title: 'Hapus Provider?',
+                html: `Provider <strong>${escapeHtml(name)}</strong> akan dihapus.<br><small>Provider yang masih digunakan tidak bisa dihapus.</small>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonText: 'Batal',
+                confirmButtonText: 'Ya, Hapus'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: JWT_PROVIDERS_API + '/' + id,
+                        method: 'DELETE',
+                        success: function() {
+                            Swal.fire('Terhapus!', 'Provider berhasil dihapus', 'success');
+                            loadProviders();
+                        },
+                        error: function(xhr) {
+                            const msg = xhr.responseJSON?.message || 'Gagal menghapus provider';
+                            Swal.fire('Error', msg, 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        // ==================== ASSIGN PROVIDER ====================
+        function openAssignModal(providerId) {
+            providerIdForAssign = providerId;
+            $('#assignModal').addClass('active');
+            $('#assignProviderId').val(providerId);
+            
+            // Load virtual directories
+            loadVDirsForAssign();
+            
+            // Load assigned vdirs
+            loadAssignedVDirs(providerId);
+        }
+
+        function closeAssignModal() {
+            $('#assignModal').removeClass('active');
+            providerIdForAssign = null;
+        }
+
+        function loadVDirsForAssign() {
+            $.ajax({
+                url: VDIRS_API + '?limit=1000',
+                method: 'GET',
+                success: function(response) {
+                    const vdirs = response.data.virtual_directories || [];
+                    const select = $('#assignVDirSelect');
+                    select.empty();
+                    select.append('<option value="">-- Pilih Virtual Directory --</option>');
+                    
+                    vdirs.forEach(vdir => {
+                        select.append(`<option value="${vdir.id}">${escapeHtml(vdir.source_path)}</option>`);
+                    });
+
+                    select.select2({
+                        placeholder: 'Pilih Virtual Directory',
+                        allowClear: true,
+                        width: '100%'
+                    });
+                },
+                error: function() {
+                    Swal.fire('Error', 'Gagal memuat daftar virtual directories', 'error');
+                }
+            });
+        }
+
+        function loadAssignedVDirs(providerId) {
+            $.ajax({
+                url: API_BASE + `/virtual-directories?limit=1000`,
+                method: 'GET',
+                success: function(response) {
+                    const allVDirs = response.data.virtual_directories || [];
+                    
+                    // Check each vdir if it has this provider
+                    const assignedList = $('#assignedVDirsList');
+                    assignedList.empty();
+
+                    let assignedCount = 0;
+                    allVDirs.forEach(vdir => {
+                        // Get providers for this vdir
+                        $.ajax({
+                            url: API_BASE + `/virtual-directories/${vdir.id}/jwt-providers`,
+                            method: 'GET',
+                            async: false, // sync to check all
+                            success: function(resp) {
+                                const providers = resp.data.providers || [];
+                                const hasProvider = providers.some(p => p.id === providerId);
+                                
+                                if (hasProvider) {
+                                    assignedCount++;
+                                    assignedList.append(`
+                                        <div class="d-flex align-items-center justify-content-between p-2 mb-2" style="background: var(--bg-secondary); border-radius: 8px;">
+                                            <div>
+                                                <div class="text-semibold text-small">${escapeHtml(vdir.source_path)}</div>
+                                                <div class="text-muted text-small">${escapeHtml(vdir.target_path || '')}</div>
+                                            </div>
+                                            <button class="btn btn-sm btn-danger" onclick="removeAssignment(${vdir.id})" title="Remove">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    `);
+                                }
+                            }
+                        });
+                    });
+
+                    if (assignedCount === 0) {
+                        assignedList.html('<div class="text-center text-muted p-3">Belum ada virtual directory yang menggunakan provider ini</div>');
+                    }
+                }
+            });
+        }
+
+        function assignProvider() {
+            const vdirId = $('#assignVDirSelect').val();
+            
+            if (!vdirId) {
+                Swal.fire('Error', 'Pilih virtual directory terlebih dahulu', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: JWT_PROVIDERS_API + `/${providerIdForAssign}/assign`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ virtual_directory_id: parseInt(vdirId) }),
+                success: function() {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Provider berhasil di-assign',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    loadAssignedVDirs(providerIdForAssign);
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Gagal assign provider';
+                    Swal.fire('Error', msg, 'error');
+                }
+            });
+        }
+
+        function removeAssignment(vdirId) {
+            Swal.fire({
+                title: 'Remove Assignment?',
+                text: 'Virtual directory ini tidak akan menggunakan provider JWT ini lagi',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Remove',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: JWT_PROVIDERS_API + `/${providerIdForAssign}/remove/${vdirId}`,
+                        method: 'DELETE',
+                        success: function() {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: 'Assignment berhasil dihapus',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            loadAssignedVDirs(providerIdForAssign);
+                            loadProviders(); // Refresh usage count
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'Gagal menghapus assignment', 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        // ==================== UTILITIES ====================
+        function generateSecret() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            let secret = '';
+            for (let i = 0; i < 64; i++) {
+                secret += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            $('#providerSecret').val(secret);
+        }
+
+        function formatDuration(seconds) {
+            if (seconds >= 86400) return (seconds / 86400) + 'd';
+            if (seconds >= 3600) return (seconds / 3600) + 'h';
+            if (seconds >= 60) return (seconds / 60) + 'm';
+            return seconds + 's';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

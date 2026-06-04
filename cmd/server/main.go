@@ -52,6 +52,7 @@ func main() {
 	jwtConfigRepo := repository.NewJWTConfigRepository(db)
 	extAuthRepo := repository.NewExternalAuthRepository(db)
 	extAuthProviderRepo := repository.NewExternalAuthProviderRepository(db)
+	jwtProviderRepo := repository.NewJWTProviderRepository(db)
 	rateLimitRepo := repository.NewRateLimitRepository(db)
 	corsConfigRepo := repository.NewCORSConfigRepository(db)
 	circuitBreakerRepo := repository.NewCircuitBreakerRepository(db)
@@ -84,6 +85,7 @@ func main() {
 	jwtConfigService := service.NewJWTConfigService(jwtConfigRepo)
 	extAuthService := service.NewExternalAuthService(extAuthRepo)
 	extAuthProviderService := service.NewExternalAuthProviderService(extAuthProviderRepo, vdirRepo)
+	jwtProviderService := service.NewJWTProviderService(jwtProviderRepo, vdirRepo)
 	rateLimitService := service.NewRateLimitService(rateLimitRepo)
 	corsConfigService := service.NewCORSConfigService(corsConfigRepo)
 	circuitBreakerService := service.NewCircuitBreakerService(circuitBreakerRepo)
@@ -116,6 +118,7 @@ func main() {
 	jwtConfigHandler := handler.NewJWTConfigHandler(jwtConfigService)
 	extAuthHandler := handler.NewExternalAuthHandler(extAuthService)
 	extAuthProviderHandler := handler.NewExternalAuthProviderHandler(extAuthProviderService)
+	jwtProviderHandler := handler.NewJWTProviderHandler(jwtProviderService)
 	rateLimitHandler := handler.NewRateLimitHandler(rateLimitService)
 	corsConfigHandler := handler.NewCORSConfigHandler(corsConfigService)
 	circuitBreakerHandler := handler.NewCircuitBreakerHandler(circuitBreakerService)
@@ -151,7 +154,7 @@ func main() {
 	adminMux := setupAdminRouter(
 		userHandler, consumerHandler, hostHandler, vhostHandler,
 		upstreamHandler, vdirHandler, credHandler, apiKeyHandler, accessHandler,
-		jwtConfigHandler, extAuthHandler, extAuthProviderHandler, rateLimitHandler, corsConfigHandler,
+		jwtConfigHandler, extAuthHandler, extAuthProviderHandler, jwtProviderHandler, rateLimitHandler, corsConfigHandler,
 		circuitBreakerHandler, ipWhitelistHandler, ipBlacklistHandler,
 		reqHeaderHandler, resHeaderHandler, queryRewriteHandler,
 		acmeHandler, sslCertHandler, certDomainHandler, sslBindingHandler,
@@ -214,6 +217,7 @@ func setupAdminRouter(
 	jwtConfigHandler *handler.JWTConfigHandler,
 	extAuthHandler *handler.ExternalAuthHandler,
 	extAuthProviderHandler *handler.ExternalAuthProviderHandler,
+	jwtProviderHandler *handler.JWTProviderHandler,
 	rateLimitHandler *handler.RateLimitHandler,
 	corsConfigHandler *handler.CORSConfigHandler,
 	circuitBreakerHandler *handler.CircuitBreakerHandler,
@@ -344,6 +348,17 @@ func setupAdminRouter(
 	mux.HandleFunc("DELETE /api/admin/external-auth-providers/{id}/remove/{vdir_id}", extAuthProviderHandler.RemoveFromVirtualDirectory)
 	mux.HandleFunc("GET /api/admin/virtual-directories/{vdir_id}/external-auth-providers", extAuthProviderHandler.GetByVirtualDirectory)
 	mux.HandleFunc("GET /api/admin/virtual-directories/{vdir_id}/external-auth-mappings", extAuthProviderHandler.GetMappingsByVirtualDirectory)
+
+	// Routes untuk JWT Providers (Master Data)
+	mux.HandleFunc("POST /api/admin/jwt-providers", jwtProviderHandler.Create)
+	mux.HandleFunc("GET /api/admin/jwt-providers", jwtProviderHandler.GetAll)
+	mux.HandleFunc("GET /api/admin/jwt-providers/{id}", jwtProviderHandler.GetByID)
+	mux.HandleFunc("PUT /api/admin/jwt-providers/{id}", jwtProviderHandler.Update)
+	mux.HandleFunc("DELETE /api/admin/jwt-providers/{id}", jwtProviderHandler.Delete)
+	mux.HandleFunc("POST /api/admin/jwt-providers/{id}/assign", jwtProviderHandler.AssignToVirtualDirectory)
+	mux.HandleFunc("DELETE /api/admin/jwt-providers/{id}/remove/{vdir_id}", jwtProviderHandler.RemoveFromVirtualDirectory)
+	mux.HandleFunc("GET /api/admin/virtual-directories/{vdir_id}/jwt-providers", jwtProviderHandler.GetByVirtualDirectory)
+	mux.HandleFunc("GET /api/admin/virtual-directories/{vdir_id}/jwt-mappings", jwtProviderHandler.GetMappingsByVirtualDirectory)
 
 	// Routes untuk Rate Limits
 	mux.HandleFunc("POST /api/admin/rate-limits", rateLimitHandler.Create)

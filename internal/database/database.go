@@ -27,6 +27,8 @@ var requiredTables = []string{
 	"external_auth_providers",
 	"virtual_directory_external_auth",
 	"external_auth",
+	"jwt_providers",
+	"virtual_directory_jwt_providers",
 	"jwt_configs",
 	"jwt_tokens",
 	"rate_limits",
