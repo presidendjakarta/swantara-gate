@@ -74,6 +74,30 @@
         .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
         .empty-state h4 { font-size: 16px; color: var(--text-secondary); margin-bottom: 6px; }
         .empty-state p { font-size: 13px; margin: 0; }
+        
+        /* Multi-select styling */
+        select[multiple] {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 8px;
+            font-size: 13px;
+        }
+        select[multiple]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+        }
+        select[multiple] option {
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+        }
+        select[multiple] option:checked {
+            background: linear-gradient(0deg, var(--accent) 0%, var(--accent) 100%);
+            color: white;
+        }
+        select[multiple] option:hover {
+            background: var(--bg-secondary);
+        }
     </style>
 </head>
 <body>
@@ -177,14 +201,6 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Auth Type</label>
-                            <select class="form-control" id="routeAuthType">
-                                <option value="none">None</option>
-                                <option value="jwt">JWT</option>
-                                <option value="api_key">API Key</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
                             <label>Proxy Timeout (sec)</label>
                             <input type="number" class="form-control" id="routeTimeout" value="30" min="1">
                         </div>
@@ -192,15 +208,37 @@
                             <label>Retry Count</label>
                             <input type="number" class="form-control" id="routeRetryCount" value="0" min="0">
                         </div>
-                        <div class="form-group">
-                            <label>Retry Delay (ms)</label>
-                            <input type="number" class="form-control" id="routeRetryDelay" value="100" min="0">
+                    </div>
+
+                    <!-- Authentication Section -->
+                    <div style="margin-top: 20px;">
+                        <div class="section-title"><i class="fa-solid fa-shield-halved"></i> Authentication</div>
+                        
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label>JWT Providers</label>
+                            <select class="form-control" id="routeJwtProviders" multiple style="min-height: 80px;">
+                                <option value="">-- No JWT provider --</option>
+                            </select>
+                            <small style="color: var(--text-tertiary); font-size: 11px;">Hold Ctrl/Cmd to select multiple</small>
                         </div>
-                        <div class="form-group">
-                            <label>Max Request Size (MB)</label>
-                            <input type="number" class="form-control" id="routeMaxSize" value="10" min="1">
+
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label>External Auth Providers</label>
+                            <select class="form-control" id="routeExternalAuthProviders" multiple style="min-height: 80px;">
+                                <option value="">-- No external auth provider --</option>
+                            </select>
+                            <small style="color: var(--text-tertiary); font-size: 11px;">Hold Ctrl/Cmd to select multiple</small>
+                        </div>
+
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label class="switch-toggle"><input type="checkbox" id="routeRequireApiKey"><span class="switch-slider"></span></label>
+                                <span style="font-size: 12px; color: var(--text-secondary);">Require API Key</span>
+                            </div>
                         </div>
                     </div>
+
+                    <div class="form-grid" style="margin-top: 14px;">
                     <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;">
                         <div style="display:flex;align-items:center;gap:8px;">
                             <label class="switch-toggle"><input type="checkbox" id="routeStripPrefix" checked><span class="switch-slider"></span></label>
@@ -442,12 +480,85 @@
             });
         }
 
+        function loadAuthProvidersForForm() {
+            // Load JWT Providers
+            $.ajax({
+                url: '/api/admin/jwt-providers?limit=200',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        const providers = r.data.providers || [];
+                        const $select = $('#routeJwtProviders');
+                        $select.find('option').remove();
+                        if (providers.length === 0) {
+                            $select.append('<option value="">-- No JWT providers available --</option>');
+                        } else {
+                            providers.forEach(function(p) {
+                                $select.append('<option value="'+p.id+'">'+escapeHtml(p.name)+' ('+p.algorithm+')</option>');
+                            });
+                        }
+                        $select.trigger('change.select2');
+                    }
+                }
+            });
+            
+            // Load External Auth Providers
+            $.ajax({
+                url: '/api/admin/external-auth-providers?limit=200',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        const providers = r.data.providers || [];
+                        const $select = $('#routeExternalAuthProviders');
+                        $select.find('option').remove();
+                        if (providers.length === 0) {
+                            $select.append('<option value="">-- No external auth providers available --</option>');
+                        } else {
+                            providers.forEach(function(p) {
+                                $select.append('<option value="'+p.id+'">'+escapeHtml(p.name)+'</option>');
+                            });
+                        }
+                        $select.trigger('change.select2');
+                    }
+                }
+            });
+        }
+
+        function loadCurrentAuthProviders(vdirId) {
+            // Load current JWT providers
+            $.ajax({
+                url: '/api/admin/virtual-directories/' + vdirId + '/jwt-providers',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data.providers) {
+                        const providerIds = r.data.providers.map(function(p) { return p.id; });
+                        $('#routeJwtProviders').val(providerIds).trigger('change.select2');
+                    }
+                }
+            });
+            
+            // Load current External Auth providers
+            $.ajax({
+                url: '/api/admin/virtual-directories/' + vdirId + '/external-auth-providers',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data.providers) {
+                        const providerIds = r.data.providers.map(function(p) { return p.id; });
+                        $('#routeExternalAuthProviders').val(providerIds).trigger('change.select2');
+                    }
+                }
+            });
+        }
+
         function openAddForm() {
             editingId = null;
             // Init Select2 on form selects if not already
             if (!$('#routeMatchType').hasClass('select2-hidden-accessible')) {
                 $('#routeMatchType').select2({ theme: 'default' });
-                $('#routeAuthType').select2({ theme: 'default' });
                 $('#routeVHostSelect').select2({ theme: 'default', placeholder: '-- Select virtual host --' });
             }
             $('#modalTitle').text('Add Route');
@@ -455,20 +566,19 @@
             $('#routeSourcePath').val('');
             $('#routeTargetPath').val('');
             $('#routeMatchType').val('prefix');
-            $('#routeAuthType').val('none');
             $('#routeTimeout').val(30);
             $('#routeRetryCount').val(0);
-            $('#routeRetryDelay').val(100);
-            $('#routeMaxSize').val(10);
             $('#routeStripPrefix').prop('checked', true);
             $('#routePreserveHost').prop('checked', false);
             $('#routeWebsocket').prop('checked', false);
             $('#routeCache').prop('checked', false);
             $('#routeIsActive').prop('checked', true).trigger('change');
+            $('#routeRequireApiKey').prop('checked', false);
             $('#routeMethodsGroup input[type=checkbox]').each(function() { $(this).prop('checked', ['GET','POST','PUT','DELETE'].indexOf($(this).val()) >= 0); });
             $('#btnSaveText').text('Save');
             $('#btnSaveRoute').removeClass('btn-warning').addClass('btn-primary');
             loadVHostsForForm();
+            loadAuthProvidersForForm();
             $('#routeModal').addClass('active');
         }
 
@@ -476,10 +586,10 @@
             // Init Select2 on form selects if not already
             if (!$('#routeMatchType').hasClass('select2-hidden-accessible')) {
                 $('#routeMatchType').select2({ theme: 'default' });
-                $('#routeAuthType').select2({ theme: 'default' });
                 $('#routeVHostSelect').select2({ theme: 'default', placeholder: '-- Select virtual host --' });
             }
             loadVHostsForForm();
+            loadAuthProvidersForForm();
             $.ajax({ url: '/api/admin/virtual-directories/' + id, method: 'GET', headers: getHeaders(),
                 success: function(r) {
                     if (r.success && r.data) {
@@ -491,20 +601,24 @@
                         $('#routeSourcePath').val(d.source_path);
                         $('#routeTargetPath').val(d.target_path);
                         $('#routeMatchType').val(d.match_type || 'prefix').trigger('change.select2');
-                        $('#routeAuthType').val(d.auth_type || 'none').trigger('change.select2');
                         $('#routeTimeout').val(d.proxy_timeout_seconds || 30);
                         $('#routeRetryCount').val(d.retry_count || 0);
-                        $('#routeRetryDelay').val(d.retry_delay_ms || 100);
-                        $('#routeMaxSize').val(d.max_request_size_mb || 10);
                         $('#routeStripPrefix').prop('checked', d.strip_prefix);
                         $('#routePreserveHost').prop('checked', d.preserve_host_header);
                         $('#routeWebsocket').prop('checked', d.websocket_enabled);
                         $('#routeCache').prop('checked', d.cache_enabled);
                         $('#routeIsActive').prop('checked', d.is_active).trigger('change');
+                        $('#routeRequireApiKey').prop('checked', d.auth_type === 'api_key');
                         const methods = (d.methods || []).map(function(m) { return m.toUpperCase(); });
                         $('#routeMethodsGroup input[type=checkbox]').each(function() { $(this).prop('checked', methods.indexOf($(this).val()) >= 0); });
                         $('#btnSaveText').text('Update');
                         $('#btnSaveRoute').removeClass('btn-primary').addClass('btn-warning');
+                        
+                        // Load current auth providers after providers list is loaded
+                        setTimeout(function() {
+                            loadCurrentAuthProviders(id);
+                        }, 500);
+                        
                         $('#routeModal').addClass('active');
                     }
                 }, error: function() { showError('Error', 'Failed to load route data'); }
@@ -520,18 +634,27 @@
             if (!tp) { showWarning('Target path is required'); $('#routeTargetPath').focus(); return; }
             const methods = [];
             $('#routeMethodsGroup input[type=checkbox]:checked').each(function() { methods.push($(this).val()); });
+            
+            // Determine auth_type
+            let authType = 'none';
+            if ($('#routeRequireApiKey').is(':checked')) {
+                authType = 'api_key';
+            } else if ($('#routeJwtProviders').val() && $('#routeJwtProviders').val().length > 0) {
+                authType = 'jwt';
+            }
+            
             const payload = {
                 virtual_host_id: parseInt($('#routeVHostSelect').val()),
                 source_path: sp, target_path: tp,
                 match_type: $('#routeMatchType').val(),
                 strip_prefix: $('#routeStripPrefix').is(':checked'),
                 preserve_host_header: $('#routePreserveHost').is(':checked'),
-                auth_type: $('#routeAuthType').val(),
+                auth_type: authType,
                 is_active: $('#routeIsActive').is(':checked'),
                 proxy_timeout_seconds: parseInt($('#routeTimeout').val()) || 30,
                 retry_count: parseInt($('#routeRetryCount').val()) || 0,
-                retry_delay_ms: parseInt($('#routeRetryDelay').val()) || 100,
-                max_request_size_mb: parseInt($('#routeMaxSize').val()) || 10,
+                retry_delay_ms: 100,
+                max_request_size_mb: 10,
                 websocket_enabled: $('#routeWebsocket').is(':checked'),
                 cache_enabled: $('#routeCache').is(':checked'),
                 cache_ttl_seconds: 60
@@ -540,12 +663,128 @@
             const orig = btn.html();
             btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Saving...');
 
+            function handleAuthProviders(vdirId, callback) {
+                const selectedJwtProviders = $('#routeJwtProviders').val() || [];
+                const selectedExtAuthProviders = $('#routeExternalAuthProviders').val() || [];
+                
+                // Get current providers
+                $.ajax({
+                    url: '/api/admin/virtual-directories/' + vdirId + '/jwt-providers',
+                    method: 'GET',
+                    headers: getHeaders(),
+                    success: function(r) {
+                        const currentJwtIds = (r.success && r.data.providers) ? r.data.providers.map(function(p) { return p.id; }) : [];
+                        
+                        // Remove unselected JWT providers
+                        const jwtToRemove = currentJwtIds.filter(function(id) { return selectedJwtProviders.indexOf(String(id)) === -1; });
+                        const jwtToAdd = selectedJwtProviders.filter(function(id) { return currentJwtIds.indexOf(parseInt(id)) === -1; });
+                        
+                        let removeCount = jwtToRemove.length;
+                        jwtToRemove.forEach(function(providerId) {
+                            $.ajax({
+                                url: '/api/admin/jwt-providers/' + providerId + '/remove/' + vdirId,
+                                method: 'DELETE',
+                                headers: getHeaders(),
+                                complete: function() {
+                                    removeCount--;
+                                    if (removeCount === 0 && jwtToAdd.length === 0) {
+                                        // All removes done, now add
+                                        addExtAuthProviders(vdirId, callback);
+                                    }
+                                }
+                            });
+                        });
+                        
+                        // Add new JWT providers
+                        if (jwtToAdd.length > 0) {
+                            let addCount = jwtToAdd.length;
+                            jwtToAdd.forEach(function(providerId) {
+                                $.ajax({
+                                    url: '/api/admin/jwt-providers/' + providerId + '/assign',
+                                    method: 'POST',
+                                    headers: getHeaders(),
+                                    contentType: 'application/json',
+                                    data: JSON.stringify({ virtual_directory_id: vdirId }),
+                                    complete: function() {
+                                        addCount--;
+                                        if (addCount === 0 && removeCount === 0) {
+                                            addExtAuthProviders(vdirId, callback);
+                                        }
+                                    }
+                                });
+                            });
+                        } else if (jwtToRemove.length === 0) {
+                            addExtAuthProviders(vdirId, callback);
+                        }
+                    }
+                });
+            }
+            
+            function addExtAuthProviders(vdirId, callback) {
+                const selectedExtAuthProviders = $('#routeExternalAuthProviders').val() || [];
+                
+                $.ajax({
+                    url: '/api/admin/virtual-directories/' + vdirId + '/external-auth-providers',
+                    method: 'GET',
+                    headers: getHeaders(),
+                    success: function(r) {
+                        const currentExtAuthIds = (r.success && r.data.providers) ? r.data.providers.map(function(p) { return p.id; }) : [];
+                        
+                        const extAuthToRemove = currentExtAuthIds.filter(function(id) { return selectedExtAuthProviders.indexOf(String(id)) === -1; });
+                        const extAuthToAdd = selectedExtAuthProviders.filter(function(id) { return currentExtAuthIds.indexOf(parseInt(id)) === -1; });
+                        
+                        let removeCount = extAuthToRemove.length;
+                        extAuthToRemove.forEach(function(providerId) {
+                            $.ajax({
+                                url: '/api/admin/external-auth-providers/' + providerId + '/remove/' + vdirId,
+                                method: 'DELETE',
+                                headers: getHeaders(),
+                                complete: function() {
+                                    removeCount--;
+                                    if (removeCount === 0 && extAuthToAdd.length === 0) {
+                                        if (callback) callback();
+                                    }
+                                }
+                            });
+                        });
+                        
+                        if (extAuthToAdd.length > 0) {
+                            let addCount = extAuthToAdd.length;
+                            extAuthToAdd.forEach(function(providerId) {
+                                $.ajax({
+                                    url: '/api/admin/external-auth-providers/' + providerId + '/assign',
+                                    method: 'POST',
+                                    headers: getHeaders(),
+                                    contentType: 'application/json',
+                                    data: JSON.stringify({ virtual_directory_id: vdirId }),
+                                    complete: function() {
+                                        addCount--;
+                                        if (addCount === 0 && removeCount === 0) {
+                                            if (callback) callback();
+                                        }
+                                    }
+                                });
+                            });
+                        } else if (extAuthToRemove.length === 0) {
+                            if (callback) callback();
+                        }
+                    }
+                });
+            }
+
             if (editingId) {
                 delete payload.virtual_host_id;
                 $.ajax({ url: '/api/admin/virtual-directories/' + editingId, method: 'PUT', headers: getHeaders(), contentType: 'application/json', data: JSON.stringify(payload),
                     success: function() {
                         $.ajax({ url: '/api/admin/virtual-directories/' + editingId + '/methods', method: 'PUT', headers: getHeaders(), contentType: 'application/json', data: JSON.stringify({ methods: methods }),
-                            complete: function() { closeModal(); showToast('Route updated successfully', 'success'); loadRoutes(); }
+                            complete: function() {
+                                // Handle auth providers
+                                handleAuthProviders(editingId, function() {
+                                    closeModal();
+                                    showToast('Route updated successfully', 'success');
+                                    loadRoutes();
+                                });
+                            }
                         });
                     }, error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to update'); },
                     complete: function() { btn.prop('disabled', false).html(orig); }
@@ -554,11 +793,30 @@
                 $.ajax({ url: '/api/admin/virtual-directories', method: 'POST', headers: getHeaders(), contentType: 'application/json', data: JSON.stringify(payload),
                     success: function(resp) {
                         const newId = resp.data?.id;
-                        if (newId && methods.length > 0) {
-                            $.ajax({ url: '/api/admin/virtual-directories/' + newId + '/methods', method: 'PUT', headers: getHeaders(), contentType: 'application/json', data: JSON.stringify({ methods: methods }),
-                                complete: function() { closeModal(); showToast('Route added successfully', 'success'); loadRoutes(); }
-                            });
-                        } else { closeModal(); showToast('Route added successfully', 'success'); loadRoutes(); }
+                        if (newId) {
+                            if (methods.length > 0) {
+                                $.ajax({ url: '/api/admin/virtual-directories/' + newId + '/methods', method: 'PUT', headers: getHeaders(), contentType: 'application/json', data: JSON.stringify({ methods: methods }),
+                                    complete: function() {
+                                        // Handle auth providers for new route
+                                        handleAuthProviders(newId, function() {
+                                            closeModal();
+                                            showToast('Route added successfully', 'success');
+                                            loadRoutes();
+                                        });
+                                    }
+                                });
+                            } else {
+                                handleAuthProviders(newId, function() {
+                                    closeModal();
+                                    showToast('Route added successfully', 'success');
+                                    loadRoutes();
+                                });
+                            }
+                        } else {
+                            closeModal();
+                            showToast('Route added successfully', 'success');
+                            loadRoutes();
+                        }
                     }, error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to create'); },
                     complete: function() { btn.prop('disabled', false).html(orig); }
                 });
