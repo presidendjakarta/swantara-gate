@@ -1,267 +1,443 @@
+
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>External Auth Providers - Swantara Gate</title>
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Metro UI -->
     <link rel="stylesheet" href="https://cdn.metroui.org.ua/current/metro.css">
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Animate.css -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+    <!-- NProgress -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    
+    <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
+    
+    <!-- Select2 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
+    
+    <!-- App Styles -->
     <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="stylesheet" href="/assets/css/components.css">
     <link rel="stylesheet" href="/assets/css/datatables.css">
     <link rel="stylesheet" href="/assets/css/animations.css">
     <link rel="stylesheet" href="/assets/css/dark.css">
     <link rel="stylesheet" href="/assets/css/swal-custom.css">
+    
     <style>
-        .content-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); overflow: hidden; }
-        .card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-secondary); }
-        .card-header-left { display: flex; align-items: center; gap: 12px; }
-        .card-icon { width: 40px; height: 40px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 16px; }
-        .card-icon.bg-info { background: rgba(21, 101, 192, 0.12); color: #1565c0; }
-        .card-header h3 { margin: 0; font-size: 14px; font-weight: 600; }
-        .card-subtitle { margin: 0; font-size: 12px; color: var(--text-tertiary); }
-        .card-body { padding: 0; }
-        .data-table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        thead { background: var(--bg-secondary); }
-        th { padding: 12px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); text-align: left; white-space: nowrap; }
-        td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
-        tbody tr:hover { background: var(--bg-secondary); }
-        tbody tr:last-child td { border-bottom: none; }
-        .provider-name { font-weight: 600; color: var(--text-primary); }
-        .auth-url { font-family: 'SF Mono', 'Consolas', monospace; font-size: 11px; color: var(--text-secondary); background: var(--bg-secondary); padding: 4px 8px; border-radius: 4px; display: inline-block; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .method-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 640px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: slideUp 0.25s ease;
+            overflow: hidden;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-header h3 i { color: var(--accent); }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: var(--transition-fast);
+        }
+        .modal-close:hover { background: var(--bg-secondary); color: var(--text-primary); }
+        .modal-body { padding: 24px; max-height: 65vh; overflow-y: auto; }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-subtle);
+            background: var(--bg-secondary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+        }
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+        .empty-state h4 {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .empty-state p { font-size: 13px; margin: 0; }
+
+        /* Switch Toggle */
+        .switch-toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+        .switch-toggle input { opacity: 0; width: 0; height: 0; }
+        .switch-slider {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 22px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        .switch-slider::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: var(--transition-fast);
+        }
+        .switch-toggle input:checked + .switch-slider { background: var(--success); }
+        .switch-toggle input:checked + .switch-slider::before { transform: translateX(18px); }
+
+        /* Table Styles */
+        .auth-url {
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .method-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
         .method-badge.post { background: #e8f5e9; color: #2e7d32; }
         .method-badge.get { background: #e3f2fd; color: #1565c0; }
         .method-badge.put { background: #fff3e0; color: #e65100; }
-        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-        .badge-success { background: #e8f5e9; color: #2e7d32; }
-        .badge-danger { background: #ffebee; color: #c62828; }
-        .badge-primary { background: #e3f2fd; color: #1565c0; }
-        .usage-count { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--bg-secondary); border-radius: 12px; font-size: 12px; }
-        .usage-count i { color: var(--accent); }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9999; display: none; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
-        .modal-overlay.active { display: flex; }
-        .modal-box { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: slideUp 0.25s ease; overflow: hidden; }
-        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-secondary); }
-        .modal-header h3 { margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-        .modal-header h3 i { color: var(--accent); }
-        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
-        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--border-subtle); background: var(--bg-secondary); }
-        .form-row { margin-bottom: 16px; }
-        .form-row:last-child { margin-bottom: 0; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
-        .form-group .form-control { height: 38px; font-size: 13px; }
-        .form-group textarea.form-control { height: auto; min-height: 60px; resize: vertical; }
-        .form-row-inline { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .switch-toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
-        .switch-toggle input { opacity: 0; width: 0; height: 0; }
-        .switch-slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; cursor: pointer; transition: var(--transition-fast); }
-        .switch-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: var(--transition-fast); }
-        .switch-toggle input:checked + .switch-slider { background: var(--success); }
-        .switch-toggle input:checked + .switch-slider::before { transform: translateX(18px); }
-        .switch-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
-        .switch-row:last-child { border-bottom: none; }
-        .switch-row span { font-size: 13px; color: var(--text-primary); }
-        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-tertiary); }
-        .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
-        .empty-state h4 { font-size: 16px; color: var(--text-secondary); margin-bottom: 6px; }
-        .empty-state p { font-size: 13px; margin: 0; }
-        .table-loading { text-align: center; padding: 40px; color: var(--text-tertiary); }
-        .table-loading i { font-size: 24px; animation: fa-spin 1s linear infinite; margin-bottom: 10px; display: block; }
-        .action-buttons { display: flex; gap: 6px; }
-        .btn-icon { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s; }
-        .btn-icon.edit { background: rgba(21, 101, 192, 0.12); color: #1565c0; }
-        .btn-icon.edit:hover { background: rgba(21, 101, 192, 0.24); }
-        .btn-icon.delete { background: rgba(198, 40, 40, 0.12); color: #c62828; }
-        .btn-icon.delete:hover { background: rgba(198, 40, 40, 0.24); }
-        .btn-icon.assign { background: rgba(46, 125, 50, 0.12); color: #2e7d32; }
-        .btn-icon.assign:hover { background: rgba(46, 125, 50, 0.24); }
-        .mapping-section { margin-top: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 8px; }
-        .mapping-section h4 { margin: 0 0 12px 0; font-size: 13px; font-weight: 600; }
-        .mapping-list { display: flex; flex-direction: column; gap: 8px; }
-        .mapping-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--surface); border-radius: 6px; font-size: 12px; }
-        .mapping-item .vdir-info { display: flex; align-items: center; gap: 8px; }
-        .mapping-item .vdir-info i { color: var(--accent); }
+        .usage-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .usage-badge i { color: var(--accent); }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 18px;
+        }
+        .form-grid .form-group.full-width { grid-column: 1 / -1; }
+        .form-grid .form-group { margin-bottom: 0; }
+
+        /* Section Title */
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title i { font-size: 13px; color: var(--accent); }
+
+        /* Loading Spinner */
+        .table-loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-tertiary);
+        }
+        .table-loading i {
+            font-size: 24px;
+            animation: fa-spin 1s linear infinite;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Pagination */
+        .pagination-wrapper {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-subtle);
+            background: var(--bg-secondary);
+        }
     </style>
 </head>
 <body>
+    <!-- App Container -->
     <div class="app-container">
+        
+        <!-- Sidebar -->
         <div id="sidebar-container"></div>
+
+        <!-- Main Content Area -->
         <div class="app-main">
+            <!-- Top Navbar -->
             <div id="navbar-container"></div>
+
+            <!-- Page Content -->
             <main class="app-content">
+                <!-- Page Header -->
                 <div class="page-header">
                     <div>
                         <h1>External Auth Providers</h1>
                         <p>Master data for reusable external authentication providers</p>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-secondary" onclick="loadProviders()"><i class="fa-solid fa-arrows-rotate"></i> <span>Refresh</span></button>
-                        <button class="btn btn-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Provider</button>
+                        <button class="btn btn-secondary" onclick="refreshData()">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>Refresh</span>
+                        </button>
+                        <button class="btn btn-primary" onclick="openAddForm()">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Add Provider</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info Alert -->
+                <div class="content-card" style="margin-bottom: 24px; border-left: 4px solid var(--accent);">
+                    <div class="card-body" style="padding: 16px 20px;">
+                        <div style="display: flex; gap: 12px; align-items: start;">
+                            <i class="fa-solid fa-circle-info" style="color: var(--accent); font-size: 20px; margin-top: 2px;"></i>
+                            <div style="flex: 1;">
+                                <h4 style="margin-bottom: 4px; font-size: 14px;">What is an External Auth Provider?</h4>
+                                <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">An External Auth Provider is a reusable authentication service configuration. Define once and use across multiple virtual directories for forward authentication, avoiding duplicate configuration.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="content-card" style="margin-bottom: 24px;">
+                    <div class="card-body" style="padding: 16px 20px;">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <i class="fa-solid fa-search" style="color: var(--text-tertiary);"></i>
+                            <input type="text" id="searchInput" class="form-control" style="flex: 1;" placeholder="Search providers by name, description, or auth URL..." onkeyup="handleSearch(event)">
+                            <button class="btn btn-sm btn-secondary" onclick="searchProviders()">Search</button>
+                            <button class="btn btn-sm btn-light" onclick="clearSearch()">Clear</button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Providers Table -->
-                <div class="content-card fade-in-up">
+                <div class="content-card" id="providersTableCard">
                     <div class="card-header">
                         <div class="card-header-left">
-                            <div class="card-icon bg-info"><i class="fa-solid fa-shield-halved"></i></div>
+                            <div class="card-icon bg-primary">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
                             <div>
                                 <h3>Auth Providers</h3>
-                                <p class="card-subtitle">Manage reusable authentication providers</p>
+                                <p class="card-subtitle" id="tableSubtitle">Manage reusable authentication providers</p>
                             </div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <input type="text" id="searchInput" class="form-control" style="width: 250px;" placeholder="Search providers..." onkeyup="handleSearch(event)">
-                            <button class="btn btn-sm btn-secondary" onclick="searchProviders()"><i class="fa-solid fa-search"></i></button>
-                        </div>
+                        <div id="providerCountBadge"></div>
                     </div>
                     <div class="card-body">
                         <div class="data-table-wrapper">
-                            <table id="providersTable">
+                            <table>
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Provider</th>
                                         <th>Auth URL</th>
                                         <th>Method</th>
                                         <th>Timeout</th>
                                         <th>Response Keys</th>
                                         <th>Usage</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
+                                        <th style="width: 100px;">Status</th>
+                                        <th style="width: 150px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="providersTableBody">
                                     <tr>
-                                        <td colspan="8" class="table-loading">
-                                            <i class="fa-solid fa-circle-notch"></i>
-                                            Loading providers...
+                                        <td colspan="9">
+                                            <div class="table-loading">
+                                                <i class="fa-solid fa-spinner"></i>Loading providers...
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                        
-                        <!-- Pagination -->
-                        <div id="paginationContainer" style="padding: 16px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle);"></div>
                     </div>
+                    
+                    <!-- Pagination -->
+                    <div class="pagination-wrapper" id="paginationWrapper"></div>
                 </div>
             </main>
         </div>
     </div>
 
-    <!-- Add/Edit Modal -->
+    <!-- Create/Edit Modal -->
     <div class="modal-overlay" id="providerModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-shield-halved"></i> <span id="modalTitle">Add Auth Provider</span></h3>
+                <h3 id="modalTitle"><i class="fa-solid fa-shield-halved"></i> <span>Add Auth Provider</span></h3>
                 <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <form id="providerForm">
+                <form id="providerForm" onsubmit="return false;">
                     <input type="hidden" id="providerId">
                     
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="name">Provider Name <span class="text-danger">*</span></label>
-                            <input type="text" id="name" class="form-control" placeholder="e.g., Keycloak, Auth0, Custom OAuth" required>
+                    <div class="section-title"><i class="fa-solid fa-id-badge"></i> Basic Information</div>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>Provider Name <span style="color:var(--danger);">*</span></label>
+                            <input type="text" class="form-control" id="providerName" placeholder="e.g., Keycloak, Auth0, Custom OAuth">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Description</label>
+                            <textarea class="form-control" id="providerDescription" placeholder="Optional description" rows="2" style="min-height: 60px; resize: vertical;"></textarea>
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="description">Description</label>
-                            <textarea id="description" class="form-control" placeholder="Optional description"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="authUrl">Auth URL <span class="text-danger">*</span></label>
-                            <input type="url" id="authUrl" class="form-control" placeholder="https://auth.example.com/validate" required>
-                        </div>
-                    </div>
-
-                    <div class="form-row form-row-inline">
-                        <div class="form-group">
-                            <label for="httpMethod">HTTP Method</label>
-                            <select id="httpMethod" class="form-control">
-                                <option value="POST">POST</option>
-                                <option value="GET">GET</option>
-                                <option value="PUT">PUT</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="timeout">Request Timeout (seconds)</label>
-                            <input type="number" id="timeout" class="form-control" value="5" min="1" max="60">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <label style="font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 10px; display: block;">Request Forwarding</label>
-                        <div class="switch-row">
-                            <span>Send Original Headers</span>
-                            <label class="switch-toggle">
-                                <input type="checkbox" id="sendHeaders" checked>
-                                <span class="switch-slider"></span>
-                            </label>
-                        </div>
-                        <div class="switch-row">
-                            <span>Send Request Body</span>
-                            <label class="switch-toggle">
-                                <input type="checkbox" id="sendBody">
-                                <span class="switch-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <label style="font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 10px; display: block;">Response Validation</label>
-                        <div class="form-row-inline">
-                            <div class="form-group">
-                                <label for="successKey">Success Key</label>
-                                <input type="text" id="successKey" class="form-control" value="status">
+                    <div style="margin-top: 20px;">
+                        <div class="section-title"><i class="fa-solid fa-link"></i> Endpoint Configuration</div>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>Auth URL <span style="color:var(--danger);">*</span></label>
+                                <input type="url" class="form-control" id="authUrl" placeholder="https://auth.example.com/validate">
                             </div>
                             <div class="form-group">
-                                <label for="successValue">Success Value</label>
-                                <input type="text" id="successValue" class="form-control" value="true">
-                            </div>
-                        </div>
-                        <div class="form-row-inline" style="margin-top: 12px;">
-                            <div class="form-group">
-                                <label for="messageKey">Message Key</label>
-                                <input type="text" id="messageKey" class="form-control" value="message">
+                                <label>HTTP Method</label>
+                                <select class="form-control" id="httpMethod">
+                                    <option value="POST">POST</option>
+                                    <option value="GET">GET</option>
+                                    <option value="PUT">PUT</option>
+                                </select>
                             </div>
                             <div class="form-group">
-                                <label for="tokenKey">Token Key (optional)</label>
-                                <input type="text" id="tokenKey" class="form-control" placeholder="e.g., access_token">
+                                <label>Request Timeout (seconds)</label>
+                                <input type="number" class="form-control" id="requestTimeout" value="5" min="1" max="60">
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="switch-row" style="border-bottom: none; padding: 10px 0 0 0;">
-                            <span>Active</span>
-                            <label class="switch-toggle">
-                                <input type="checkbox" id="isActive" checked>
-                                <span class="switch-slider"></span>
-                            </label>
+                    <div style="margin-top: 20px;">
+                        <div class="section-title"><i class="fa-solid fa-paper-plane"></i> Request Forwarding</div>
+                        <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <label class="switch-toggle"><input type="checkbox" id="sendHeaders" checked><span class="switch-slider"></span></label>
+                                <span style="font-size:13px;font-weight:500;">Send Headers</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <label class="switch-toggle"><input type="checkbox" id="sendBody"><span class="switch-slider"></span></label>
+                                <span style="font-size:13px;font-weight:500;">Send Body</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div class="section-title"><i class="fa-solid fa-check-double"></i> Response Validation</div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Success Key</label>
+                                <input type="text" class="form-control" id="successKey" value="status">
+                            </div>
+                            <div class="form-group">
+                                <label>Success Value</label>
+                                <input type="text" class="form-control" id="successValue" value="true">
+                            </div>
+                            <div class="form-group">
+                                <label>Message Key</label>
+                                <input type="text" class="form-control" id="messageKey" value="message">
+                            </div>
+                            <div class="form-group">
+                                <label>Token Key (optional)</label>
+                                <input type="text" class="form-control" id="tokenKey" placeholder="e.g., access_token">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div class="section-title"><i class="fa-solid fa-toggle-on"></i> Provider Status</div>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <label class="switch-toggle"><input type="checkbox" id="isActive" checked><span class="switch-slider"></span></label>
+                            <span id="statusLabel" style="font-size:13px;font-weight:500;color:var(--success);">Active</span>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveProvider()"><i class="fa-solid fa-save"></i> Save Provider</button>
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </button>
+                <button class="btn btn-primary" id="btnSave" onclick="saveProvider()">
+                    <i class="fa-solid fa-check"></i> <span id="btnSaveText">Save</span>
+                </button>
             </div>
         </div>
     </div>
@@ -270,157 +446,228 @@
     <div class="modal-overlay" id="assignModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-link"></i> Assign Provider to Virtual Directory</h3>
+                <h3><i class="fa-solid fa-link"></i> <span>Assign Provider to Virtual Directory</span></h3>
                 <button class="modal-close" onclick="closeAssignModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="vdirSelect">Select Virtual Directory</label>
-                        <select id="vdirSelect" class="form-control"></select>
-                    </div>
+                <div class="form-group">
+                    <label>Select Virtual Directory</label>
+                    <select class="form-control" id="vdirSelect">
+                        <option value="">-- Choose a virtual directory --</option>
+                    </select>
                 </div>
                 
-                <div id="currentMappings" class="mapping-section" style="display: none;">
-                    <h4><i class="fa-solid fa-list"></i> Current Mappings</h4>
-                    <div id="mappingList" class="mapping-list"></div>
+                <div id="currentMappingsSection" style="margin-top: 20px; display: none;">
+                    <div class="section-title"><i class="fa-solid fa-list-check"></i> Current Mappings</div>
+                    <div id="mappingList" style="display: flex; flex-direction: column; gap: 8px;"></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeAssignModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="assignProvider()"><i class="fa-solid fa-link"></i> Assign</button>
+                <button class="btn btn-secondary" onclick="closeAssignModal()">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </button>
+                <button class="btn btn-primary" onclick="assignProvider()">
+                    <i class="fa-solid fa-link"></i> Assign
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- Command Palette -->
+    <div class="command-palette-overlay" id="commandPaletteOverlay">
+        <div class="command-palette" id="commandPalette">
+            <div class="command-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="commandInput" placeholder="Type a command or search...">
+                <kbd>ESC</kbd>
+            </div>
+            <div class="command-results" id="commandResults"></div>
+        </div>
+    </div>
+
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.metroui.org.ua/current/metro.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+    
+    <!-- SweetAlert2 Custom Config -->
+    <script src="/assets/js/swal-config.js"></script>
     <script src="/assets/js/app.js"></script>
-    <script src="/assets/js/common.js"></script>
-    <script src="/assets/js/sidebar-loader.js"></script>
+    
     <script>
+        // ========================
+        // State
+        // ========================
         let currentPage = 1;
         let currentLimit = 10;
         let currentSearch = '';
-        let editingProviderId = null;
+        let editingId = null;
         let assigningProviderId = null;
+        let providersList = [];
 
-        // Load providers on page load
+        const PROVIDER_API = '/api/admin/external-auth-providers';
+        const VDIR_API = '/api/admin/virtual-directories';
+
+        // ========================
+        // Init
+        // ========================
         $(document).ready(function() {
-            loadSidebar();
-            loadNavbar();
-            setActiveMenu('/external-auth.html');
-            loadProviders();
-            loadVirtualDirectories();
-        });
+            $('#sidebar-container').load('/components/sidebar.html');
+            $('#navbar-container').load('/components/navbar.html');
 
-        async function loadProviders() {
-            try {
-                NProgress.start();
-                const response = await fetch(`/api/admin/external-auth-providers?page=${currentPage}&limit=${currentLimit}&search=${encodeURIComponent(currentSearch)}`);
-                const data = await response.json();
-
-                if (!data.success) {
-                    throw new Error(data.message || 'Failed to load providers');
-                }
-
-                renderProviders(data.data.providers, data.data.pagination);
-            } catch (error) {
-                console.error('Error loading providers:', error);
-                Swal.fire('Error', error.message, 'error');
-                renderEmpty();
-            } finally {
-                NProgress.done();
-            }
-        }
-
-        function renderProviders(providers, pagination) {
-            const tbody = document.getElementById('providersTableBody');
-            
-            if (!providers || providers.length === 0) {
-                renderEmpty();
+            // Auth check
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = '/login.html';
                 return;
             }
 
-            tbody.innerHTML = providers.map(p => `
-                <tr>
-                    <td>
-                        <div class="provider-name">${escapeHtml(p.name)}</div>
-                        ${p.description ? `<small style="color: var(--text-tertiary);">${escapeHtml(p.description)}</small>` : ''}
-                    </td>
-                    <td><span class="auth-url" title="${escapeHtml(p.auth_url)}">${escapeHtml(p.auth_url)}</span></td>
-                    <td><span class="method-badge ${p.http_method.toLowerCase()}">${p.http_method}</span></td>
-                    <td>${p.request_timeout_seconds}s</td>
-                    <td>
-                        <small>
-                            <div>✓ ${escapeHtml(p.success_key)}=${escapeHtml(p.success_value)}</div>
-                            <div>ℹ ${escapeHtml(p.message_key)}</div>
-                            ${p.token_key ? `<div>🔑 ${escapeHtml(p.token_key)}</div>` : ''}
-                        </small>
-                    </td>
-                    <td>
-                        <span class="usage-count">
-                            <i class="fa-solid fa-route"></i>
-                            ${p.used_by_count || 0} vdir(s)
-                        </span>
-                    </td>
-                    <td>
-                        ${p.is_active 
-                            ? '<span class="badge badge-success"><i class="fa-solid fa-check-circle"></i> Active</span>'
-                            : '<span class="badge badge-danger"><i class="fa-solid fa-times-circle"></i> Inactive</span>'
-                        }
-                    </td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-icon assign" onclick="openAssignModal(${p.id})" title="Assign to VDir"><i class="fa-solid fa-link"></i></button>
-                            <button class="btn-icon edit" onclick="editProvider(${p.id})" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn-icon delete" onclick="deleteProvider(${p.id}, '${escapeHtml(p.name)}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+            loadProviders();
+            loadVirtualDirectories();
 
-            renderPagination(pagination);
+            // Toggle listeners
+            $('#isActive').on('change', function() {
+                const v = $(this).is(':checked');
+                $('#statusLabel').text(v ? 'Active' : 'Inactive').css('color', v ? 'var(--success)' : 'var(--text-tertiary)');
+            });
+
+            // Close modal
+            $('#providerModal').on('click', function(e) { if (e.target === this) closeModal(); });
+            $('#assignModal').on('click', function(e) { if (e.target === this) closeAssignModal(); });
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    closeAssignModal();
+                }
+            });
+
+            // Initialize Select2
+            $('#vdirSelect').select2({ theme: 'default', placeholder: '-- Choose a virtual directory --' });
+            $('#httpMethod').select2({ theme: 'default' });
+        });
+
+        function getHeaders() {
+            return { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') };
+        }
+
+        // ========================
+        // Load Providers
+        // ========================
+        function loadProviders() {
+            NProgress.start();
+            $('#providersTableBody').html('<tr><td colspan="9"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading providers...</div></td></tr>');
+            $('#tableSubtitle').text('Loading...');
+
+            $.ajax({
+                url: PROVIDER_API + '?page=' + currentPage + '&limit=' + currentLimit + '&search=' + encodeURIComponent(currentSearch),
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(response) {
+                    if (response.success && response.data) {
+                        providersList = response.data.providers || [];
+                        const pagination = response.data.pagination || {};
+                        renderTable(providersList);
+                        renderPagination(pagination);
+                        $('#providerCountBadge').html('<span class="badge badge-primary"><i class="fa-solid fa-shield-halved" style="margin-right:4px"></i>' + (pagination.total || 0) + ' providers</span>');
+                        $('#tableSubtitle').text((pagination.total || 0) + ' provider(s)' + (currentSearch ? ' matching "' + currentSearch + '"' : ''));
+                    } else {
+                        renderEmpty();
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 401) { window.location.href = '/login.html'; return; }
+                    showError('Error', 'Failed to load providers');
+                    renderEmpty();
+                },
+                complete: function() { NProgress.done(); }
+            });
+        }
+
+        // ========================
+        // Render Table
+        // ========================
+        function renderTable(providers) {
+            if (!providers || providers.length === 0) { renderEmpty(); return; }
+
+            let html = '';
+            providers.forEach(function(p, i) {
+                const statusBadge = p.is_active
+                    ? '<span class="badge badge-success"><i class="fa-solid fa-check-circle" style="margin-right:4px"></i>Active</span>'
+                    : '<span class="badge badge-danger"><i class="fa-solid fa-times-circle" style="margin-right:4px"></i>Inactive</span>';
+                
+                const methodClass = (p.http_method || 'POST').toLowerCase();
+                const usedByCount = p.used_by_count || 0;
+
+                html += '<tr>' +
+                    '<td>' + ((currentPage - 1) * currentLimit + i + 1) + '</td>' +
+                    '<td>' +
+                        '<div style="font-weight:600;">' + escapeHtml(p.name) + '</div>' +
+                        (p.description ? '<div style="font-size:11px;color:var(--text-tertiary);margin-top:2px;">' + escapeHtml(p.description) + '</div>' : '') +
+                    '</td>' +
+                    '<td><span class="auth-url" title="' + escapeHtml(p.auth_url) + '">' + escapeHtml(p.auth_url) + '</span></td>' +
+                    '<td><span class="method-badge ' + methodClass + '">' + p.http_method + '</span></td>' +
+                    '<td style="text-align:center;">' + p.request_timeout_seconds + 's</td>' +
+                    '<td>' +
+                        '<div style="font-size:11px;">' +
+                            '<div>✓ ' + escapeHtml(p.success_key) + '=' + escapeHtml(p.success_value) + '</div>' +
+                            '<div style="color:var(--text-tertiary);">ℹ ' + escapeHtml(p.message_key) + '</div>' +
+                            (p.token_key ? '<div style="color:var(--accent);">🔑 ' + escapeHtml(p.token_key) + '</div>' : '') +
+                        '</div>' +
+                    '</td>' +
+                    '<td>' +
+                        '<span class="usage-badge">' +
+                            '<i class="fa-solid fa-route"></i> ' + usedByCount + ' vdir(s)' +
+                        '</span>' +
+                    '</td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td>' +
+                        '<div style="display:flex;gap:6px;">' +
+                            '<button class="btn btn-sm btn-success" title="Assign to VDir" onclick="openAssignModal(' + p.id + ')"><i class="fa-solid fa-link"></i></button>' +
+                            '<button class="btn btn-sm btn-secondary" title="Edit" onclick="openEditForm(' + p.id + ')"><i class="fa-solid fa-pen"></i></button>' +
+                            '<button class="btn btn-sm btn-danger" title="Delete" onclick="deleteProvider(' + p.id + ', \'' + escapeHtml(p.name) + '\')"><i class="fa-solid fa-trash"></i></button>' +
+                        '</div>' +
+                    '</td>' +
+                '</tr>';
+            });
+
+            $('#providersTableBody').html(html);
         }
 
         function renderEmpty() {
-            document.getElementById('providersTableBody').innerHTML = `
-                <tr>
-                    <td colspan="8">
-                        <div class="empty-state">
-                            <i class="fa-solid fa-shield-halved"></i>
-                            <h4>No Auth Providers</h4>
-                            <p>Create your first external auth provider to get started</p>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            document.getElementById('paginationContainer').innerHTML = '';
+            $('#providersTableBody').html(
+                '<tr><td colspan="9">' +
+                    '<div class="empty-state">' +
+                        '<i class="fa-solid fa-shield-halved"></i>' +
+                        '<h4>No Auth Providers</h4>' +
+                        '<p>Click <strong>Add Provider</strong> to create your first external auth provider</p>' +
+                    '</div>' +
+                '</td></tr>'
+            );
+            $('#providerCountBadge').html('');
+            $('#tableSubtitle').text('No providers found');
+            $('#paginationWrapper').html('');
         }
 
+        // ========================
+        // Pagination
+        // ========================
         function renderPagination(pagination) {
-            const container = document.getElementById('paginationContainer');
             if (!pagination || pagination.totalPages <= 1) {
-                container.innerHTML = `<small style="color: var(--text-tertiary);">Total: ${pagination?.total || 0} providers</small>`;
+                $('#paginationWrapper').html('<small style="color:var(--text-tertiary);">Total: ' + (pagination?.total || 0) + ' providers</small>');
                 return;
             }
 
-            container.innerHTML = `
-                <small style="color: var(--text-tertiary);">
-                    Page ${pagination.page} of ${pagination.totalPages} (Total: ${pagination.total})
-                </small>
-                <div style="display: flex; gap: 6px;">
-                    <button class="btn btn-sm btn-secondary" ${pagination.page <= 1 ? 'disabled' : ''} onclick="changePage(${pagination.page - 1})">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </button>
-                    <button class="btn btn-sm btn-secondary" ${pagination.page >= pagination.totalPages ? 'disabled' : ''} onclick="changePage(${pagination.page + 1})">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </button>
-                </div>
-            `;
+            $('#paginationWrapper').html(
+                '<small style="color:var(--text-tertiary);">Page ' + pagination.page + ' of ' + pagination.totalPages + ' (Total: ' + pagination.total + ')</small>' +
+                '<div style="display:flex;gap:6px;">' +
+                    '<button class="btn btn-sm btn-secondary" ' + (pagination.page <= 1 ? 'disabled' : '') + ' onclick="changePage(' + (pagination.page - 1) + ')"><i class="fa-solid fa-chevron-left"></i></button>' +
+                    '<button class="btn btn-sm btn-secondary" ' + (pagination.page >= pagination.totalPages ? 'disabled' : '') + ' onclick="changePage(' + (pagination.page + 1) + ')"><i class="fa-solid fa-chevron-right"></i></button>' +
+                '</div>'
+            );
         }
 
         function changePage(page) {
@@ -428,6 +675,9 @@
             loadProviders();
         }
 
+        // ========================
+        // Search
+        // ========================
         function handleSearch(event) {
             if (event.key === 'Enter') {
                 searchProviders();
@@ -435,274 +685,299 @@
         }
 
         function searchProviders() {
-            currentSearch = document.getElementById('searchInput').value.trim();
+            currentSearch = $('#searchInput').val().trim();
             currentPage = 1;
             loadProviders();
         }
 
-        function openAddModal() {
-            editingProviderId = null;
-            document.getElementById('modalTitle').textContent = 'Add Auth Provider';
-            document.getElementById('providerForm').reset();
-            document.getElementById('providerId').value = '';
-            
-            // Set defaults
-            document.getElementById('httpMethod').value = 'POST';
-            document.getElementById('timeout').value = '5';
-            document.getElementById('successKey').value = 'status';
-            document.getElementById('successValue').value = 'true';
-            document.getElementById('messageKey').value = 'message';
-            document.getElementById('sendHeaders').checked = true;
-            document.getElementById('sendBody').checked = false;
-            document.getElementById('isActive').checked = true;
-            
-            document.getElementById('providerModal').classList.add('active');
+        function clearSearch() {
+            $('#searchInput').val('');
+            currentSearch = '';
+            currentPage = 1;
+            loadProviders();
         }
 
-        async function editProvider(id) {
-            try {
-                NProgress.start();
-                const response = await fetch(`/api/admin/external-auth-providers/${id}`);
-                const data = await response.json();
-
-                if (!data.success) {
-                    throw new Error(data.message);
-                }
-
-                const p = data.data;
-                editingProviderId = id;
-                document.getElementById('modalTitle').textContent = 'Edit Auth Provider';
-                document.getElementById('providerId').value = p.id;
-                document.getElementById('name').value = p.name;
-                document.getElementById('description').value = p.description || '';
-                document.getElementById('authUrl').value = p.auth_url;
-                document.getElementById('httpMethod').value = p.http_method;
-                document.getElementById('timeout').value = p.request_timeout_seconds;
-                document.getElementById('sendHeaders').checked = p.send_headers;
-                document.getElementById('sendBody').checked = p.send_body;
-                document.getElementById('successKey').value = p.success_key;
-                document.getElementById('successValue').value = p.success_value;
-                document.getElementById('messageKey').value = p.message_key;
-                document.getElementById('tokenKey').value = p.token_key || '';
-                document.getElementById('isActive').checked = p.is_active;
-
-                document.getElementById('providerModal').classList.add('active');
-            } catch (error) {
-                Swal.fire('Error', error.message, 'error');
-            } finally {
-                NProgress.done();
-            }
+        // ========================
+        // Modal
+        // ========================
+        function openAddForm() {
+            editingId = null;
+            $('#modalTitle span').text('Add Auth Provider');
+            $('#modalTitle i').attr('class', 'fa-solid fa-plus');
+            $('#providerId').val('');
+            $('#providerName').val('');
+            $('#providerDescription').val('');
+            $('#authUrl').val('');
+            $('#httpMethod').val('POST');
+            $('#requestTimeout').val(5);
+            $('#sendHeaders').prop('checked', true);
+            $('#sendBody').prop('checked', false);
+            $('#successKey').val('status');
+            $('#successValue').val('true');
+            $('#messageKey').val('message');
+            $('#tokenKey').val('');
+            $('#isActive').prop('checked', true).trigger('change');
+            $('#btnSaveText').text('Save');
+            $('#btnSave').removeClass('btn-warning').addClass('btn-primary');
+            $('#providerModal').addClass('active');
+            setTimeout(() => $('#providerName').focus(), 200);
         }
 
-        async function saveProvider() {
-            const name = document.getElementById('name').value.trim();
-            const authUrl = document.getElementById('authUrl').value.trim();
-
-            if (!name || !authUrl) {
-                Swal.fire('Validation Error', 'Provider name and auth URL are required', 'warning');
-                return;
+        function openEditForm(id) {
+            if (!$('#httpMethod').hasClass('select2-hidden-accessible')) {
+                $('#httpMethod').select2({ theme: 'default' });
             }
-
-            const payload = {
-                name: name,
-                description: document.getElementById('description').value.trim(),
-                auth_url: authUrl,
-                http_method: document.getElementById('httpMethod').value,
-                request_timeout_seconds: parseInt(document.getElementById('timeout').value),
-                send_headers: document.getElementById('sendHeaders').checked,
-                send_body: document.getElementById('sendBody').checked,
-                success_key: document.getElementById('successKey').value.trim() || 'status',
-                success_value: document.getElementById('successValue').value.trim() || 'true',
-                message_key: document.getElementById('messageKey').value.trim() || 'message',
-                token_key: document.getElementById('tokenKey').value.trim() || null,
-                is_active: document.getElementById('isActive').checked
-            };
-
-            try {
-                NProgress.start();
-                const isEdit = editingProviderId !== null;
-                const url = isEdit ? `/api/admin/external-auth-providers/${editingProviderId}` : '/api/admin/external-auth-providers';
-                const method = isEdit ? 'PUT' : 'POST';
-
-                const response = await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await response.json();
-
-                if (!data.success) {
-                    throw new Error(data.message);
-                }
-
-                Swal.fire('Success', data.message, 'success');
-                closeModal();
-                loadProviders();
-            } catch (error) {
-                Swal.fire('Error', error.message, 'error');
-            } finally {
-                NProgress.done();
-            }
-        }
-
-        async function deleteProvider(id, name) {
-            const result = await Swal.fire({
-                title: 'Delete Provider?',
-                html: `Are you sure you want to delete <strong>${escapeHtml(name)}</strong>?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#c62828',
-                confirmButtonText: 'Yes, Delete'
+            $.ajax({
+                url: PROVIDER_API + '/' + id,
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(response) {
+                    if (response.success && response.data) {
+                        const p = response.data;
+                        editingId = id;
+                        $('#modalTitle span').text('Edit Auth Provider');
+                        $('#modalTitle i').attr('class', 'fa-solid fa-pen');
+                        $('#providerId').val(p.id);
+                        $('#providerName').val(p.name);
+                        $('#providerDescription').val(p.description || '');
+                        $('#authUrl').val(p.auth_url);
+                        $('#httpMethod').val(p.http_method || 'POST').trigger('change.select2');
+                        $('#requestTimeout').val(p.request_timeout_seconds);
+                        $('#sendHeaders').prop('checked', p.send_headers);
+                        $('#sendBody').prop('checked', p.send_body);
+                        $('#successKey').val(p.success_key);
+                        $('#successValue').val(p.success_value);
+                        $('#messageKey').val(p.message_key);
+                        $('#tokenKey').val(p.token_key || '');
+                        $('#isActive').prop('checked', p.is_active).trigger('change');
+                        $('#btnSaveText').text('Update');
+                        $('#btnSave').removeClass('btn-primary').addClass('btn-warning');
+                        $('#providerModal').addClass('active');
+                    }
+                },
+                error: function() { showError('Error', 'Failed to load provider data'); }
             });
-
-            if (!result.isConfirmed) return;
-
-            try {
-                NProgress.start();
-                const response = await fetch(`/api/admin/external-auth-providers/${id}`, { method: 'DELETE' });
-                const data = await response.json();
-
-                if (!data.success) {
-                    throw new Error(data.message);
-                }
-
-                Swal.fire('Deleted', data.message, 'success');
-                loadProviders();
-            } catch (error) {
-                Swal.fire('Error', error.message, 'error');
-            } finally {
-                NProgress.done();
-            }
         }
 
         function closeModal() {
-            document.getElementById('providerModal').classList.remove('active');
+            $('#providerModal').removeClass('active');
+            editingId = null;
         }
 
-        // Assign Modal Functions
-        async function openAssignModal(providerId) {
-            assigningProviderId = providerId;
-            document.getElementById('assignModal').classList.add('active');
-            
-            // Load current mappings
-            try {
-                const response = await fetch(`/api/admin/virtual-directories/${assigningProviderId}/external-auth-mappings`);
-                const data = await response.json();
-                
-                if (data.success && data.data.mappings && data.data.mappings.length > 0) {
-                    document.getElementById('currentMappings').style.display = 'block';
-                    document.getElementById('mappingList').innerHTML = data.data.mappings.map(m => `
-                        <div class="mapping-item">
-                            <div class="vdir-info">
-                                <i class="fa-solid fa-route"></i>
-                                <span>${escapeHtml(m.source_path || 'N/A')} → ${escapeHtml(m.target_path || 'N/A')}</span>
-                            </div>
-                            <button class="btn btn-sm btn-danger" onclick="removeMapping(${m.virtual_directory_id}, ${providerId})">
-                                <i class="fa-solid fa-unlink"></i>
-                            </button>
-                        </div>
-                    `).join('');
-                } else {
-                    document.getElementById('currentMappings').style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error loading mappings:', error);
+        // ========================
+        // Save (Create / Update)
+        // ========================
+        function saveProvider() {
+            const name = $('#providerName').val().trim();
+            const authUrl = $('#authUrl').val().trim();
+            if (!name) { showWarning('Validation', 'Provider name is required'); $('#providerName').focus(); return; }
+            if (!authUrl) { showWarning('Validation', 'Auth URL is required'); $('#authUrl').focus(); return; }
+
+            const payload = {
+                name: name,
+                description: $('#providerDescription').val().trim(),
+                auth_url: authUrl,
+                http_method: $('#httpMethod').val(),
+                request_timeout_seconds: parseInt($('#requestTimeout').val()) || 5,
+                send_headers: $('#sendHeaders').is(':checked'),
+                send_body: $('#sendBody').is(':checked'),
+                success_key: $('#successKey').val().trim() || 'status',
+                success_value: $('#successValue').val().trim() || 'true',
+                message_key: $('#messageKey').val().trim() || 'message',
+                token_key: $('#tokenKey').val().trim() || null,
+                is_active: $('#isActive').is(':checked')
+            };
+
+            const btn = $('#btnSave');
+            const origHtml = btn.html();
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Saving...');
+
+            if (editingId) {
+                $.ajax({
+                    url: PROVIDER_API + '/' + editingId,
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function() { closeModal(); showToast('Provider updated successfully', 'success'); loadProviders(); },
+                    error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to update provider'); },
+                    complete: function() { btn.prop('disabled', false).html(origHtml); }
+                });
+            } else {
+                $.ajax({
+                    url: PROVIDER_API,
+                    method: 'POST',
+                    headers: getHeaders(),
+                    contentType: 'application/json',
+                    data: JSON.stringify(payload),
+                    success: function() { closeModal(); showToast('Provider created successfully', 'success'); loadProviders(); },
+                    error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to create provider'); },
+                    complete: function() { btn.prop('disabled', false).html(origHtml); }
+                });
             }
+        }
+
+        // ========================
+        // Delete
+        // ========================
+        function deleteProvider(id, name) {
+            showConfirm('Delete Provider', 'Are you sure you want to delete "' + name + '"? This action cannot be undone.', 'Yes, Delete', 'Cancel').then(function(result) {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: PROVIDER_API + '/' + id,
+                        method: 'DELETE',
+                        headers: getHeaders(),
+                        success: function() { showToast('Provider deleted successfully', 'success'); loadProviders(); },
+                        error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to delete provider'); }
+                    });
+                }
+            });
+        }
+
+        // ========================
+        // Assign Modal
+        // ========================
+        function openAssignModal(providerId) {
+            assigningProviderId = providerId;
+            $('#assignModal').addClass('active');
+            loadMappings(providerId);
         }
 
         function closeAssignModal() {
-            document.getElementById('assignModal').classList.remove('active');
+            $('#assignModal').removeClass('active');
             assigningProviderId = null;
         }
 
-        async function assignProvider() {
-            const vdirId = document.getElementById('vdirSelect').value;
-            
-            if (!vdirId) {
-                Swal.fire('Validation Error', 'Please select a virtual directory', 'warning');
-                return;
-            }
-
-            try {
-                NProgress.start();
-                const response = await fetch(`/api/admin/external-auth-providers/${assigningProviderId}/assign`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ virtual_directory_id: parseInt(vdirId) })
-                });
-
-                const data = await response.json();
-
-                if (!data.success) {
-                    throw new Error(data.message);
-                }
-
-                Swal.fire('Success', data.message, 'success');
-                closeAssignModal();
-                loadProviders();
-            } catch (error) {
-                Swal.fire('Error', error.message, 'error');
-            } finally {
-                NProgress.done();
-            }
-        }
-
-        async function removeMapping(vdirId, providerId) {
-            const result = await Swal.fire({
-                title: 'Remove Mapping?',
-                text: 'Remove this provider from the virtual directory?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#c62828',
-                confirmButtonText: 'Yes, Remove'
+        function loadMappings(providerId) {
+            $.ajax({
+                url: VDIR_API + '/' + providerId + '/external-auth-mappings',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(response) {
+                    if (response.success && response.data.mappings && response.data.mappings.length > 0) {
+                        $('#currentMappingsSection').show();
+                        let html = '';
+                        response.data.mappings.forEach(function(m) {
+                            html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-secondary);border-radius:6px;">' +
+                                '<div style="display:flex;align-items:center;gap:8px;">' +
+                                    '<i class="fa-solid fa-route" style="color:var(--accent);"></i>' +
+                                    '<span style="font-size:13px;">' + escapeHtml(m.source_path || 'N/A') + ' → ' + escapeHtml(m.target_path || 'N/A') + '</span>' +
+                                '</div>' +
+                                '<button class="btn btn-sm btn-danger" onclick="removeMapping(' + m.virtual_directory_id + ', ' + providerId + ')"><i class="fa-solid fa-unlink"></i></button>' +
+                            '</div>';
+                        });
+                        $('#mappingList').html(html);
+                    } else {
+                        $('#currentMappingsSection').hide();
+                    }
+                },
+                error: function() { $('#currentMappingsSection').hide(); }
             });
-
-            if (!result.isConfirmed) return;
-
-            try {
-                NProgress.start();
-                const response = await fetch(`/api/admin/external-auth-providers/${providerId}/remove/${vdirId}`, { method: 'DELETE' });
-                const data = await response.json();
-
-                if (!data.success) {
-                    throw new Error(data.message);
-                }
-
-                Swal.fire('Removed', data.message, 'success');
-                openAssignModal(providerId); // Refresh mappings
-                loadProviders();
-            } catch (error) {
-                Swal.fire('Error', error.message, 'error');
-            } finally {
-                NProgress.done();
-            }
         }
 
-        // Load virtual directories for assign dropdown
-        async function loadVirtualDirectories() {
-            try {
-                const response = await fetch('/api/admin/virtual-directories?limit=1000');
-                const data = await response.json();
+        function assignProvider() {
+            const vdirId = $('#vdirSelect').val();
+            if (!vdirId) { showWarning('Validation', 'Please select a virtual directory'); return; }
 
-                if (!data.success) return;
+            const btn = $('#assignModal .btn-primary');
+            const origHtml = btn.html();
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Assigning...');
 
-                const select = document.getElementById('vdirSelect');
-                select.innerHTML = '<option value="">-- Select Virtual Directory --</option>' + 
-                    data.data.directories.map(d => 
-                        `<option value="${d.id}">${escapeHtml(d.source_path || d.target_path)}</option>`
-                    ).join('');
-            } catch (error) {
-                console.error('Error loading virtual directories:', error);
-            }
+            $.ajax({
+                url: PROVIDER_API + '/' + assigningProviderId + '/assign',
+                method: 'POST',
+                headers: getHeaders(),
+                contentType: 'application/json',
+                data: JSON.stringify({ virtual_directory_id: parseInt(vdirId) }),
+                success: function() {
+                    closeAssignModal();
+                    showToast('Provider assigned successfully', 'success');
+                    loadProviders();
+                    loadMappings(assigningProviderId);
+                },
+                error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to assign provider'); },
+                complete: function() { btn.prop('disabled', false).html(origHtml); }
+            });
+        }
+
+        function removeMapping(vdirId, providerId) {
+            showConfirm('Remove Mapping', 'Remove this provider from the virtual directory?', 'Yes, Remove', 'Cancel').then(function(result) {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: PROVIDER_API + '/' + providerId + '/remove/' + vdirId,
+                        method: 'DELETE',
+                        headers: getHeaders(),
+                        success: function() {
+                            showToast('Mapping removed successfully', 'success');
+                            loadProviders();
+                            loadMappings(providerId);
+                        },
+                        error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to remove mapping'); }
+                    });
+                }
+            });
+        }
+
+        // ========================
+        // Load Virtual Directories
+        // ========================
+        function loadVirtualDirectories() {
+            $.ajax({
+                url: VDIR_API + '?limit=1000',
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(response) {
+                    if (response.success && response.data) {
+                        const vdirs = response.data.directories || [];
+                        const $select = $('#vdirSelect');
+                        $select.find('option:not(:first)').remove();
+                        vdirs.forEach(function(d) {
+                            $select.append('<option value="' + d.id + '">' + escapeHtml(d.source_path || d.target_path) + '</option>');
+                        });
+                        $select.trigger('change.select2');
+                    }
+                },
+                error: function() { console.error('Failed to load virtual directories'); }
+            });
+        }
+
+        // ========================
+        // Helpers
+        // ========================
+        function refreshData() {
+            loadProviders();
+            loadVirtualDirectories();
         }
 
         function escapeHtml(text) {
             if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        function logout() {
+            $.ajax({
+                url: '/api/admin/auth/logout',
+                method: 'POST',
+                headers: getHeaders(),
+                complete: function() {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    window.location.href = '/login.html';
+                }
+            });
+        }
+
+        function reloadConfig() {
+            $.ajax({
+                url: '/api/admin/config/reload',
+                method: 'POST',
+                headers: getHeaders(),
+                success: function() { showToast('Proxy configuration reloaded successfully', 'success'); },
+                error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to reload configuration'); }
+            });
         }
     </script>
+    
 </body>
 </html>
