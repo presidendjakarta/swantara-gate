@@ -74,18 +74,30 @@ func (r *JWTConfigRepository) GetByID(id int64) (*model.JWTConfig, error) {
 }
 
 // GetAll mengambil semua JWT configs dengan pagination
-func (r *JWTConfigRepository) GetAll(page, limit int) ([]model.JWTConfig, error) {
+func (r *JWTConfigRepository) GetAll(page, limit int, search string) ([]model.JWTConfig, error) {
 	offset := (page - 1) * limit
+	
+	var args []interface{}
+	
 	query := `
 		SELECT jc.id, jc.virtual_directory_id, jc.algorithm, jc.jwt_secret, jc.issuer, jc.audience,
 		       jc.expired_in_seconds, jc.clock_skew_seconds, jc.require_exp, jc.require_iat,
 		       jc.is_active, jc.created_at, vd.source_path
 		FROM jwt_configs jc
 		LEFT JOIN virtual_directories vd ON jc.virtual_directory_id = vd.id
-		ORDER BY jc.created_at DESC
-		LIMIT ? OFFSET ?
 	`
-	rows, err := r.DB.Query(query, limit, offset)
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR jc.issuer LIKE ? OR jc.audience LIKE ? OR jc.algorithm LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY jc.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
+	
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar JWT config: %w", err)
 	}
@@ -175,9 +187,20 @@ func (r *JWTConfigRepository) Delete(id int64) error {
 }
 
 // Count menghitung total JWT configs
-func (r *JWTConfigRepository) Count() (int64, error) {
+func (r *JWTConfigRepository) Count(search string) (int64, error) {
 	var count int64
-	err := r.DB.QueryRow("SELECT COUNT(*) FROM jwt_configs").Scan(&count)
+	var err error
+	
+	query := `SELECT COUNT(*) FROM jwt_configs jc LEFT JOIN virtual_directories vd ON jc.virtual_directory_id = vd.id`
+	
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR jc.issuer LIKE ? OR jc.audience LIKE ? OR jc.algorithm LIKE ?`
+		searchPattern := "%" + search + "%"
+		err = r.DB.QueryRow(query, searchPattern, searchPattern, searchPattern, searchPattern).Scan(&count)
+	} else {
+		err = r.DB.QueryRow(query).Scan(&count)
+	}
+	
 	return count, err
 }
 
@@ -251,17 +274,30 @@ func (r *ExternalAuthRepository) GetByID(id int64) (*model.ExternalAuth, error) 
 }
 
 // GetAll mengambil semua external auth dengan pagination
-func (r *ExternalAuthRepository) GetAll(page, limit int) ([]model.ExternalAuth, error) {
+func (r *ExternalAuthRepository) GetAll(page, limit int, search string) ([]model.ExternalAuth, error) {
 	offset := (page - 1) * limit
+	
+	var args []interface{}
+	
 	query := `
 		SELECT ea.id, ea.virtual_directory_id, ea.auth_url, ea.http_method, ea.request_timeout_seconds,
 		       ea.send_headers, ea.send_body, ea.success_key, ea.success_value, ea.message_key,
 		       ea.token_key, ea.is_active, ea.created_at, vd.source_path
 		FROM external_auth ea
 		LEFT JOIN virtual_directories vd ON ea.virtual_directory_id = vd.id
-		ORDER BY ea.created_at DESC LIMIT ? OFFSET ?
 	`
-	rows, err := r.DB.Query(query, limit, offset)
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR ea.auth_url LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY ea.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
+	
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar external auth: %w", err)
 	}
@@ -319,9 +355,20 @@ func (r *ExternalAuthRepository) Delete(id int64) error {
 }
 
 // Count menghitung total external auth
-func (r *ExternalAuthRepository) Count() (int64, error) {
+func (r *ExternalAuthRepository) Count(search string) (int64, error) {
 	var count int64
-	err := r.DB.QueryRow("SELECT COUNT(*) FROM external_auth").Scan(&count)
+	var err error
+	
+	query := `SELECT COUNT(*) FROM external_auth ea LEFT JOIN virtual_directories vd ON ea.virtual_directory_id = vd.id`
+	
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR ea.auth_url LIKE ?`
+		searchPattern := "%" + search + "%"
+		err = r.DB.QueryRow(query, searchPattern, searchPattern).Scan(&count)
+	} else {
+		err = r.DB.QueryRow(query).Scan(&count)
+	}
+	
 	return count, err
 }
 
@@ -384,16 +431,29 @@ func (r *RateLimitRepository) GetByID(id int64) (*model.RateLimit, error) {
 }
 
 // GetAll mengambil semua rate limits dengan pagination
-func (r *RateLimitRepository) GetAll(page, limit int) ([]model.RateLimit, error) {
+func (r *RateLimitRepository) GetAll(page, limit int, search string) ([]model.RateLimit, error) {
 	offset := (page - 1) * limit
+	
+	var args []interface{}
+	
 	query := `
 		SELECT rl.id, rl.virtual_directory_id, rl.limit_by, rl.requests_per_minute, rl.burst,
 		       rl.block_duration_seconds, rl.is_active, rl.created_at, vd.source_path
 		FROM rate_limits rl
 		LEFT JOIN virtual_directories vd ON rl.virtual_directory_id = vd.id
-		ORDER BY rl.created_at DESC LIMIT ? OFFSET ?
 	`
-	rows, err := r.DB.Query(query, limit, offset)
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR rl.limit_by LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY rl.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
+	
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar rate limit: %w", err)
 	}
@@ -442,9 +502,20 @@ func (r *RateLimitRepository) Delete(id int64) error {
 }
 
 // Count menghitung total rate limits
-func (r *RateLimitRepository) Count() (int64, error) {
+func (r *RateLimitRepository) Count(search string) (int64, error) {
 	var count int64
-	err := r.DB.QueryRow("SELECT COUNT(*) FROM rate_limits").Scan(&count)
+	var err error
+	
+	query := `SELECT COUNT(*) FROM rate_limits rl LEFT JOIN virtual_directories vd ON rl.virtual_directory_id = vd.id`
+	
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR rl.limit_by LIKE ?`
+		searchPattern := "%" + search + "%"
+		err = r.DB.QueryRow(query, searchPattern, searchPattern).Scan(&count)
+	} else {
+		err = r.DB.QueryRow(query).Scan(&count)
+	}
+	
 	return count, err
 }
 
@@ -511,16 +582,29 @@ func (r *CORSConfigRepository) GetByID(id int64) (*model.CORSConfig, error) {
 }
 
 // GetAll mengambil semua CORS configs dengan pagination
-func (r *CORSConfigRepository) GetAll(page, limit int) ([]model.CORSConfig, error) {
+func (r *CORSConfigRepository) GetAll(page, limit int, search string) ([]model.CORSConfig, error) {
 	offset := (page - 1) * limit
+	
+	var args []interface{}
+	
 	query := `
 		SELECT cc.id, cc.virtual_directory_id, cc.allowed_origins, cc.allowed_methods, cc.allowed_headers,
 		       cc.exposed_headers, cc.allow_credentials, cc.max_age_seconds, cc.is_active, cc.created_at, vd.source_path
 		FROM cors_configs cc
 		LEFT JOIN virtual_directories vd ON cc.virtual_directory_id = vd.id
-		ORDER BY cc.created_at DESC LIMIT ? OFFSET ?
 	`
-	rows, err := r.DB.Query(query, limit, offset)
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR cc.allowed_origins LIKE ? OR cc.allowed_methods LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY cc.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
+	
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar CORS config: %w", err)
 	}
@@ -573,9 +657,20 @@ func (r *CORSConfigRepository) Delete(id int64) error {
 }
 
 // Count menghitung total CORS configs
-func (r *CORSConfigRepository) Count() (int64, error) {
+func (r *CORSConfigRepository) Count(search string) (int64, error) {
 	var count int64
-	err := r.DB.QueryRow("SELECT COUNT(*) FROM cors_configs").Scan(&count)
+	var err error
+	
+	query := `SELECT COUNT(*) FROM cors_configs cc LEFT JOIN virtual_directories vd ON cc.virtual_directory_id = vd.id`
+	
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR cc.allowed_origins LIKE ? OR cc.allowed_methods LIKE ?`
+		searchPattern := "%" + search + "%"
+		err = r.DB.QueryRow(query, searchPattern, searchPattern, searchPattern).Scan(&count)
+	} else {
+		err = r.DB.QueryRow(query).Scan(&count)
+	}
+	
 	return count, err
 }
 
@@ -637,16 +732,28 @@ func (r *CircuitBreakerRepository) GetByID(id int64) (*model.CircuitBreaker, err
 }
 
 // GetAll mengambil semua circuit breakers dengan pagination
-func (r *CircuitBreakerRepository) GetAll(page, limit int) ([]model.CircuitBreaker, error) {
+func (r *CircuitBreakerRepository) GetAll(page, limit int, search string) ([]model.CircuitBreaker, error) {
 	offset := (page - 1) * limit
+	
+	var args []interface{}
+	
 	query := `
 		SELECT cb.id, cb.virtual_directory_id, cb.enabled, cb.failure_threshold,
 		       cb.recovery_timeout_seconds, cb.half_open_max_requests, cb.created_at, vd.source_path
 		FROM circuit_breakers cb
 		LEFT JOIN virtual_directories vd ON cb.virtual_directory_id = vd.id
-		ORDER BY cb.created_at DESC LIMIT ? OFFSET ?
 	`
-	rows, err := r.DB.Query(query, limit, offset)
+	
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern)
+	}
+	
+	query += ` ORDER BY cb.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
+	
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar circuit breaker: %w", err)
 	}
@@ -695,9 +802,20 @@ func (r *CircuitBreakerRepository) Delete(id int64) error {
 }
 
 // Count menghitung total circuit breakers
-func (r *CircuitBreakerRepository) Count() (int64, error) {
+func (r *CircuitBreakerRepository) Count(search string) (int64, error) {
 	var count int64
-	err := r.DB.QueryRow("SELECT COUNT(*) FROM circuit_breakers").Scan(&count)
+	var err error
+	
+	query := `SELECT COUNT(*) FROM circuit_breakers cb LEFT JOIN virtual_directories vd ON cb.virtual_directory_id = vd.id`
+	
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ?`
+		searchPattern := "%" + search + "%"
+		err = r.DB.QueryRow(query, searchPattern).Scan(&count)
+	} else {
+		err = r.DB.QueryRow(query).Scan(&count)
+	}
+	
 	return count, err
 }
 
@@ -752,15 +870,27 @@ func (r *IPWhitelistRepository) GetByID(id int64) (*model.IPWhitelist, error) {
 }
 
 // GetAll mengambil semua IP whitelist dengan pagination
-func (r *IPWhitelistRepository) GetAll(page, limit int) ([]model.IPWhitelist, error) {
+func (r *IPWhitelistRepository) GetAll(page, limit int, search string) ([]model.IPWhitelist, error) {
 	offset := (page - 1) * limit
+	
+	var args []interface{}
+	
 	query := `
 		SELECT iw.id, iw.virtual_directory_id, iw.ip_address, iw.description, iw.is_active, iw.created_at, vd.source_path
 		FROM ip_whitelists iw
 		LEFT JOIN virtual_directories vd ON iw.virtual_directory_id = vd.id
-		ORDER BY iw.created_at DESC LIMIT ? OFFSET ?
 	`
-	rows, err := r.DB.Query(query, limit, offset)
+	
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR iw.ip_address LIKE ? OR iw.description LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY iw.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
+	
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar IP whitelist: %w", err)
 	}
@@ -832,9 +962,20 @@ func (r *IPWhitelistRepository) Delete(id int64) error {
 }
 
 // Count menghitung total IP whitelist
-func (r *IPWhitelistRepository) Count() (int64, error) {
+func (r *IPWhitelistRepository) Count(search string) (int64, error) {
 	var count int64
-	err := r.DB.QueryRow("SELECT COUNT(*) FROM ip_whitelists").Scan(&count)
+	var err error
+	
+	query := `SELECT COUNT(*) FROM ip_whitelists iw LEFT JOIN virtual_directories vd ON iw.virtual_directory_id = vd.id`
+	
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR iw.ip_address LIKE ? OR iw.description LIKE ?`
+		searchPattern := "%" + search + "%"
+		err = r.DB.QueryRow(query, searchPattern, searchPattern, searchPattern).Scan(&count)
+	} else {
+		err = r.DB.QueryRow(query).Scan(&count)
+	}
+	
 	return count, err
 }
 
@@ -899,15 +1040,27 @@ func (r *IPBlacklistRepository) GetByID(id int64) (*model.IPBlacklist, error) {
 }
 
 // GetAll mengambil semua IP blacklist dengan pagination
-func (r *IPBlacklistRepository) GetAll(page, limit int) ([]model.IPBlacklist, error) {
+func (r *IPBlacklistRepository) GetAll(page, limit int, search string) ([]model.IPBlacklist, error) {
 	offset := (page - 1) * limit
+	
+	var args []interface{}
+	
 	query := `
 		SELECT ib.id, ib.virtual_directory_id, ib.ip_address, ib.reason, ib.expired_at, ib.is_active, ib.created_at, vd.source_path
 		FROM ip_blacklists ib
 		LEFT JOIN virtual_directories vd ON ib.virtual_directory_id = vd.id
-		ORDER BY ib.created_at DESC LIMIT ? OFFSET ?
 	`
-	rows, err := r.DB.Query(query, limit, offset)
+	
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR ib.ip_address LIKE ? OR ib.reason LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY ib.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
+	
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar IP blacklist: %w", err)
 	}
@@ -987,8 +1140,19 @@ func (r *IPBlacklistRepository) Delete(id int64) error {
 }
 
 // Count menghitung total IP blacklist
-func (r *IPBlacklistRepository) Count() (int64, error) {
+func (r *IPBlacklistRepository) Count(search string) (int64, error) {
 	var count int64
-	err := r.DB.QueryRow("SELECT COUNT(*) FROM ip_blacklists").Scan(&count)
+	var err error
+	
+	query := `SELECT COUNT(*) FROM ip_blacklists ib LEFT JOIN virtual_directories vd ON ib.virtual_directory_id = vd.id`
+	
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR ib.ip_address LIKE ? OR ib.reason LIKE ?`
+		searchPattern := "%" + search + "%"
+		err = r.DB.QueryRow(query, searchPattern, searchPattern, searchPattern).Scan(&count)
+	} else {
+		err = r.DB.QueryRow(query).Scan(&count)
+	}
+	
 	return count, err
 }

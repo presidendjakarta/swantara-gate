@@ -64,7 +64,7 @@ func (s *UpstreamServerService) GetUpstreamServerByID(id int64) (*model.Upstream
 }
 
 // GetAllUpstreamServers mengambil semua upstream server dengan pagination
-func (s *UpstreamServerService) GetAllUpstreamServers(page, limit int) ([]model.UpstreamServer, int64, error) {
+func (s *UpstreamServerService) GetAllUpstreamServers(page, limit int, search string) ([]model.UpstreamServer, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -72,12 +72,12 @@ func (s *UpstreamServerService) GetAllUpstreamServers(page, limit int) ([]model.
 		limit = 10
 	}
 
-	total, err := s.UpstreamRepo.Count()
+	total, err := s.UpstreamRepo.Count(search)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	servers, err := s.UpstreamRepo.GetAll(page, limit)
+	servers, err := s.UpstreamRepo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, err
 	}

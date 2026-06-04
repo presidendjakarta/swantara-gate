@@ -114,18 +114,29 @@ func (r *ConsumerCredentialRepository) GetByID(id int64) (*model.ConsumerCredent
 }
 
 // GetAll mengambil semua credentials dengan pagination
-func (r *ConsumerCredentialRepository) GetAll(page, limit int) ([]model.ConsumerCredential, error) {
+func (r *ConsumerCredentialRepository) GetAll(page, limit int, search string) ([]model.ConsumerCredential, error) {
 	offset := (page - 1) * limit
+	
+	var args []interface{}
+	
 	query := `
 		SELECT cc.id, cc.consumer_id, cc.auth_type, cc.username, cc.api_key, cc.jwt_secret,
 		       cc.expired_at, cc.is_active, cc.created_at, ac.consumer_name
 		FROM consumer_credentials cc
 		LEFT JOIN api_consumers ac ON cc.consumer_id = ac.id
-		ORDER BY cc.created_at DESC
-		LIMIT ? OFFSET ?
 	`
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE ac.consumer_name LIKE ? OR cc.username LIKE ? OR cc.auth_type LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY cc.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
 
-	rows, err := r.DB.Query(query, limit, offset)
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar credential: %w", err)
 	}
@@ -228,9 +239,20 @@ func (r *ConsumerCredentialRepository) Delete(id int64) error {
 }
 
 // Count menghitung total credentials
-func (r *ConsumerCredentialRepository) Count() (int64, error) {
+func (r *ConsumerCredentialRepository) Count(search string) (int64, error) {
 	var count int64
-	err := r.DB.QueryRow("SELECT COUNT(*) FROM consumer_credentials").Scan(&count)
+	var err error
+	
+	query := `SELECT COUNT(*) FROM consumer_credentials cc LEFT JOIN api_consumers ac ON cc.consumer_id = ac.id`
+	
+	if search != "" {
+		query += ` WHERE ac.consumer_name LIKE ? OR cc.username LIKE ? OR cc.auth_type LIKE ?`
+		searchPattern := "%" + search + "%"
+		err = r.DB.QueryRow(query, searchPattern, searchPattern, searchPattern).Scan(&count)
+	} else {
+		err = r.DB.QueryRow(query).Scan(&count)
+	}
+	
 	if err != nil {
 		return 0, fmt.Errorf("gagal menghitung credential: %w", err)
 	}
@@ -328,18 +350,29 @@ func (r *APIKeyRepository) GetByID(id int64) (*model.APIKey, error) {
 }
 
 // GetAll mengambil semua API keys dengan pagination
-func (r *APIKeyRepository) GetAll(page, limit int) ([]model.APIKey, error) {
+func (r *APIKeyRepository) GetAll(page, limit int, search string) ([]model.APIKey, error) {
 	offset := (page - 1) * limit
+	
+	var args []interface{}
+	
 	query := `
 		SELECT ak.id, ak.consumer_id, ak.api_key, ak.description, ak.expired_at,
 		       ak.rate_limit_override, ak.is_active, ak.created_at, COALESCE(ac.consumer_name, '') as consumer_name
 		FROM api_keys ak
 		LEFT JOIN api_consumers ac ON ak.consumer_id = ac.id
-		ORDER BY ak.created_at DESC
-		LIMIT ? OFFSET ?
 	`
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE ak.description LIKE ? OR ak.api_key LIKE ? OR ac.consumer_name LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY ak.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
 
-	rows, err := r.DB.Query(query, limit, offset)
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar API keys: %w", err)
 	}
@@ -475,9 +508,20 @@ func (r *APIKeyRepository) Delete(id int64) error {
 }
 
 // Count menghitung total API keys
-func (r *APIKeyRepository) Count() (int64, error) {
+func (r *APIKeyRepository) Count(search string) (int64, error) {
 	var count int64
-	err := r.DB.QueryRow("SELECT COUNT(*) FROM api_keys").Scan(&count)
+	var err error
+	
+	query := `SELECT COUNT(*) FROM api_keys ak LEFT JOIN api_consumers ac ON ak.consumer_id = ac.id`
+	
+	if search != "" {
+		query += ` WHERE ak.description LIKE ? OR ak.api_key LIKE ? OR ac.consumer_name LIKE ?`
+		searchPattern := "%" + search + "%"
+		err = r.DB.QueryRow(query, searchPattern, searchPattern, searchPattern).Scan(&count)
+	} else {
+		err = r.DB.QueryRow(query).Scan(&count)
+	}
+	
 	if err != nil {
 		return 0, fmt.Errorf("gagal menghitung API keys: %w", err)
 	}

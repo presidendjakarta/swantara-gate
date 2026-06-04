@@ -95,8 +95,11 @@ func (r *UpstreamServerRepository) GetByID(id int64) (*model.UpstreamServer, err
 }
 
 // GetAll mengambil semua upstream server dengan pagination
-func (r *UpstreamServerRepository) GetAll(page, limit int) ([]model.UpstreamServer, error) {
+func (r *UpstreamServerRepository) GetAll(page, limit int, search string) ([]model.UpstreamServer, error) {
 	offset := (page - 1) * limit
+	
+	var args []interface{}
+	
 	query := `
 		SELECT us.id, us.virtual_host_id, us.target_host, us.target_port, us.protocol,
 		       us.priority, us.weight, us.is_backup, us.is_active,
@@ -106,11 +109,19 @@ func (r *UpstreamServerRepository) GetAll(page, limit int) ([]model.UpstreamServ
 		       vh.vhost_name
 		FROM upstream_servers us
 		LEFT JOIN virtual_hosts vh ON us.virtual_host_id = vh.id
-		ORDER BY us.created_at DESC
-		LIMIT ? OFFSET ?
 	`
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE us.target_host LIKE ? OR vh.vhost_name LIKE ? OR us.protocol LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY us.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
 
-	rows, err := r.DB.Query(query, limit, offset)
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar upstream server: %w", err)
 	}
@@ -222,9 +233,20 @@ func (r *UpstreamServerRepository) Delete(id int64) error {
 }
 
 // Count menghitung total upstream server
-func (r *UpstreamServerRepository) Count() (int64, error) {
+func (r *UpstreamServerRepository) Count(search string) (int64, error) {
 	var count int64
-	err := r.DB.QueryRow("SELECT COUNT(*) FROM upstream_servers").Scan(&count)
+	var err error
+	
+	query := `SELECT COUNT(*) FROM upstream_servers us LEFT JOIN virtual_hosts vh ON us.virtual_host_id = vh.id`
+	
+	if search != "" {
+		query += ` WHERE us.target_host LIKE ? OR vh.vhost_name LIKE ? OR us.protocol LIKE ?`
+		searchPattern := "%" + search + "%"
+		err = r.DB.QueryRow(query, searchPattern, searchPattern, searchPattern).Scan(&count)
+	} else {
+		err = r.DB.QueryRow(query).Scan(&count)
+	}
+	
 	if err != nil {
 		return 0, fmt.Errorf("gagal menghitung upstream server: %w", err)
 	}

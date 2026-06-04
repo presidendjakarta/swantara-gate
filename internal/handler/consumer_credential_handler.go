@@ -62,8 +62,9 @@ func (h *ConsumerCredentialHandler) GetCredentialByID(w http.ResponseWriter, r *
 // GetAllCredentials handler untuk mengambil semua credentials
 func (h *ConsumerCredentialHandler) GetAllCredentials(w http.ResponseWriter, r *http.Request) {
 	page, limit := parsePagination(r)
+	search := r.URL.Query().Get("search")
 
-	creds, total, err := h.Service.GetAllCredentials(page, limit)
+	creds, total, err := h.Service.GetAllCredentials(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar credential")
 		return
@@ -188,8 +189,9 @@ func (h *APIKeyHandler) GetAPIKeyByID(w http.ResponseWriter, r *http.Request) {
 // GetAllAPIKeys handler untuk mengambil semua API keys
 func (h *APIKeyHandler) GetAllAPIKeys(w http.ResponseWriter, r *http.Request) {
 	page, limit := parsePagination(r)
+	search := r.URL.Query().Get("search")
 
-	keys, total, err := h.Service.GetAllAPIKeys(page, limit)
+	keys, total, err := h.Service.GetAllAPIKeys(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar API keys")
 		return

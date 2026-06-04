@@ -68,7 +68,7 @@ func (s *UserService) GetUserByID(id int64) (*model.User, error) {
 }
 
 // GetAllUsers mengambil semua user dengan pagination
-func (s *UserService) GetAllUsers(page, limit int) ([]model.User, int64, error) {
+func (s *UserService) GetAllUsers(page, limit int, search string) ([]model.User, int64, error) {
 	// Validasi pagination
 	if page < 1 {
 		page = 1
@@ -78,13 +78,13 @@ func (s *UserService) GetAllUsers(page, limit int) ([]model.User, int64, error) 
 	}
 
 	// Mengambil total count
-	total, err := s.UserRepo.Count()
+	total, err := s.UserRepo.Count(search)
 	if err != nil {
 		return nil, 0, fmt.Errorf("gagal menghitung user: %w", err)
 	}
 
 	// Mengambil data user
-	users, err := s.UserRepo.GetAll(page, limit)
+	users, err := s.UserRepo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, fmt.Errorf("gagal mengambil daftar user: %w", err)
 	}

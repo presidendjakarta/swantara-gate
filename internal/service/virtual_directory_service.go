@@ -55,7 +55,7 @@ func (s *VirtualDirectoryService) GetVirtualDirectoryByID(id int64) (*model.Virt
 }
 
 // GetAllVirtualDirectories mengambil semua virtual directory dengan pagination
-func (s *VirtualDirectoryService) GetAllVirtualDirectories(page, limit int) ([]model.VirtualDirectory, int64, error) {
+func (s *VirtualDirectoryService) GetAllVirtualDirectories(page, limit int, search string) ([]model.VirtualDirectory, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -63,12 +63,12 @@ func (s *VirtualDirectoryService) GetAllVirtualDirectories(page, limit int) ([]m
 		limit = 10
 	}
 
-	total, err := s.DirRepo.Count()
+	total, err := s.DirRepo.Count(search)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	dirs, err := s.DirRepo.GetAll(page, limit)
+	dirs, err := s.DirRepo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -124,8 +124,11 @@ func (r *VirtualDirectoryRepository) getMethodsByDirectoryID(dirID int64) ([]str
 }
 
 // GetAll mengambil semua virtual directory dengan pagination
-func (r *VirtualDirectoryRepository) GetAll(page, limit int) ([]model.VirtualDirectory, error) {
+func (r *VirtualDirectoryRepository) GetAll(page, limit int, search string) ([]model.VirtualDirectory, error) {
 	offset := (page - 1) * limit
+	
+	var args []interface{}
+	
 	query := `
 		SELECT vd.id, vd.virtual_host_id, vd.source_path, vd.target_path, vd.match_type,
 		       vd.strip_prefix, vd.preserve_host_header, vd.auth_type, vd.is_active,
@@ -135,11 +138,19 @@ func (r *VirtualDirectoryRepository) GetAll(page, limit int) ([]model.VirtualDir
 		       vh.vhost_name
 		FROM virtual_directories vd
 		LEFT JOIN virtual_hosts vh ON vd.virtual_host_id = vh.id
-		ORDER BY vd.created_at DESC
-		LIMIT ? OFFSET ?
 	`
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR vd.target_path LIKE ? OR vh.vhost_name LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY vd.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
 
-	rows, err := r.DB.Query(query, limit, offset)
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar virtual directory: %w", err)
 	}
@@ -351,9 +362,20 @@ func (r *VirtualDirectoryRepository) Delete(id int64) error {
 }
 
 // Count menghitung total virtual directory
-func (r *VirtualDirectoryRepository) Count() (int64, error) {
+func (r *VirtualDirectoryRepository) Count(search string) (int64, error) {
 	var count int64
-	err := r.DB.QueryRow("SELECT COUNT(*) FROM virtual_directories").Scan(&count)
+	var err error
+	
+	query := `SELECT COUNT(*) FROM virtual_directories vd LEFT JOIN virtual_hosts vh ON vd.virtual_host_id = vh.id`
+	
+	if search != "" {
+		query += ` WHERE vd.source_path LIKE ? OR vd.target_path LIKE ? OR vh.vhost_name LIKE ?`
+		searchPattern := "%" + search + "%"
+		err = r.DB.QueryRow(query, searchPattern, searchPattern, searchPattern).Scan(&count)
+	} else {
+		err = r.DB.QueryRow(query).Scan(&count)
+	}
+	
 	if err != nil {
 		return 0, fmt.Errorf("gagal menghitung virtual directory: %w", err)
 	}

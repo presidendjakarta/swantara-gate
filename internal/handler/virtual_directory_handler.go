@@ -62,8 +62,9 @@ func (h *VirtualDirectoryHandler) GetVirtualDirectoryByID(w http.ResponseWriter,
 // GetAllVirtualDirectories handler untuk mengambil semua virtual directories
 func (h *VirtualDirectoryHandler) GetAllVirtualDirectories(w http.ResponseWriter, r *http.Request) {
 	page, limit := parsePagination(r)
+	search := r.URL.Query().Get("search")
 
-	dirs, total, err := h.Service.GetAllVirtualDirectories(page, limit)
+	dirs, total, err := h.Service.GetAllVirtualDirectories(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar virtual directory")
 		return

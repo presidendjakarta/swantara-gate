@@ -57,7 +57,8 @@ func (h *JWTConfigHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // GetAll handler untuk mengambil semua JWT configs
 func (h *JWTConfigHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	page, limit := parsePagination(r)
-	items, total, err := h.Service.GetAll(page, limit)
+	search := r.URL.Query().Get("search")
+	items, total, err := h.Service.GetAll(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar JWT config")
 		return
@@ -153,7 +154,8 @@ func (h *ExternalAuthHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // GetAll handler untuk mengambil semua external auth
 func (h *ExternalAuthHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	page, limit := parsePagination(r)
-	items, total, err := h.Service.GetAll(page, limit)
+	search := r.URL.Query().Get("search")
+	items, total, err := h.Service.GetAll(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar external auth")
 		return
@@ -249,7 +251,8 @@ func (h *RateLimitHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // GetAll handler untuk mengambil semua rate limits
 func (h *RateLimitHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	page, limit := parsePagination(r)
-	items, total, err := h.Service.GetAll(page, limit)
+	search := r.URL.Query().Get("search")
+	items, total, err := h.Service.GetAll(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar rate limit")
 		return
@@ -345,7 +348,8 @@ func (h *CORSConfigHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // GetAll handler untuk mengambil semua CORS configs
 func (h *CORSConfigHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	page, limit := parsePagination(r)
-	items, total, err := h.Service.GetAll(page, limit)
+	search := r.URL.Query().Get("search")
+	items, total, err := h.Service.GetAll(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar CORS config")
 		return
@@ -441,7 +445,8 @@ func (h *CircuitBreakerHandler) GetByID(w http.ResponseWriter, r *http.Request) 
 // GetAll handler untuk mengambil semua circuit breakers
 func (h *CircuitBreakerHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	page, limit := parsePagination(r)
-	items, total, err := h.Service.GetAll(page, limit)
+	search := r.URL.Query().Get("search")
+	items, total, err := h.Service.GetAll(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar circuit breaker")
 		return
@@ -537,7 +542,8 @@ func (h *IPWhitelistHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // GetAll handler untuk mengambil semua IP whitelist
 func (h *IPWhitelistHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	page, limit := parsePagination(r)
-	items, total, err := h.Service.GetAll(page, limit)
+	search := r.URL.Query().Get("search")
+	items, total, err := h.Service.GetAll(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar IP whitelist")
 		return
@@ -648,7 +654,8 @@ func (h *IPBlacklistHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // GetAll handler untuk mengambil semua IP blacklist
 func (h *IPBlacklistHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	page, limit := parsePagination(r)
-	items, total, err := h.Service.GetAll(page, limit)
+	search := r.URL.Query().Get("search")
+	items, total, err := h.Service.GetAll(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar IP blacklist")
 		return

@@ -83,17 +83,27 @@ func (r *UserRepository) GetByID(id int64) (*model.User, error) {
 }
 
 // GetAll mengambil semua user dengan pagination
-func (r *UserRepository) GetAll(page, limit int) ([]model.User, error) {
+func (r *UserRepository) GetAll(page, limit int, search string) ([]model.User, error) {
 	offset := (page - 1) * limit
+	
+	var args []interface{}
 	
 	query := `
 		SELECT id, username, full_name, email, role, is_active, last_login_at, created_at, updated_at
 		FROM users
-		ORDER BY created_at DESC
-		LIMIT ? OFFSET ?
 	`
+	
+	// Add search filter if provided
+	if search != "" {
+		query += ` WHERE username LIKE ? OR full_name LIKE ? OR email LIKE ?`
+		searchPattern := "%" + search + "%"
+		args = append(args, searchPattern, searchPattern, searchPattern)
+	}
+	
+	query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
 
-	rows, err := r.DB.Query(query, limit, offset)
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("gagal mengambil daftar user: %w", err)
 	}
@@ -213,15 +223,23 @@ func (r *UserRepository) UpdateLastLogin(id int64) error {
 }
 
 // Count menghitung total jumlah user
-func (r *UserRepository) Count() (int64, error) {
-	query := `SELECT COUNT(*) FROM users`
-
+func (r *UserRepository) Count(search string) (int64, error) {
 	var count int64
-	err := r.DB.QueryRow(query).Scan(&count)
+	var err error
+	
+	query := `SELECT COUNT(*) FROM users`
+	
+	if search != "" {
+		query += ` WHERE username LIKE ? OR full_name LIKE ? OR email LIKE ?`
+		searchPattern := "%" + search + "%"
+		err = r.DB.QueryRow(query, searchPattern, searchPattern, searchPattern).Scan(&count)
+	} else {
+		err = r.DB.QueryRow(query).Scan(&count)
+	}
+	
 	if err != nil {
 		return 0, fmt.Errorf("gagal menghitung user: %w", err)
 	}
-
 	return count, nil
 }
 

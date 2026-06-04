@@ -40,18 +40,18 @@ func (s *JWTConfigService) GetByID(id int64) (*model.JWTConfig, error) {
 }
 
 // GetAll mengambil semua JWT configs dengan pagination
-func (s *JWTConfigService) GetAll(page, limit int) ([]model.JWTConfig, int64, error) {
+func (s *JWTConfigService) GetAll(page, limit int, search string) ([]model.JWTConfig, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
-	total, err := s.Repo.Count()
+	total, err := s.Repo.Count(search)
 	if err != nil {
 		return nil, 0, err
 	}
-	items, err := s.Repo.GetAll(page, limit)
+	items, err := s.Repo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -122,18 +122,18 @@ func (s *ExternalAuthService) GetByID(id int64) (*model.ExternalAuth, error) {
 }
 
 // GetAll mengambil semua external auth dengan pagination
-func (s *ExternalAuthService) GetAll(page, limit int) ([]model.ExternalAuth, int64, error) {
+func (s *ExternalAuthService) GetAll(page, limit int, search string) ([]model.ExternalAuth, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
-	total, err := s.Repo.Count()
+	total, err := s.Repo.Count(search)
 	if err != nil {
 		return nil, 0, err
 	}
-	items, err := s.Repo.GetAll(page, limit)
+	items, err := s.Repo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -193,18 +193,18 @@ func (s *RateLimitService) GetByID(id int64) (*model.RateLimit, error) {
 }
 
 // GetAll mengambil semua rate limits dengan pagination
-func (s *RateLimitService) GetAll(page, limit int) ([]model.RateLimit, int64, error) {
+func (s *RateLimitService) GetAll(page, limit int, search string) ([]model.RateLimit, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
-	total, err := s.Repo.Count()
+	total, err := s.Repo.Count(search)
 	if err != nil {
 		return nil, 0, err
 	}
-	items, err := s.Repo.GetAll(page, limit)
+	items, err := s.Repo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -264,18 +264,18 @@ func (s *CORSConfigService) GetByID(id int64) (*model.CORSConfig, error) {
 }
 
 // GetAll mengambil semua CORS configs dengan pagination
-func (s *CORSConfigService) GetAll(page, limit int) ([]model.CORSConfig, int64, error) {
+func (s *CORSConfigService) GetAll(page, limit int, search string) ([]model.CORSConfig, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
-	total, err := s.Repo.Count()
+	total, err := s.Repo.Count(search)
 	if err != nil {
 		return nil, 0, err
 	}
-	items, err := s.Repo.GetAll(page, limit)
+	items, err := s.Repo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -332,18 +332,18 @@ func (s *CircuitBreakerService) GetByID(id int64) (*model.CircuitBreaker, error)
 }
 
 // GetAll mengambil semua circuit breakers dengan pagination
-func (s *CircuitBreakerService) GetAll(page, limit int) ([]model.CircuitBreaker, int64, error) {
+func (s *CircuitBreakerService) GetAll(page, limit int, search string) ([]model.CircuitBreaker, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
-	total, err := s.Repo.Count()
+	total, err := s.Repo.Count(search)
 	if err != nil {
 		return nil, 0, err
 	}
-	items, err := s.Repo.GetAll(page, limit)
+	items, err := s.Repo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -394,18 +394,18 @@ func (s *IPWhitelistService) GetByID(id int64) (*model.IPWhitelist, error) {
 }
 
 // GetAll mengambil semua IP whitelist dengan pagination
-func (s *IPWhitelistService) GetAll(page, limit int) ([]model.IPWhitelist, int64, error) {
+func (s *IPWhitelistService) GetAll(page, limit int, search string) ([]model.IPWhitelist, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
-	total, err := s.Repo.Count()
+	total, err := s.Repo.Count(search)
 	if err != nil {
 		return nil, 0, err
 	}
-	items, err := s.Repo.GetAll(page, limit)
+	items, err := s.Repo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -461,18 +461,18 @@ func (s *IPBlacklistService) GetByID(id int64) (*model.IPBlacklist, error) {
 }
 
 // GetAll mengambil semua IP blacklist dengan pagination
-func (s *IPBlacklistService) GetAll(page, limit int) ([]model.IPBlacklist, int64, error) {
+func (s *IPBlacklistService) GetAll(page, limit int, search string) ([]model.IPBlacklist, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
-	total, err := s.Repo.Count()
+	total, err := s.Repo.Count(search)
 	if err != nil {
 		return nil, 0, err
 	}
-	items, err := s.Repo.GetAll(page, limit)
+	items, err := s.Repo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, err
 	}

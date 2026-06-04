@@ -56,7 +56,7 @@ func (s *ConsumerCredentialService) GetCredentialByID(id int64) (*model.Consumer
 }
 
 // GetAllCredentials mengambil semua credentials dengan pagination
-func (s *ConsumerCredentialService) GetAllCredentials(page, limit int) ([]model.ConsumerCredential, int64, error) {
+func (s *ConsumerCredentialService) GetAllCredentials(page, limit int, search string) ([]model.ConsumerCredential, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -64,12 +64,12 @@ func (s *ConsumerCredentialService) GetAllCredentials(page, limit int) ([]model.
 		limit = 10
 	}
 
-	total, err := s.CredRepo.Count()
+	total, err := s.CredRepo.Count(search)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	creds, err := s.CredRepo.GetAll(page, limit)
+	creds, err := s.CredRepo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -143,7 +143,7 @@ func (s *APIKeyService) GetAPIKeyByID(id int64) (*model.APIKey, error) {
 }
 
 // GetAllAPIKeys mengambil semua API keys dengan pagination
-func (s *APIKeyService) GetAllAPIKeys(page, limit int) ([]model.APIKey, int64, error) {
+func (s *APIKeyService) GetAllAPIKeys(page, limit int, search string) ([]model.APIKey, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -151,12 +151,12 @@ func (s *APIKeyService) GetAllAPIKeys(page, limit int) ([]model.APIKey, int64, e
 		limit = 10
 	}
 
-	total, err := s.KeyRepo.Count()
+	total, err := s.KeyRepo.Count(search)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	keys, err := s.KeyRepo.GetAll(page, limit)
+	keys, err := s.KeyRepo.GetAll(page, limit, search)
 	if err != nil {
 		return nil, 0, err
 	}

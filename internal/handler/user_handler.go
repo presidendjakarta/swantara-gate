@@ -93,8 +93,11 @@ func (h *UserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Mengambil search parameter
+	search := r.URL.Query().Get("search")
+
 	// Mengambil daftar user dari service
-	users, total, err := h.UserService.GetAllUsers(page, limit)
+	users, total, err := h.UserService.GetAllUsers(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar user")
 		return

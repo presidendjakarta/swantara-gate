@@ -62,8 +62,9 @@ func (h *UpstreamServerHandler) GetUpstreamServerByID(w http.ResponseWriter, r *
 // GetAllUpstreamServers handler untuk mengambil semua upstream servers
 func (h *UpstreamServerHandler) GetAllUpstreamServers(w http.ResponseWriter, r *http.Request) {
 	page, limit := parsePagination(r)
+	search := r.URL.Query().Get("search")
 
-	servers, total, err := h.Service.GetAllUpstreamServers(page, limit)
+	servers, total, err := h.Service.GetAllUpstreamServers(page, limit, search)
 	if err != nil {
 		response.InternalServerError(w, "Gagal mengambil daftar upstream server")
 		return
