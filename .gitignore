@@ -19,7 +19,7 @@ go.work.sum
 .env
 
 # Web folder (development mode - symlink to internal/webui/static)
-web/
+# web/
 
 # Access log files
 logs/
