@@ -23,6 +23,8 @@ var requiredTables = []string{
 	"virtual_directories",
 	"virtual_directory_methods",
 	"route_consumer_access",
+	"external_auth_providers",
+	"virtual_directory_external_auth",
 	"external_auth",
 	"jwt_configs",
 	"jwt_tokens",

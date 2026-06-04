@@ -48,7 +48,74 @@ type UpdateJWTConfigRequest struct {
 	IsActive         bool   `json:"is_active"`
 }
 
-// ExternalAuth merepresentasikan konfigurasi autentikasi eksternal (forward auth)
+// ExternalAuthProvider merepresentasikan master data provider autentikasi eksternal
+type ExternalAuthProvider struct {
+	ID                    int64     `json:"id"`
+	Name                  string    `json:"name"`
+	Description           string    `json:"description,omitempty"`
+	AuthURL               string    `json:"auth_url"`
+	HTTPMethod            string    `json:"http_method"`
+	RequestTimeoutSeconds int       `json:"request_timeout_seconds"`
+	SendHeaders           bool      `json:"send_headers"`
+	SendBody              bool      `json:"send_body"`
+	SuccessKey            string    `json:"success_key"`
+	SuccessValue          string    `json:"success_value"`
+	MessageKey            string    `json:"message_key"`
+	TokenKey              string    `json:"token_key"`
+	IsActive              bool      `json:"is_active"`
+	CreatedAt             time.Time `json:"created_at"`
+	UpdatedAt             time.Time `json:"updated_at"`
+
+	// Statistics
+	UsedByCount int64 `json:"used_by_count,omitempty"` // Jumlah vdir yang menggunakan provider ini
+}
+
+// CreateExternalAuthProviderRequest request untuk membuat provider baru
+type CreateExternalAuthProviderRequest struct {
+	Name                  string `json:"name" validate:"required"`
+	Description           string `json:"description"`
+	AuthURL               string `json:"auth_url" validate:"required"`
+	HTTPMethod            string `json:"http_method"`
+	RequestTimeoutSeconds int    `json:"request_timeout_seconds"`
+	SendHeaders           bool   `json:"send_headers"`
+	SendBody              bool   `json:"send_body"`
+	SuccessKey            string `json:"success_key"`
+	SuccessValue          string `json:"success_value"`
+	MessageKey            string `json:"message_key"`
+	TokenKey              string `json:"token_key"`
+	IsActive              bool   `json:"is_active"`
+}
+
+// UpdateExternalAuthProviderRequest request untuk update provider
+type UpdateExternalAuthProviderRequest struct {
+	Name                  string `json:"name"`
+	Description           string `json:"description"`
+	AuthURL               string `json:"auth_url"`
+	HTTPMethod            string `json:"http_method"`
+	RequestTimeoutSeconds int    `json:"request_timeout_seconds"`
+	SendHeaders           bool   `json:"send_headers"`
+	SendBody              bool   `json:"send_body"`
+	SuccessKey            string `json:"success_key"`
+	SuccessValue          string `json:"success_value"`
+	MessageKey            string `json:"message_key"`
+	TokenKey              string `json:"token_key"`
+	IsActive              bool   `json:"is_active"`
+}
+
+// VirtualDirectoryExternalAuthMapping mapping antara virtual directory dan auth provider
+type VirtualDirectoryExternalAuthMapping struct {
+	VirtualDirectoryID       int64     `json:"virtual_directory_id"`
+	ExternalAuthProviderID   int64     `json:"external_auth_provider_id"`
+	CreatedAt                time.Time `json:"created_at"`
+
+	// Data join
+	SourcePath  string `json:"source_path,omitempty"`
+	TargetPath  string `json:"target_path,omitempty"`
+	ProviderName string `json:"provider_name,omitempty"`
+	AuthURL     string `json:"auth_url,omitempty"`
+}
+
+// ExternalAuth merepresentasikan konfigurasi autentikasi eksternal (backward compatibility)
 type ExternalAuth struct {
 	ID                    int64     `json:"id"`
 	VirtualDirectoryID    int64     `json:"virtual_directory_id"`

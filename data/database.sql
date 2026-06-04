@@ -271,8 +271,64 @@ CREATE TABLE route_consumer_access (
 );
 
 -- =========================================================
+-- TABLE external_auth_providers
+-- Master data untuk external auth providers (reusable)
+-- =========================================================
+CREATE TABLE external_auth_providers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    name TEXT NOT NULL,
+
+    description TEXT,
+
+    auth_url TEXT NOT NULL,
+
+    http_method TEXT DEFAULT 'POST',
+
+    request_timeout_seconds INTEGER DEFAULT 5,
+
+    send_headers INTEGER DEFAULT 1,
+
+    send_body INTEGER DEFAULT 0,
+
+    success_key TEXT DEFAULT 'status',
+
+    success_value TEXT DEFAULT 'true',
+
+    message_key TEXT DEFAULT 'message',
+
+    token_key TEXT,
+
+    is_active INTEGER DEFAULT 1,
+
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================================================
+-- TABLE virtual_directory_external_auth
+-- Junction table untuk mapping virtual directory ke auth provider
+-- =========================================================
+CREATE TABLE virtual_directory_external_auth (
+    virtual_directory_id INTEGER NOT NULL,
+    external_auth_provider_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (virtual_directory_id, external_auth_provider_id),
+
+    FOREIGN KEY (virtual_directory_id)
+        REFERENCES virtual_directories(id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (external_auth_provider_id)
+        REFERENCES external_auth_providers(id)
+        ON DELETE CASCADE
+);
+
+-- =========================================================
 -- TABLE external_auth
--- External auth config
+-- External auth config (backward compatibility)
 -- =========================================================
 CREATE TABLE external_auth (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
