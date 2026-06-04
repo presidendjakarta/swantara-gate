@@ -58,23 +58,50 @@ func InitDatabase(dbPath string, sqlPath string) error {
 		return fmt.Errorf("gagal membuat direktori database: %w", err)
 	}
 
-	// Membuka koneksi ke database SQLite
+	// Membuka koneksi ke database SQLite dengan WAL mode untuk concurrent access
 	var err error
-	DB, err = sql.Open("sqlite", dbPath)
+	
+	// Tambahkan query parameters untuk concurrent access yang lebih baik:
+	// - _journal_mode=WAL: Write-Ahead Logging untuk concurrent reads + better writes
+	// - _busy_timeout=5000: Tunggu 5 detik sebelum fail jika database locked
+	// - _tx_lock=deferred: Defer lock untuk mengurangi contention
+	// - cache=shared: Share cache antar connections
+	dbURL := dbPath + "?_journal_mode=WAL&_busy_timeout=5000&_tx_lock=deferred&cache=shared"
+	
+	DB, err = sql.Open("sqlite", dbURL)
 	if err != nil {
 		return fmt.Errorf("gagal membuka database: %w", err)
 	}
 
-	// Mengatur koneksi pool untuk performa
-	DB.SetMaxOpenConns(25)
-	DB.SetMaxIdleConns(10)
+	// Mengatur koneksi pool untuk performa dengan SQLite
+	// SQLite handle concurrency di level file, bukan connection
+	DB.SetMaxOpenConns(1)        // SQLite hanya support 1 writer, batasi untuk hindari contention
+	DB.SetMaxIdleConns(4)        // Keep beberapa idle connection untuk reads
+	DB.SetConnMaxLifetime(0)     // Reuse connections indefinitely
 
 	// Memastikan koneksi dapat digunakan
 	if err := DB.Ping(); err != nil {
 		return fmt.Errorf("gagal melakukan ping ke database: %w", err)
 	}
+	
+	// Enable PRAGMA settings untuk concurrent access yang lebih baik
+	pragmas := []string{
+		"PRAGMA journal_mode=WAL",              // Write-Ahead Logging
+		"PRAGMA synchronous=NORMAL",            // Balance antara performance dan safety
+		"PRAGMA cache_size=-64000",             // 64MB cache (negative = KB)
+		"PRAGMA temp_store=MEMORY",             // Store temp tables in memory
+		"PRAGMA mmap_size=268435456",           // 256MB memory-mapped I/O
+		"PRAGMA foreign_keys=ON",               // Enable foreign key constraints
+		"PRAGMA busy_timeout=5000",             // 5 second busy timeout
+	}
+	
+	for _, pragma := range pragmas {
+		if _, err := DB.Exec(pragma); err != nil {
+			log.Printf("⚠ Warning: Failed to set %s: %v", pragma, err)
+		}
+	}
 
-	log.Println("✓ Koneksi database berhasil dibuka")
+	log.Println("✓ Koneksi database berhasil dibuka (WAL mode enabled)")
 
 	// Cek dan jalankan migrasi jika diperlukan
 	if err := checkAndMigrate(sqlPath); err != nil {
