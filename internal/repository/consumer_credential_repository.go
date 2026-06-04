@@ -91,16 +91,20 @@ func (r *ConsumerCredentialRepository) Create(req *model.CreateConsumerCredentia
 func (r *ConsumerCredentialRepository) GetByID(id int64) (*model.ConsumerCredential, error) {
 	query := `
 		SELECT cc.id, cc.consumer_id, cc.auth_type, cc.username, cc.api_key, cc.jwt_secret,
-		       cc.expired_at, cc.is_active, cc.created_at, ac.consumer_name
+		       cc.expired_at, cc.is_active, cc.created_at, COALESCE(ac.consumer_name, '') as consumer_name
 		FROM consumer_credentials cc
 		LEFT JOIN api_consumers ac ON cc.consumer_id = ac.id
 		WHERE cc.id = ?
 	`
 
 	var cc model.ConsumerCredential
+	var username, apiKey, jwtSecret sql.NullString
+	var expiredAt sql.NullTime
+	var consumerName sql.NullString
+
 	err := r.DB.QueryRow(query, id).Scan(
-		&cc.ID, &cc.ConsumerID, &cc.AuthType, &cc.Username, &cc.APIKey, &cc.JWTSecret,
-		&cc.ExpiredAt, &cc.IsActive, &cc.CreatedAt, &cc.ConsumerName,
+		&cc.ID, &cc.ConsumerID, &cc.AuthType, &username, &apiKey, &jwtSecret,
+		&expiredAt, &cc.IsActive, &cc.CreatedAt, &consumerName,
 	)
 
 	if err != nil {
@@ -108,6 +112,23 @@ func (r *ConsumerCredentialRepository) GetByID(id int64) (*model.ConsumerCredent
 			return nil, fmt.Errorf("consumer credential tidak ditemukan")
 		}
 		return nil, fmt.Errorf("gagal mengambil consumer credential: %w", err)
+	}
+
+	// Handle nullable fields
+	if username.Valid {
+		cc.Username = username.String
+	}
+	if apiKey.Valid {
+		cc.APIKey = apiKey.String
+	}
+	if jwtSecret.Valid {
+		cc.JWTSecret = jwtSecret.String
+	}
+	if expiredAt.Valid {
+		cc.ExpiredAt = &expiredAt.Time
+	}
+	if consumerName.Valid {
+		cc.ConsumerName = consumerName.String
 	}
 
 	return &cc, nil
@@ -121,7 +142,7 @@ func (r *ConsumerCredentialRepository) GetAll(page, limit int, search string) ([
 	
 	query := `
 		SELECT cc.id, cc.consumer_id, cc.auth_type, cc.username, cc.api_key, cc.jwt_secret,
-		       cc.expired_at, cc.is_active, cc.created_at, ac.consumer_name
+		       cc.expired_at, cc.is_active, cc.created_at, COALESCE(ac.consumer_name, '') as consumer_name
 		FROM consumer_credentials cc
 		LEFT JOIN api_consumers ac ON cc.consumer_id = ac.id
 	`
@@ -145,14 +166,40 @@ func (r *ConsumerCredentialRepository) GetAll(page, limit int, search string) ([
 	var creds []model.ConsumerCredential
 	for rows.Next() {
 		var cc model.ConsumerCredential
+		var username, apiKey, jwtSecret sql.NullString
+		var expiredAt sql.NullTime
+		var consumerName sql.NullString
+
 		err := rows.Scan(
-			&cc.ID, &cc.ConsumerID, &cc.AuthType, &cc.Username, &cc.APIKey, &cc.JWTSecret,
-			&cc.ExpiredAt, &cc.IsActive, &cc.CreatedAt, &cc.ConsumerName,
+			&cc.ID, &cc.ConsumerID, &cc.AuthType, &username, &apiKey, &jwtSecret,
+			&expiredAt, &cc.IsActive, &cc.CreatedAt, &consumerName,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("gagal memindai credential: %w", err)
 		}
+
+		// Handle nullable fields
+		if username.Valid {
+			cc.Username = username.String
+		}
+		if apiKey.Valid {
+			cc.APIKey = apiKey.String
+		}
+		if jwtSecret.Valid {
+			cc.JWTSecret = jwtSecret.String
+		}
+		if expiredAt.Valid {
+			cc.ExpiredAt = &expiredAt.Time
+		}
+		if consumerName.Valid {
+			cc.ConsumerName = consumerName.String
+		}
+
 		creds = append(creds, cc)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating credentials: %w", err)
 	}
 
 	return creds, nil
@@ -162,7 +209,7 @@ func (r *ConsumerCredentialRepository) GetAll(page, limit int, search string) ([
 func (r *ConsumerCredentialRepository) GetByConsumerID(consumerID int64) ([]model.ConsumerCredential, error) {
 	query := `
 		SELECT cc.id, cc.consumer_id, cc.auth_type, cc.username, cc.api_key, cc.jwt_secret,
-		       cc.expired_at, cc.is_active, cc.created_at, ac.consumer_name
+		       cc.expired_at, cc.is_active, cc.created_at, COALESCE(ac.consumer_name, '') as consumer_name
 		FROM consumer_credentials cc
 		LEFT JOIN api_consumers ac ON cc.consumer_id = ac.id
 		WHERE cc.consumer_id = ?
@@ -178,14 +225,40 @@ func (r *ConsumerCredentialRepository) GetByConsumerID(consumerID int64) ([]mode
 	var creds []model.ConsumerCredential
 	for rows.Next() {
 		var cc model.ConsumerCredential
+		var username, apiKey, jwtSecret sql.NullString
+		var expiredAt sql.NullTime
+		var consumerName sql.NullString
+
 		err := rows.Scan(
-			&cc.ID, &cc.ConsumerID, &cc.AuthType, &cc.Username, &cc.APIKey, &cc.JWTSecret,
-			&cc.ExpiredAt, &cc.IsActive, &cc.CreatedAt, &cc.ConsumerName,
+			&cc.ID, &cc.ConsumerID, &cc.AuthType, &username, &apiKey, &jwtSecret,
+			&expiredAt, &cc.IsActive, &cc.CreatedAt, &consumerName,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("gagal memindai credential: %w", err)
 		}
+
+		// Handle nullable fields
+		if username.Valid {
+			cc.Username = username.String
+		}
+		if apiKey.Valid {
+			cc.APIKey = apiKey.String
+		}
+		if jwtSecret.Valid {
+			cc.JWTSecret = jwtSecret.String
+		}
+		if expiredAt.Valid {
+			cc.ExpiredAt = &expiredAt.Time
+		}
+		if consumerName.Valid {
+			cc.ConsumerName = consumerName.String
+		}
+
 		creds = append(creds, cc)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating credentials: %w", err)
 	}
 
 	return creds, nil
