@@ -5,10 +5,39 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/presidendjakarta/swantara-gate/internal/model"
 )
+
+// parseFlexibleTime mencoba parse time dari berbagai format
+// Support: "2006-01-02 15:04:05" atau "2006-01-02T15:04" atau "2006-01-02T15:04:05Z07:00"
+func parseFlexibleTime(timeStr string) (*time.Time, error) {
+	if timeStr == "" {
+		return nil, nil
+	}
+
+	// Trim whitespace
+	timeStr = strings.TrimSpace(timeStr)
+
+	// Try common formats
+	formats := []string{
+		"2006-01-02 15:04:05",      // SQL format
+		"2006-01-02T15:04",         // datetime-local without seconds
+		"2006-01-02T15:04:05",      // ISO without timezone
+		time.RFC3339,               // 2006-01-02T15:04:05Z07:00
+		"2006-01-02 15:04",         // Without seconds
+	}
+
+	for _, format := range formats {
+		if t, err := time.Parse(format, timeStr); err == nil {
+			return &t, nil
+		}
+	}
+
+	return nil, fmt.Errorf("format waktu tidak valid: %s", timeStr)
+}
 
 // ConsumerCredentialRepository menangani operasi database untuk Consumer Credential
 type ConsumerCredentialRepository struct {
@@ -237,13 +266,14 @@ func (r *APIKeyRepository) Create(req *model.CreateAPIKeyRequest) (*model.APIKey
 		return nil, err
 	}
 
+	// Parse expired_at dengan flexible format
 	var expiredAt *time.Time
 	if req.ExpiredAt != "" {
-		t, err := time.Parse("2006-01-02 15:04:05", req.ExpiredAt)
+		t, err := parseFlexibleTime(req.ExpiredAt)
 		if err != nil {
-			return nil, fmt.Errorf("format expired_at tidak valid (gunakan YYYY-MM-DD HH:MM:SS): %w", err)
+			return nil, fmt.Errorf("format expired_at tidak valid: %w", err)
 		}
-		expiredAt = &t
+		expiredAt = t
 	}
 
 	query := `
@@ -302,7 +332,7 @@ func (r *APIKeyRepository) GetAll(page, limit int) ([]model.APIKey, error) {
 	offset := (page - 1) * limit
 	query := `
 		SELECT ak.id, ak.consumer_id, ak.api_key, ak.description, ak.expired_at,
-		       ak.rate_limit_override, ak.is_active, ak.created_at, ac.consumer_name
+		       ak.rate_limit_override, ak.is_active, ak.created_at, COALESCE(ac.consumer_name, '') as consumer_name
 		FROM api_keys ak
 		LEFT JOIN api_consumers ac ON ak.consumer_id = ac.id
 		ORDER BY ak.created_at DESC
@@ -318,14 +348,31 @@ func (r *APIKeyRepository) GetAll(page, limit int) ([]model.APIKey, error) {
 	var keys []model.APIKey
 	for rows.Next() {
 		var ak model.APIKey
+		var expiredAt sql.NullTime
+		var rateLimit sql.NullInt64
+
 		err := rows.Scan(
-			&ak.ID, &ak.ConsumerID, &ak.Key, &ak.Description, &ak.ExpiredAt,
-			&ak.RateLimitOverride, &ak.IsActive, &ak.CreatedAt, &ak.ConsumerName,
+			&ak.ID, &ak.ConsumerID, &ak.Key, &ak.Description, &expiredAt,
+			&rateLimit, &ak.IsActive, &ak.CreatedAt, &ak.ConsumerName,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("gagal memindai API key: %w", err)
 		}
+
+		// Handle nullable fields
+		if expiredAt.Valid {
+			ak.ExpiredAt = &expiredAt.Time
+		}
+		if rateLimit.Valid {
+			rl := int(rateLimit.Int64)
+			ak.RateLimitOverride = &rl
+		}
+
 		keys = append(keys, ak)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating API keys: %w", err)
 	}
 
 	return keys, nil
@@ -335,7 +382,7 @@ func (r *APIKeyRepository) GetAll(page, limit int) ([]model.APIKey, error) {
 func (r *APIKeyRepository) GetByConsumerID(consumerID int64) ([]model.APIKey, error) {
 	query := `
 		SELECT ak.id, ak.consumer_id, ak.api_key, ak.description, ak.expired_at,
-		       ak.rate_limit_override, ak.is_active, ak.created_at, ac.consumer_name
+		       ak.rate_limit_override, ak.is_active, ak.created_at, COALESCE(ac.consumer_name, '') as consumer_name
 		FROM api_keys ak
 		LEFT JOIN api_consumers ac ON ak.consumer_id = ac.id
 		WHERE ak.consumer_id = ?
@@ -351,14 +398,31 @@ func (r *APIKeyRepository) GetByConsumerID(consumerID int64) ([]model.APIKey, er
 	var keys []model.APIKey
 	for rows.Next() {
 		var ak model.APIKey
+		var expiredAt sql.NullTime
+		var rateLimit sql.NullInt64
+
 		err := rows.Scan(
-			&ak.ID, &ak.ConsumerID, &ak.Key, &ak.Description, &ak.ExpiredAt,
-			&ak.RateLimitOverride, &ak.IsActive, &ak.CreatedAt, &ak.ConsumerName,
+			&ak.ID, &ak.ConsumerID, &ak.Key, &ak.Description, &expiredAt,
+			&rateLimit, &ak.IsActive, &ak.CreatedAt, &ak.ConsumerName,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("gagal memindai API key: %w", err)
 		}
+
+		// Handle nullable fields
+		if expiredAt.Valid {
+			ak.ExpiredAt = &expiredAt.Time
+		}
+		if rateLimit.Valid {
+			rl := int(rateLimit.Int64)
+			ak.RateLimitOverride = &rl
+		}
+
 		keys = append(keys, ak)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating API keys: %w", err)
 	}
 
 	return keys, nil
@@ -366,13 +430,14 @@ func (r *APIKeyRepository) GetByConsumerID(consumerID int64) ([]model.APIKey, er
 
 // Update memperbarui API key
 func (r *APIKeyRepository) Update(id int64, req *model.UpdateAPIKeyRequest) error {
+	// Parse expired_at dengan flexible format
 	var expiredAt *time.Time
 	if req.ExpiredAt != "" {
-		t, err := time.Parse("2006-01-02 15:04:05", req.ExpiredAt)
+		t, err := parseFlexibleTime(req.ExpiredAt)
 		if err != nil {
 			return fmt.Errorf("format expired_at tidak valid: %w", err)
 		}
-		expiredAt = &t
+		expiredAt = t
 	}
 
 	query := `

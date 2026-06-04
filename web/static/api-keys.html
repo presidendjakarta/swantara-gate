@@ -101,6 +101,21 @@
                     </div>
                 </div>
 
+                <!-- Consumer Selector -->
+                <div class="content-card" style="margin-bottom: 16px;">
+                    <div class="card-body" style="padding: 16px 20px;">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <label style="font-size: 13px; font-weight: 500; color: var(--text-secondary); white-space: nowrap;">
+                                <i class="fa-solid fa-users" style="color: var(--accent); margin-right: 6px;"></i>
+                                Select Consumer <span style="color: var(--danger);">*</span>
+                            </label>
+                            <select id="filterConsumer" class="form-control" style="flex: 1; max-width: 400px; height: 38px; font-size: 13px;" onchange="loadAPIKeys(1)">
+                                <option value="">-- Choose a consumer --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- API Keys Table -->
                 <div class="content-card">
                     <div class="card-header">
@@ -126,14 +141,16 @@
                                         <th style="width:50px;">#</th>
                                         <th>Consumer</th>
                                         <th>API Key</th>
+                                        <th>Description</th>
+                                        <th>Rate Limit</th>
                                         <th>Expires</th>
                                         <th>Status</th>
                                         <th>Created</th>
-                                        <th style="width:100px;">Actions</th>
+                                        <th style="width:120px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="keyTableBody">
-                                    <tr><td colspan="7"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading API keys...</div></td></tr>
+                                    <tr><td colspan="9"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading API keys...</div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -167,20 +184,20 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-row form-row-inline">
-                        <div class="form-group">
-                            <label>Key Name</label>
-                            <input type="text" class="form-control" id="keyName" placeholder="e.g., Production Key">
-                        </div>
-                        <div class="form-group">
-                            <label>Expires In (days)</label>
-                            <input type="number" class="form-control" id="keyExpiresIn" value="365" min="1" max="3650">
-                        </div>
-                    </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Scopes (comma separated)</label>
-                            <input type="text" class="form-control" id="keyScopes" placeholder="e.g., read:users, write:orders">
+                            <label>Description</label>
+                            <textarea class="form-control" id="keyDescription" placeholder="e.g., Production API Key" style="min-height: 80px; resize: none;"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-row form-row-inline">
+                        <div class="form-group">
+                            <label>Expires At</label>
+                            <input type="datetime-local" class="form-control" id="keyExpiredAt">
+                        </div>
+                        <div class="form-group">
+                            <label>Rate Limit Override (req/min)</label>
+                            <input type="number" class="form-control" id="keyRateLimit" placeholder="Optional" min="1">
                         </div>
                     </div>
                     <div class="form-row" style="margin-top: 16px;">
@@ -255,9 +272,6 @@
             $('#navbar-container').load('/components/navbar.html');
             if (!localStorage.getItem('access_token')) { window.location.href = '/login.html'; return; }
 
-            // Initialize Select2
-            $('#keyConsumer').select2({ theme: 'default', placeholder: '-- Select consumer --' });
-
             loadConsumers();
             loadAPIKeys();
 
@@ -276,12 +290,28 @@
                 success: function(r) {
                     if (r.success && r.data) {
                         consumers = Array.isArray(r.data) ? r.data : r.data.consumers || [];
+                        
+                        // Populate filter dropdown
+                        const $filter = $('#filterConsumer');
+                        $filter.find('option:not(:first)').remove();
+                        consumers.forEach(function(c) {
+                            $filter.append('<option value="' + c.id + '">' + escapeHtml(c.consumer_name) + '</option>');
+                        });
+                        
+                        // Populate form dropdown
                         const $s = $('#keyConsumer');
                         $s.find('option:not(:first)').remove();
                         consumers.forEach(function(c) {
                             $s.append('<option value="' + c.id + '">' + escapeHtml(c.consumer_name) + '</option>');
                         });
                         $s.trigger('change.select2');
+                        
+                        // Initialize Select2 for filter
+                        $filter.select2({ 
+                            theme: 'default', 
+                            placeholder: 'All Consumers',
+                            allowClear: true 
+                        });
                     }
                 }
             });
@@ -289,13 +319,26 @@
 
         function loadAPIKeys(page = 1) {
             currentPage = page;
-            $('#keyTableBody').html('<tr><td colspan="7"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading...</div></td></tr>');
+            
+            const consumerFilter = $('#filterConsumer').val() || '';
+            
+            // Consumer wajib dipilih
+            if (!consumerFilter) {
+                $('#keyTableBody').html('<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-hand-pointer"></i><h4>Please Select a Consumer</h4><p>Choose a consumer from the filter above to view API keys</p></div></td></tr>');
+                $('#keySubtitle').text('No consumer selected');
+                $('#paginationButtons').html('');
+                $('#paginationInfo').text('Showing 0 - 0 of 0');
+                return;
+            }
+            
+            $('#keyTableBody').html('<tr><td colspan="9"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading...</div></td></tr>');
 
             const search = $('#searchInput').val() || '';
             const limit = 10;
 
+            // Load API keys for selected consumer
             $.ajax({
-                url: API_KEYS_ENDPOINT,
+                url: CONSUMERS_ENDPOINT + '/' + consumerFilter + '/api-keys',
                 method: 'GET',
                 headers: getHeaders(),
                 data: { page: currentPage, limit: limit, search: search },
@@ -314,7 +357,7 @@
                 },
                 error: function(xhr) {
                     if (xhr.status === 401) { window.location.href = '/login.html'; return; }
-                    $('#keyTableBody').html('<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--danger);">Failed to load API keys</td></tr>');
+                    $('#keyTableBody').html('<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--danger);">Failed to load API keys</td></tr>');
                 }
             });
         }
@@ -330,19 +373,25 @@
 
                 const keyDisplay = k.api_key
                     ? '<div class="key-display"><span class="key-value">' + escapeHtml(maskKey(k.api_key)) + '</span><span class="key-copy" onclick="copyToClipboard(\'' + escapeHtml(k.api_key) + '\')" title="Copy"><i class="fa-solid fa-copy"></i></span></div>'
-                    : '<span style="color:var(--text-tertiary);font-size:12px;">Not generated</span>';
+                    : '<span style="color:var(--text-tertiary);font-size:12px;">Not available</span>';
 
-                const expiryInfo = formatExpiry(k.expires_at);
+                const expiryInfo = formatExpiry(k.expired_at);
                 const consumerName = k.consumer_name || getConsumerName(k.consumer_id);
+                const rateLimit = k.rate_limit_override
+                    ? '<span style="font-size:12px;color:var(--text-secondary);">' + k.rate_limit_override + ' req/min</span>'
+                    : '<span style="font-size:12px;color:var(--text-tertiary);">Default</span>';
 
                 html += '<tr>' +
                     '<td>' + ((currentPage - 1) * 10 + i + 1) + '</td>' +
                     '<td><div class="consumer-chip"><i class="fa-solid fa-user"></i>' + escapeHtml(consumerName) + '</div></td>' +
                     '<td>' + keyDisplay + '</td>' +
+                    '<td><span style="font-size:12px;color:var(--text-secondary);">' + escapeHtml(k.description || '-') + '</span></td>' +
+                    '<td>' + rateLimit + '</td>' +
                     '<td>' + expiryInfo + '</td>' +
                     '<td>' + statusBadge + '</td>' +
                     '<td><span style="font-size:12px;color:var(--text-tertiary);">' + formatDate(k.created_at) + '</span></td>' +
                     '<td><div style="display:flex;gap:6px;">' +
+                        '<button class="btn btn-sm btn-secondary" title="Edit" onclick="editKey(' + k.id + ')"><i class="fa-solid fa-pen"></i></button>' +
                         '<button class="btn btn-sm btn-danger" title="Delete" onclick="deleteKey(' + k.id + ')"><i class="fa-solid fa-trash"></i></button>' +
                     '</div></td>' +
                 '</tr>';
@@ -352,7 +401,7 @@
         }
 
         function renderEmpty() {
-            $('#keyTableBody').html('<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-key"></i><h4>No API Keys Yet</h4><p>Click <strong>Create API Key</strong> to generate one</p></div></td></tr>');
+            $('#keyTableBody').html('<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-key"></i><h4>No API Keys Yet</h4><p>Click <strong>Create API Key</strong> to generate one</p></div></td></tr>');
             $('#keySubtitle').text('0 keys');
             $('#paginationButtons').html('');
             $('#paginationInfo').text('Showing 0 - 0 of 0');
@@ -435,13 +484,54 @@
 
             $('#modalTitle').text('Create API Key');
             $('#keyId').val('');
-            $('#keyName').val('');
-            $('#keyExpiresIn').val(365);
-            $('#keyScopes').val('');
+            $('#keyConsumer').val('').trigger('change.select2');
+            $('#keyConsumer').prop('disabled', false);
+            $('#keyDescription').val('');
+            $('#keyExpiredAt').val('');
+            $('#keyRateLimit').val('');
             $('#keyIsActive').prop('checked', true);
             $('#btnSaveKey').html('<i class="fa-solid fa-check"></i> Create Key');
 
             $('#keyModal').addClass('active');
+        }
+
+        function editKey(id) {
+            // Init Select2 if not already
+            if (!$('#keyConsumer').hasClass('select2-hidden-accessible')) {
+                $('#keyConsumer').select2({ theme: 'default', placeholder: '-- Select consumer --' });
+            }
+
+            $.ajax({
+                url: API_KEYS_ENDPOINT + '/' + id,
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        const k = r.data;
+                        editingId = id;
+                        $('#modalTitle').text('Edit API Key');
+                        $('#keyId').val(k.id);
+                        $('#keyConsumer').val(k.consumer_id).trigger('change.select2');
+                        $('#keyConsumer').prop('disabled', true); // Cannot change consumer
+                        $('#keyDescription').val(k.description || '');
+                        
+                        // Set expired_at if exists
+                        if (k.expired_at) {
+                            const expDate = moment(k.expired_at).format('YYYY-MM-DDTHH:mm');
+                            $('#keyExpiredAt').val(expDate);
+                        } else {
+                            $('#keyExpiredAt').val('');
+                        }
+                        
+                        // Set rate_limit_override if exists
+                        $('#keyRateLimit').val(k.rate_limit_override || '');
+                        $('#keyIsActive').prop('checked', k.is_active !== false);
+                        $('#btnSaveKey').html('<i class="fa-solid fa-check"></i> Update Key');
+                        $('#keyModal').addClass('active');
+                    }
+                },
+                error: function() { showError('Error', 'Failed to load API key data'); }
+            });
         }
 
         function closeModal() {
@@ -480,35 +570,49 @@
             if (!consumerId) { showWarning('Please select a consumer'); return; }
 
             const payload = {
-                consumer_id: consumerId,
-                name: $('#keyName').val().trim(),
-                expires_in_days: parseInt($('#keyExpiresIn').val()) || 365,
-                scopes: $('#keyScopes').val().trim(),
+                description: $('#keyDescription').val().trim(),
                 is_active: $('#keyIsActive').is(':checked')
             };
 
+            // Add expired_at if provided (empty string means never expire)
+            // Convert from datetime-local format (2026-06-27T15:18) to SQL format (2026-06-27 15:18:00)
+            const expiredAt = $('#keyExpiredAt').val();
+            if (expiredAt) {
+                // Replace T with space and add :00 for seconds
+                payload.expired_at = expiredAt.replace('T', ' ') + ':00';
+            }
+
+            // Add rate_limit_override if provided (empty or 0 means use default)
+            const rateLimit = parseInt($('#keyRateLimit').val());
+            if (rateLimit > 0) {
+                payload.rate_limit_override = rateLimit;
+            }
+
             const btn = $('#btnSaveKey');
             const orig = btn.html();
-            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Creating...');
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> ' + (editingId ? 'Updating...' : 'Creating...'));
+
+            const method = editingId ? 'PUT' : 'POST';
+            const url = editingId ? API_KEYS_ENDPOINT + '/' + editingId : API_KEYS_ENDPOINT;
 
             $.ajax({
-                url: API_KEYS_ENDPOINT,
-                method: 'POST',
+                url: url,
+                method: method,
                 headers: getHeaders(),
                 contentType: 'application/json',
                 data: JSON.stringify(payload),
                 success: function(r) {
                     closeModal();
-                    if (r.data && r.data.api_key) {
+                    if (!editingId && r.data && r.data.api_key) {
                         generatedKey = r.data.api_key;
                         $('#generatedKeyValue').text(generatedKey);
                         $('#generatedKeyModal').addClass('active');
                     }
-                    showToast('API key created successfully', 'success');
+                    showToast(editingId ? 'API key updated successfully' : 'API key created successfully', 'success');
                     loadAPIKeys(currentPage);
                 },
                 error: function(xhr) {
-                    showError('Error', xhr.responseJSON?.message || 'Failed to create API key');
+                    showError('Error', xhr.responseJSON?.message || (editingId ? 'Failed to update API key' : 'Failed to create API key'));
                 },
                 complete: function() {
                     btn.prop('disabled', false).html(orig);

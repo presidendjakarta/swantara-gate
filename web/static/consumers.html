@@ -118,15 +118,14 @@
                                     <tr>
                                         <th style="width:50px;">#</th>
                                         <th>Consumer</th>
-                                        <th>API Key</th>
-                                        <th>Auth Type</th>
+                                        <th>Contact Email</th>
                                         <th>Status</th>
                                         <th>Created</th>
-                                        <th style="width:100px;">Actions</th>
+                                        <th style="width:120px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="consumerTableBody">
-                                    <tr><td colspan="7"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading consumers...</div></td></tr>
+                                    <tr><td colspan="6"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading consumers...</div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -164,24 +163,10 @@
                             <textarea class="form-control" id="consumerDescription" placeholder="Brief description of this consumer"></textarea>
                         </div>
                     </div>
-                    <div class="form-row form-row-inline">
-                        <div class="form-group">
-                            <label>Auth Type</label>
-                            <select class="form-control" id="consumerAuthType">
-                                <option value="api_key">API Key</option>
-                                <option value="jwt">JWT</option>
-                                <option value="oauth2">OAuth 2.0</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Rate Limit (req/min)</label>
-                            <input type="number" class="form-control" id="consumerRateLimit" value="1000" min="1">
-                        </div>
-                    </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Allowed IPs (comma separated)</label>
-                            <input type="text" class="form-control" id="consumerAllowedIPs" placeholder="e.g., 192.168.1.1, 10.0.0.0/24">
+                            <label>Contact Email</label>
+                            <input type="email" class="form-control" id="consumerContactEmail" placeholder="e.g., admin@example.com">
                         </div>
                     </div>
                     <div class="form-row" style="margin-top: 16px;">
@@ -189,20 +174,6 @@
                             <span>Enable Consumer</span>
                             <label class="switch-toggle">
                                 <input type="checkbox" id="consumerIsActive" checked>
-                                <span class="switch-slider"></span>
-                            </label>
-                        </div>
-                        <div class="switch-row">
-                            <span>Enable Rate Limiting</span>
-                            <label class="switch-toggle">
-                                <input type="checkbox" id="consumerEnableRateLimit" checked>
-                                <span class="switch-slider"></span>
-                            </label>
-                        </div>
-                        <div class="switch-row">
-                            <span>IP Whitelist Enforcement</span>
-                            <label class="switch-toggle">
-                                <input type="checkbox" id="consumerEnforceIPWhitelist">
                                 <span class="switch-slider"></span>
                             </label>
                         </div>
@@ -243,10 +214,6 @@
             });
             $('#navbar-container').load('/components/navbar.html');
             if (!localStorage.getItem('access_token')) { window.location.href = '/login.html'; return; }
-
-            // Initialize Select2
-            $('#consumerAuthType').select2({ theme: 'default' });
-
             loadConsumers();
 
             // Close modal on backdrop click
@@ -295,7 +262,6 @@
                     ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Active</span>'
                     : '<span class="badge badge-danger"><i class="fa-solid fa-times"></i> Inactive</span>';
 
-                const authBadge = getAuthTypeBadge(c.auth_type);
                 const initials = c.consumer_name ? c.consumer_name.substring(0, 2).toUpperCase() : 'CN';
 
                 html += '<tr>' +
@@ -307,8 +273,7 @@
                             '<p>' + escapeHtml(c.description || 'No description') + '</p>' +
                         '</div>' +
                     '</div></td>' +
-                    '<td><span class="consumer-key">' + escapeHtml(c.api_key ? (c.api_key.length > 16 ? c.api_key.substring(0, 16) + '...' : c.api_key) : 'Not generated') + '</span></td>' +
-                    '<td>' + authBadge + '</td>' +
+                    '<td><span style="font-size:13px;color:var(--text-secondary);">' + escapeHtml(c.contact_email || '-') + '</span></td>' +
                     '<td>' + statusBadge + '</td>' +
                     '<td><span style="font-size:12px;color:var(--text-tertiary);">' + formatDate(c.created_at) + '</span></td>' +
                     '<td><div style="display:flex;gap:6px;">' +
@@ -322,7 +287,7 @@
         }
 
         function renderEmpty() {
-            $('#consumerTableBody').html('<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-users-gear"></i><h4>No Consumers Yet</h4><p>Click <strong>Add Consumer</strong> to create one</p></div></td></tr>');
+            $('#consumerTableBody').html('<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-users-gear"></i><h4>No Consumers Yet</h4><p>Click <strong>Add Consumer</strong> to create one</p></div></td></tr>');
             $('#consumerSubtitle').text('0 consumers');
             $('#paginationButtons').html('');
             $('#paginationInfo').text('Showing 0 - 0 of 0');
@@ -354,14 +319,7 @@
             $('#paginationButtons').html(html);
         }
 
-        function getAuthTypeBadge(type) {
-            const badges = {
-                'api_key': '<span class="badge badge-primary">API Key</span>',
-                'jwt': '<span class="badge badge-warning">JWT</span>',
-                'oauth2': '<span class="badge badge-success">OAuth 2.0</span>'
-            };
-            return badges[type] || '<span class="badge badge-primary">' + escapeHtml(type || 'api_key') + '</span>';
-        }
+
 
         function formatDate(dateStr) {
             if (!dateStr) return '-';
@@ -379,34 +337,18 @@
 
         function openAddModal() {
             editingId = null;
-
-            // Init Select2 if not already
-            if (!$('#consumerAuthType').hasClass('select2-hidden-accessible')) {
-                $('#consumerAuthType').select2({ theme: 'default' });
-            }
-
             $('#modalTitle').text('Add Consumer');
             $('#consumerId').val('');
             $('#consumerName').val('');
             $('#consumerDescription').val('');
-            $('#consumerAuthType').val('api_key').trigger('change.select2');
-            $('#consumerRateLimit').val(1000);
-            $('#consumerAllowedIPs').val('');
+            $('#consumerContactEmail').val('');
             $('#consumerIsActive').prop('checked', true);
-            $('#consumerEnableRateLimit').prop('checked', true);
-            $('#consumerEnforceIPWhitelist').prop('checked', false);
             $('#btnSaveText').text('Save');
             $('#btnSaveConsumer').removeClass('btn-warning').addClass('btn-primary');
-
             $('#consumerModal').addClass('active');
         }
 
         function editConsumer(id) {
-            // Init Select2 if not already
-            if (!$('#consumerAuthType').hasClass('select2-hidden-accessible')) {
-                $('#consumerAuthType').select2({ theme: 'default' });
-            }
-
             $.ajax({
                 url: CONSUMER_API + '/' + id,
                 method: 'GET',
@@ -419,12 +361,8 @@
                         $('#consumerId').val(c.id);
                         $('#consumerName').val(c.consumer_name || '');
                         $('#consumerDescription').val(c.description || '');
-                        $('#consumerAuthType').val(c.auth_type || 'api_key').trigger('change.select2');
-                        $('#consumerRateLimit').val(c.rate_limit || 1000);
-                        $('#consumerAllowedIPs').val(c.allowed_ips || '');
+                        $('#consumerContactEmail').val(c.contact_email || '');
                         $('#consumerIsActive').prop('checked', c.is_active !== false);
-                        $('#consumerEnableRateLimit').prop('checked', c.enable_rate_limit !== false);
-                        $('#consumerEnforceIPWhitelist').prop('checked', c.enforce_ip_whitelist === true);
                         $('#btnSaveText').text('Update');
                         $('#btnSaveConsumer').removeClass('btn-primary').addClass('btn-warning');
                         $('#consumerModal').addClass('active');
@@ -446,12 +384,8 @@
             const payload = {
                 consumer_name: name,
                 description: $('#consumerDescription').val().trim(),
-                auth_type: $('#consumerAuthType').val(),
-                rate_limit: parseInt($('#consumerRateLimit').val()) || 1000,
-                allowed_ips: $('#consumerAllowedIPs').val().trim(),
-                is_active: $('#consumerIsActive').is(':checked'),
-                enable_rate_limit: $('#consumerEnableRateLimit').is(':checked'),
-                enforce_ip_whitelist: $('#consumerEnforceIPWhitelist').is(':checked')
+                contact_email: $('#consumerContactEmail').val().trim(),
+                is_active: $('#consumerIsActive').is(':checked')
             };
 
             const btn = $('#btnSaveConsumer');
