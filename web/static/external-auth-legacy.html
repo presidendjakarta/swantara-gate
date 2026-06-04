@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>External Auth - Swantara Gate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.metroui.org.ua/current/metro.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+    <link rel="stylesheet" href="/assets/css/datatables.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+    <link rel="stylesheet" href="/assets/css/dark.css">
+    <link rel="stylesheet" href="/assets/css/swal-custom.css">
+    <style>
+        .content-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); overflow: hidden; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-secondary); }
+        .card-header-left { display: flex; align-items: center; gap: 12px; }
+        .card-icon { width: 40px; height: 40px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .card-icon.bg-info { background: rgba(21, 101, 192, 0.12); color: #1565c0; }
+        .card-header h3 { margin: 0; font-size: 14px; font-weight: 600; }
+        .card-subtitle { margin: 0; font-size: 12px; color: var(--text-tertiary); }
+        .card-body { padding: 0; }
+        .data-table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--bg-secondary); }
+        th { padding: 12px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); text-align: left; white-space: nowrap; }
+        td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+        tbody tr:hover { background: var(--bg-secondary); }
+        tbody tr:last-child td { border-bottom: none; }
+        .auth-url { font-family: 'SF Mono', 'Consolas', monospace; font-size: 11px; color: var(--text-secondary); background: var(--bg-secondary); padding: 4px 8px; border-radius: 4px; display: inline-block; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .method-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .method-badge.post { background: #e8f5e9; color: #2e7d32; }
+        .method-badge.get { background: #e3f2fd; color: #1565c0; }
+        .method-badge.put { background: #fff3e0; color: #e65100; }
+        .method-badge.delete { background: #ffebee; color: #c62828; }
+        .vhost-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--bg-secondary); border-radius: 12px; font-size: 12px; }
+        .vhost-chip i { color: var(--accent); }
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+        .badge-warning { background: #fff3e0; color: #e65100; }
+        .badge-primary { background: #e3f2fd; color: #1565c0; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9999; display: none; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: slideUp 0.25s ease; overflow: hidden; }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-secondary); }
+        .modal-header h3 { margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .modal-header h3 i { color: var(--accent); }
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--border-subtle); background: var(--bg-secondary); }
+        .form-row { margin-bottom: 16px; }
+        .form-row:last-child { margin-bottom: 0; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+        .form-group .form-control { height: 38px; font-size: 13px; }
+        .form-group textarea.form-control { height: auto; min-height: 60px; resize: vertical; }
+        .form-row-inline { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .switch-toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .switch-toggle input { opacity: 0; width: 0; height: 0; }
+        .switch-slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; cursor: pointer; transition: var(--transition-fast); }
+        .switch-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: var(--transition-fast); }
+        .switch-toggle input:checked + .switch-slider { background: var(--success); }
+        .switch-toggle input:checked + .switch-slider::before { transform: translateX(18px); }
+        .switch-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+        .switch-row:last-child { border-bottom: none; }
+        .switch-row span { font-size: 13px; color: var(--text-primary); }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-tertiary); }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+        .empty-state h4 { font-size: 16px; color: var(--text-secondary); margin-bottom: 6px; }
+        .empty-state p { font-size: 13px; margin: 0; }
+        .table-loading { text-align: center; padding: 40px; color: var(--text-tertiary); }
+        .table-loading i { font-size: 24px; animation: fa-spin 1s linear infinite; margin-bottom: 10px; display: block; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        <div class="app-main">
+            <div id="navbar-container"></div>
+            <main class="app-content">
+                <div class="page-header">
+                    <div>
+                        <h1>External Authentication</h1>
+                        <p>Configure external auth endpoints for forward authentication</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="loadExternalAuths()"><i class="fa-solid fa-arrows-rotate"></i> <span>Refresh</span></button>
+                        <button class="btn btn-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Auth</button>
+                    </div>
+                </div>
+
+                <!-- External Auth Table -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="card-header-left">
+                            <div class="card-icon bg-info"><i class="fa-solid fa-shield-halved"></i></div>
+                            <div>
+                                <h3>External Auth List</h3>
+                                <p class="card-subtitle" id="authSubtitle">Loading...</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <select id="filterVhost" class="form-control" style="height: 36px; width: 180px;" onchange="loadExternalAuths(1)">
+                                <option value="">All Virtual Directories</option>
+                            </select>
+                            <div style="position: relative;">
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search..." style="padding-left: 36px; width: 200px; height: 36px; font-size: 13px;" onkeyup="handleSearch()">
+                                <i class="fa-solid fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-size: 13px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="data-table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:50px;">#</th>
+                                        <th>Virtual Directory</th>
+                                        <th>Auth URL</th>
+                                        <th>Method</th>
+                                        <th>Timeout</th>
+                                        <th>Status</th>
+                                        <th style="width:110px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="authTableBody">
+                                    <tr><td colspan="7"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading...</div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding: 12px 0;">
+                    <div class="pagination-info" id="paginationInfo">Showing 0 - 0 of 0</div>
+                    <div class="pagination-buttons" id="paginationButtons"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-shield-halved"></i> <span id="modalTitle">Add External Auth</span></h3>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="authForm">
+                    <input type="hidden" id="authId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Virtual Directory <span style="color:var(--danger);">*</span></label>
+                            <select class="form-control" id="authVdir">
+                                <option value="">-- Select virtual directory --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Auth URL <span style="color:var(--danger);">*</span></label>
+                            <input type="text" class="form-control" id="authUrl" placeholder="https://auth.example.com/verify">
+                        </div>
+                    </div>
+                    <div class="form-row form-row-inline">
+                        <div class="form-group">
+                            <label>HTTP Method</label>
+                            <select class="form-control" id="httpMethod">
+                                <option value="POST">POST</option>
+                                <option value="GET">GET</option>
+                                <option value="PUT">PUT</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Request Timeout (seconds)</label>
+                            <input type="number" class="form-control" id="requestTimeout" value="5" min="1" max="300">
+                        </div>
+                    </div>
+                    <div class="form-row form-row-inline">
+                        <div class="form-group">
+                            <label>Success Key</label>
+                            <input type="text" class="form-control" id="successKey" value="status" placeholder="JSON key to check">
+                        </div>
+                        <div class="form-group">
+                            <label>Success Value</label>
+                            <input type="text" class="form-control" id="successValue" value="true" placeholder="Expected value">
+                        </div>
+                    </div>
+                    <div class="form-row form-row-inline">
+                        <div class="form-group">
+                            <label>Message Key</label>
+                            <input type="text" class="form-control" id="messageKey" value="message" placeholder="Key for error message">
+                        </div>
+                        <div class="form-group">
+                            <label>Token Key</label>
+                            <input type="text" class="form-control" id="tokenKey" placeholder="Key for token (optional)">
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top: 16px;">
+                        <div class="switch-row">
+                            <span>Active</span>
+                            <label class="switch-toggle">
+                                <input type="checkbox" id="authIsActive" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+                        <div class="switch-row">
+                            <span>Send Headers</span>
+                            <label class="switch-toggle">
+                                <input type="checkbox" id="sendHeaders" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+                        <div class="switch-row">
+                            <span>Send Body</span>
+                            <label class="switch-toggle">
+                                <input type="checkbox" id="sendBody">
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                <button class="btn btn-primary" id="btnSaveAuth" onclick="saveAuth()"><i class="fa-solid fa-check"></i> <span id="btnSaveText">Save</span></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.metroui.org.ua/current/metro.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+    <script src="/assets/js/swal-config.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script>
+        const AUTH_API = '/api/admin/external-auth';
+        const VDIR_API = '/api/admin/virtual-directories';
+        let editingId = null;
+        let currentPage = 1;
+        let totalPages = 1;
+        let searchTimeout = null;
+        let virtualDirectories = [];
+
+        function getHeaders() { return { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }; }
+        function escapeHtml(t) { if (!t) return ''; return t.replace(/[&<>"']/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]; }); }
+
+        $(document).ready(function() {
+            $('#sidebar-container').load('/components/sidebar.html', function() {
+                $(this).find('.nav-item').removeClass('active');
+                $(this).find('a[href="/external-auth.html"]').closest('.nav-item').addClass('active');
+                $(this).find('a[href="/external-auth.html"]').closest('.has-submenu').addClass('open');
+            });
+            $('#navbar-container').load('/components/navbar.html');
+            if (!localStorage.getItem('access_token')) { window.location.href = '/login.html'; return; }
+
+            // Initialize Select2
+            $('#authVdir').select2({ theme: 'default', placeholder: '-- Select virtual directory --' });
+            $('#httpMethod').select2({ theme: 'default' });
+            $('#filterVhost').select2({ theme: 'default', placeholder: 'All Virtual Directories' });
+
+            loadVirtualDirectories();
+            loadExternalAuths();
+
+            // Close modal on backdrop click
+            $('#authModal').on('click', function(e) { if (e.target === this) closeModal(); });
+            $(document).on('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+        });
+
+        function loadVirtualDirectories() {
+            $.ajax({
+                url: VDIR_API,
+                method: 'GET',
+                headers: getHeaders(),
+                data: { limit: 200 },
+                success: function(r) {
+                    if (r.success && r.data) {
+                        virtualDirectories = Array.isArray(r.data) ? r.data : r.data.virtual_directories || [];
+
+                        // Populate form dropdown
+                        const $form = $('#authVdir');
+                        $form.find('option:not(:first)').remove();
+                        virtualDirectories.forEach(function(vd) {
+                            $form.append('<option value="' + vd.id + '">' + escapeHtml(vd.source_path) + ' → ' + escapeHtml(vd.target_path) + '</option>');
+                        });
+                        $form.trigger('change.select2');
+
+                        // Populate filter dropdown
+                        const $filter = $('#filterVhost');
+                        $filter.find('option:not(:first)').remove();
+                        virtualDirectories.forEach(function(vd) {
+                            $filter.append('<option value="' + vd.id + '">' + escapeHtml(vd.source_path) + '</option>');
+                        });
+                        $filter.trigger('change.select2');
+                    }
+                }
+            });
+        }
+
+        function getVdirPath(vdirId) {
+            const vd = virtualDirectories.find(function(vd) { return vd.id === vdirId; });
+            return vd ? vd.source_path : 'Unknown';
+        }
+
+        function loadExternalAuths(page = 1) {
+            currentPage = page;
+            $('#authTableBody').html('<tr><td colspan="7"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading...</div></td></tr>');
+
+            const search = $('#searchInput').val() || '';
+            const limit = 10;
+
+            let url = AUTH_API + '?page=' + currentPage + '&limit=' + limit;
+            if (search) url += '&search=' + encodeURIComponent(search);
+
+            $.ajax({
+                url: url,
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        const data = Array.isArray(r.data) ? r.data : r.data.external_auth || [];
+                        const pagination = r.data.pagination || {};
+                        const total = pagination.total || 0;
+
+                        renderTable(data);
+                        renderPagination(pagination);
+                        $('#authSubtitle').text(data.length + ' auth configuration(s) found');
+                    } else {
+                        renderEmpty();
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 401) { window.location.href = '/login.html'; return; }
+                    $('#authTableBody').html('<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--danger);">Failed to load external auth</td></tr>');
+                }
+            });
+        }
+
+        function renderTable(auths) {
+            if (!auths || auths.length === 0) { renderEmpty(); return; }
+
+            let html = '';
+            auths.forEach(function(a, i) {
+                const statusBadge = a.is_active
+                    ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Active</span>'
+                    : '<span class="badge badge-danger"><i class="fa-solid fa-times"></i> Inactive</span>';
+
+                const methodClass = (a.http_method || 'POST').toLowerCase();
+                const methodBadge = '<span class="method-badge ' + methodClass + '">' + escapeHtml(a.http_method || 'POST') + '</span>';
+                const vdirPath = a.source_path || getVdirPath(a.virtual_directory_id);
+
+                html += '<tr>' +
+                    '<td>' + ((currentPage - 1) * 10 + i + 1) + '</td>' +
+                    '<td><div class="vhost-chip"><i class="fa-solid fa-route"></i>' + escapeHtml(vdirPath) + '</div></td>' +
+                    '<td><span class="auth-url" title="' + escapeHtml(a.auth_url) + '">' + escapeHtml(a.auth_url) + '</span></td>' +
+                    '<td>' + methodBadge + '</td>' +
+                    '<td><span style="font-weight:600;">' + (a.request_timeout_seconds || 5) + 's</span></td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td><div style="display:flex;gap:6px;">' +
+                        '<button class="btn btn-sm btn-secondary" title="Edit" onclick="editAuth(' + a.id + ')"><i class="fa-solid fa-pen"></i></button>' +
+                        '<button class="btn btn-sm btn-danger" title="Delete" onclick="deleteAuth(' + a.id + ')"><i class="fa-solid fa-trash"></i></button>' +
+                    '</div></td>' +
+                '</tr>';
+            });
+
+            $('#authTableBody').html(html);
+        }
+
+        function renderEmpty() {
+            $('#authTableBody').html('<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-shield-halved"></i><h4>No External Auth Yet</h4><p>Click <strong>Add Auth</strong> to configure external authentication</p></div></td></tr>');
+            $('#authSubtitle').text('0 configurations');
+            $('#paginationButtons').html('');
+            $('#paginationInfo').text('Showing 0 - 0 of 0');
+        }
+
+        function renderPagination(pagination) {
+            const page = pagination.page || 1;
+            const total = pagination.total || 0;
+            const limit = pagination.limit || 10;
+            totalPages = Math.ceil(total / limit);
+
+            const from = total === 0 ? 0 : (page - 1) * limit + 1;
+            const to = Math.min(page * limit, total);
+
+            $('#paginationInfo').text('Showing ' + from + ' - ' + to + ' of ' + total);
+
+            let html = '';
+            if (totalPages > 1) {
+                html += '<button ' + (page <= 1 ? 'disabled' : '') + ' onclick="loadExternalAuths(' + (page - 1) + ')"><i class="fa-solid fa-chevron-left"></i></button>';
+                for (let p = 1; p <= totalPages; p++) {
+                    if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
+                        html += '<button class="' + (p === page ? 'active' : '') + '" onclick="loadExternalAuths(' + p + ')">' + p + '</button>';
+                    } else if (p === page - 2 || p === page + 2) {
+                        html += '<span style="padding:0 8px;color:var(--text-tertiary);">...</span>';
+                    }
+                }
+                html += '<button ' + (page >= totalPages ? 'disabled' : '') + ' onclick="loadExternalAuths(' + (page + 1) + ')"><i class="fa-solid fa-chevron-right"></i></button>';
+            }
+            $('#paginationButtons').html(html);
+        }
+
+        function handleSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                loadExternalAuths(1);
+            }, 300);
+        }
+
+        function openAddModal() {
+            editingId = null;
+
+            // Init Select2 if not already
+            if (!$('#authVdir').hasClass('select2-hidden-accessible')) {
+                $('#authVdir').select2({ theme: 'default', placeholder: '-- Select virtual directory --' });
+            }
+            if (!$('#httpMethod').hasClass('select2-hidden-accessible')) {
+                $('#httpMethod').select2({ theme: 'default' });
+            }
+
+            $('#modalTitle').text('Add External Auth');
+            $('#authId').val('');
+            $('#authVdir').val('').trigger('change.select2');
+            $('#authUrl').val('');
+            $('#httpMethod').val('POST').trigger('change.select2');
+            $('#requestTimeout').val(5);
+            $('#successKey').val('status');
+            $('#successValue').val('true');
+            $('#messageKey').val('message');
+            $('#tokenKey').val('');
+            $('#authIsActive').prop('checked', true);
+            $('#sendHeaders').prop('checked', true);
+            $('#sendBody').prop('checked', false);
+            $('#btnSaveText').text('Save');
+            $('#btnSaveAuth').removeClass('btn-warning').addClass('btn-primary');
+
+            $('#authModal').addClass('active');
+        }
+
+        function editAuth(id) {
+            // Init Select2 if not already
+            if (!$('#authVdir').hasClass('select2-hidden-accessible')) {
+                $('#authVdir').select2({ theme: 'default', placeholder: '-- Select virtual directory --' });
+            }
+            if (!$('#httpMethod').hasClass('select2-hidden-accessible')) {
+                $('#httpMethod').select2({ theme: 'default' });
+            }
+
+            $.ajax({
+                url: AUTH_API + '/' + id,
+                method: 'GET',
+                headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        const a = r.data;
+                        editingId = id;
+                        $('#modalTitle').text('Edit External Auth');
+                        $('#authId').val(a.id);
+                        $('#authVdir').val(a.virtual_directory_id).trigger('change.select2');
+                        $('#authUrl').val(a.auth_url || '');
+                        $('#httpMethod').val(a.http_method || 'POST').trigger('change.select2');
+                        $('#requestTimeout').val(a.request_timeout_seconds || 5);
+                        $('#successKey').val(a.success_key || 'status');
+                        $('#successValue').val(a.success_value || 'true');
+                        $('#messageKey').val(a.message_key || 'message');
+                        $('#tokenKey').val(a.token_key || '');
+                        $('#authIsActive').prop('checked', a.is_active !== false);
+                        $('#sendHeaders').prop('checked', a.send_headers !== false);
+                        $('#sendBody').prop('checked', a.send_body === true);
+                        $('#btnSaveText').text('Update');
+                        $('#btnSaveAuth').removeClass('btn-primary').addClass('btn-warning');
+                        $('#authModal').addClass('active');
+                    }
+                },
+                error: function() { showError('Error', 'Failed to load external auth data'); }
+            });
+        }
+
+        function closeModal() {
+            $('#authModal').removeClass('active');
+            editingId = null;
+        }
+
+        function saveAuth() {
+            const vdirId = parseInt($('#authVdir').val());
+            if (!vdirId) { showWarning('Please select a virtual directory'); return; }
+
+            const authUrl = $('#authUrl').val().trim();
+            if (!authUrl) { showWarning('Auth URL is required'); return; }
+
+            const payload = {
+                virtual_directory_id: vdirId,
+                auth_url: authUrl,
+                http_method: $('#httpMethod').val(),
+                request_timeout_seconds: parseInt($('#requestTimeout').val()) || 5,
+                success_key: $('#successKey').val().trim(),
+                success_value: $('#successValue').val().trim(),
+                message_key: $('#messageKey').val().trim(),
+                token_key: $('#tokenKey').val().trim(),
+                is_active: $('#authIsActive').is(':checked'),
+                send_headers: $('#sendHeaders').is(':checked'),
+                send_body: $('#sendBody').is(':checked')
+            };
+
+            const btn = $('#btnSaveAuth');
+            const orig = btn.html();
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Saving...');
+
+            const method = editingId ? 'PUT' : 'POST';
+            const url = editingId ? AUTH_API + '/' + editingId : AUTH_API;
+
+            $.ajax({
+                url: url,
+                method: method,
+                headers: getHeaders(),
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function() {
+                    closeModal();
+                    showToast(editingId ? 'External auth updated successfully' : 'External auth created successfully', 'success');
+                    loadExternalAuths(currentPage);
+                },
+                error: function(xhr) {
+                    showError('Error', xhr.responseJSON?.message || 'Failed to save');
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html(orig);
+                }
+            });
+        }
+
+        function deleteAuth(id) {
+            showConfirm('Delete External Auth', 'Are you sure you want to delete this external auth configuration? This action cannot be undone.', 'Yes, Delete', 'Cancel').then(function(result) {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: AUTH_API + '/' + id,
+                        method: 'DELETE',
+                        headers: getHeaders(),
+                        success: function() { showToast('External auth deleted', 'success'); loadExternalAuths(currentPage); },
+                        error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to delete'); }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
