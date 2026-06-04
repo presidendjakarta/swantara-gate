@@ -34,24 +34,22 @@
         td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
         tbody tr:hover { background: var(--bg-secondary); }
         tbody tr:last-child td { border-bottom: none; }
-        .provider-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: white; }
-        .provider-icon.oauth2 { background: linear-gradient(135deg, #4285f4, #34a853); }
-        .provider-icon.ldap { background: linear-gradient(135deg, #1a73e8, #0d47a1); }
-        .provider-icon.saml { background: linear-gradient(135deg, #ff6d00, #e65100); }
-        .provider-icon.custom { background: linear-gradient(135deg, #9c27b0, #6a1b9a); }
-        .provider-info { display: flex; align-items: center; gap: 12px; }
-        .provider-details h4 { font-size: 13px; font-weight: 600; margin: 0; }
-        .provider-details p { font-size: 11px; color: var(--text-tertiary); margin: 2px 0 0; }
-        .endpoint-url { font-family: 'SF Mono', 'Consolas', monospace; font-size: 11px; color: var(--text-secondary); background: var(--bg-secondary); padding: 4px 8px; border-radius: 4px; display: inline-block; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .auth-url { font-family: 'SF Mono', 'Consolas', monospace; font-size: 11px; color: var(--text-secondary); background: var(--bg-secondary); padding: 4px 8px; border-radius: 4px; display: inline-block; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .method-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .method-badge.post { background: #e8f5e9; color: #2e7d32; }
+        .method-badge.get { background: #e3f2fd; color: #1565c0; }
+        .method-badge.put { background: #fff3e0; color: #e65100; }
+        .method-badge.delete { background: #ffebee; color: #c62828; }
+        .vhost-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--bg-secondary); border-radius: 12px; font-size: 12px; }
+        .vhost-chip i { color: var(--accent); }
         .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
         .badge-success { background: #e8f5e9; color: #2e7d32; }
         .badge-danger { background: #ffebee; color: #c62828; }
         .badge-warning { background: #fff3e0; color: #e65100; }
         .badge-primary { background: #e3f2fd; color: #1565c0; }
-        .badge-info { background: #e3f2fd; color: #0277bd; }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9999; display: none; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
         .modal-overlay.active { display: flex; }
-        .modal-box { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 560px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: slideUp 0.25s ease; overflow: hidden; }
+        .modal-box { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: slideUp 0.25s ease; overflow: hidden; }
         @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-secondary); }
         .modal-header h3 { margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
@@ -63,9 +61,8 @@
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
         .form-group .form-control { height: 38px; font-size: 13px; }
-        .form-group textarea.form-control { height: auto; min-height: 80px; resize: vertical; }
+        .form-group textarea.form-control { height: auto; min-height: 60px; resize: vertical; }
         .form-row-inline { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .form-row-full { grid-column: 1 / -1; }
         .switch-toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
         .switch-toggle input { opacity: 0; width: 0; height: 0; }
         .switch-slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; cursor: pointer; transition: var(--transition-fast); }
@@ -92,11 +89,11 @@
                 <div class="page-header">
                     <div>
                         <h1>External Authentication</h1>
-                        <p>Configure external identity providers for API authentication</p>
+                        <p>Configure external auth endpoints for forward authentication</p>
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn btn-secondary" onclick="loadExternalAuths()"><i class="fa-solid fa-arrows-rotate"></i> <span>Refresh</span></button>
-                        <button class="btn btn-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Provider</button>
+                        <button class="btn btn-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Auth</button>
                     </div>
                 </div>
 
@@ -106,20 +103,16 @@
                         <div class="card-header-left">
                             <div class="card-icon bg-info"><i class="fa-solid fa-shield-halved"></i></div>
                             <div>
-                                <h3>Provider List</h3>
+                                <h3>External Auth List</h3>
                                 <p class="card-subtitle" id="authSubtitle">Loading...</p>
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 12px;">
-                            <select id="filterType" class="form-control" style="height: 36px; width: 140px;" onchange="loadExternalAuths(1)">
-                                <option value="">All Types</option>
-                                <option value="oauth2">OAuth 2.0</option>
-                                <option value="ldap">LDAP</option>
-                                <option value="saml">SAML</option>
-                                <option value="custom">Custom</option>
+                            <select id="filterVhost" class="form-control" style="height: 36px; width: 180px;" onchange="loadExternalAuths(1)">
+                                <option value="">All Virtual Directories</option>
                             </select>
                             <div style="position: relative;">
-                                <input type="text" id="searchInput" class="form-control" placeholder="Search providers..." style="padding-left: 36px; width: 220px; height: 36px; font-size: 13px;" onkeyup="handleSearch()">
+                                <input type="text" id="searchInput" class="form-control" placeholder="Search..." style="padding-left: 36px; width: 200px; height: 36px; font-size: 13px;" onkeyup="handleSearch()">
                                 <i class="fa-solid fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-size: 13px;"></i>
                             </div>
                         </div>
@@ -130,10 +123,10 @@
                                 <thead>
                                     <tr>
                                         <th style="width:50px;">#</th>
-                                        <th>Provider</th>
-                                        <th>Type</th>
-                                        <th>Endpoint</th>
-                                        <th>Priority</th>
+                                        <th>Virtual Directory</th>
+                                        <th>Auth URL</th>
+                                        <th>Method</th>
+                                        <th>Timeout</th>
                                         <th>Status</th>
                                         <th style="width:110px;">Actions</th>
                                     </tr>
@@ -159,75 +152,58 @@
     <div class="modal-overlay" id="authModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-shield-halved"></i> <span id="modalTitle">Add Provider</span></h3>
+                <h3><i class="fa-solid fa-shield-halved"></i> <span id="modalTitle">Add External Auth</span></h3>
                 <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
                 <form id="authForm">
                     <input type="hidden" id="authId">
-                    <div class="form-row form-row-inline">
+                    <div class="form-row">
                         <div class="form-group">
-                            <label>Provider Name <span style="color:var(--danger);">*</span></label>
-                            <input type="text" class="form-control" id="authName" placeholder="e.g., Google OAuth">
-                        </div>
-                        <div class="form-group">
-                            <label>Provider Type <span style="color:var(--danger);">*</span></label>
-                            <select class="form-control" id="authType">
-                                <option value="oauth2">OAuth 2.0</option>
-                                <option value="ldap">LDAP</option>
-                                <option value="saml">SAML</option>
-                                <option value="custom">Custom</option>
+                            <label>Virtual Directory <span style="color:var(--danger);">*</span></label>
+                            <select class="form-control" id="authVdir">
+                                <option value="">-- Select virtual directory --</option>
                             </select>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Provider URL</label>
-                            <input type="text" class="form-control" id="authProviderUrl" placeholder="https://auth.example.com">
+                            <label>Auth URL <span style="color:var(--danger);">*</span></label>
+                            <input type="text" class="form-control" id="authUrl" placeholder="https://auth.example.com/verify">
                         </div>
                     </div>
                     <div class="form-row form-row-inline">
                         <div class="form-group">
-                            <label>Client ID / Username</label>
-                            <input type="text" class="form-control" id="authClientId" placeholder="Client ID or Bind DN">
+                            <label>HTTP Method</label>
+                            <select class="form-control" id="httpMethod">
+                                <option value="POST">POST</option>
+                                <option value="GET">GET</option>
+                                <option value="PUT">PUT</option>
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label>Client Secret / Password</label>
-                            <input type="password" class="form-control" id="authClientSecret" placeholder="Client secret or bind password">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Authorization Endpoint</label>
-                            <input type="text" class="form-control" id="authAuthEndpoint" placeholder="https://auth.example.com/oauth/authorize">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Token Endpoint</label>
-                            <input type="text" class="form-control" id="authTokenEndpoint" placeholder="https://auth.example.com/oauth/token">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>User Info Endpoint</label>
-                            <input type="text" class="form-control" id="authUserInfoEndpoint" placeholder="https://auth.example.com/oauth/userinfo">
+                            <label>Request Timeout (seconds)</label>
+                            <input type="number" class="form-control" id="requestTimeout" value="5" min="1" max="300">
                         </div>
                     </div>
                     <div class="form-row form-row-inline">
                         <div class="form-group">
-                            <label>Priority</label>
-                            <input type="number" class="form-control" id="authPriority" value="1" min="1" max="100">
+                            <label>Success Key</label>
+                            <input type="text" class="form-control" id="successKey" value="status" placeholder="JSON key to check">
                         </div>
                         <div class="form-group">
-                            <label>Timeout (sec)</label>
-                            <input type="number" class="form-control" id="authTimeout" value="30" min="5" max="300">
+                            <label>Success Value</label>
+                            <input type="text" class="form-control" id="successValue" value="true" placeholder="Expected value">
                         </div>
                     </div>
-                    <div class="form-row">
+                    <div class="form-row form-row-inline">
                         <div class="form-group">
-                            <label>Scopes (comma separated)</label>
-                            <input type="text" class="form-control" id="authScopes" placeholder="e.g., openid, profile, email">
+                            <label>Message Key</label>
+                            <input type="text" class="form-control" id="messageKey" value="message" placeholder="Key for error message">
+                        </div>
+                        <div class="form-group">
+                            <label>Token Key</label>
+                            <input type="text" class="form-control" id="tokenKey" placeholder="Key for token (optional)">
                         </div>
                     </div>
                     <div class="form-row" style="margin-top: 16px;">
@@ -239,16 +215,16 @@
                             </label>
                         </div>
                         <div class="switch-row">
-                            <span>Auto Provision Users</span>
+                            <span>Send Headers</span>
                             <label class="switch-toggle">
-                                <input type="checkbox" id="authAutoProvision">
+                                <input type="checkbox" id="sendHeaders" checked>
                                 <span class="switch-slider"></span>
                             </label>
                         </div>
                         <div class="switch-row">
-                            <span>Strict Certificate Validation</span>
+                            <span>Send Body</span>
                             <label class="switch-toggle">
-                                <input type="checkbox" id="authStrictCert" checked>
+                                <input type="checkbox" id="sendBody">
                                 <span class="switch-slider"></span>
                             </label>
                         </div>
@@ -273,10 +249,12 @@
     <script src="/assets/js/app.js"></script>
     <script>
         const AUTH_API = '/api/admin/external-auth';
+        const VDIR_API = '/api/admin/virtual-directories';
         let editingId = null;
         let currentPage = 1;
         let totalPages = 1;
         let searchTimeout = null;
+        let virtualDirectories = [];
 
         function getHeaders() { return { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }; }
         function escapeHtml(t) { if (!t) return ''; return t.replace(/[&<>"']/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]; }); }
@@ -291,9 +269,11 @@
             if (!localStorage.getItem('access_token')) { window.location.href = '/login.html'; return; }
 
             // Initialize Select2
-            $('#authType').select2({ theme: 'default' });
-            $('#filterType').select2({ theme: 'default', placeholder: 'All Types' });
+            $('#authVdir').select2({ theme: 'default', placeholder: '-- Select virtual directory --' });
+            $('#httpMethod').select2({ theme: 'default' });
+            $('#filterVhost').select2({ theme: 'default', placeholder: 'All Virtual Directories' });
 
+            loadVirtualDirectories();
             loadExternalAuths();
 
             // Close modal on backdrop click
@@ -301,17 +281,50 @@
             $(document).on('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
         });
 
+        function loadVirtualDirectories() {
+            $.ajax({
+                url: VDIR_API,
+                method: 'GET',
+                headers: getHeaders(),
+                data: { limit: 200 },
+                success: function(r) {
+                    if (r.success && r.data) {
+                        virtualDirectories = Array.isArray(r.data) ? r.data : r.data.virtual_directories || [];
+
+                        // Populate form dropdown
+                        const $form = $('#authVdir');
+                        $form.find('option:not(:first)').remove();
+                        virtualDirectories.forEach(function(vd) {
+                            $form.append('<option value="' + vd.id + '">' + escapeHtml(vd.source_path) + ' → ' + escapeHtml(vd.target_path) + '</option>');
+                        });
+                        $form.trigger('change.select2');
+
+                        // Populate filter dropdown
+                        const $filter = $('#filterVhost');
+                        $filter.find('option:not(:first)').remove();
+                        virtualDirectories.forEach(function(vd) {
+                            $filter.append('<option value="' + vd.id + '">' + escapeHtml(vd.source_path) + '</option>');
+                        });
+                        $filter.trigger('change.select2');
+                    }
+                }
+            });
+        }
+
+        function getVdirPath(vdirId) {
+            const vd = virtualDirectories.find(function(vd) { return vd.id === vdirId; });
+            return vd ? vd.source_path : 'Unknown';
+        }
+
         function loadExternalAuths(page = 1) {
             currentPage = page;
             $('#authTableBody').html('<tr><td colspan="7"><div class="table-loading"><i class="fa-solid fa-spinner"></i>Loading...</div></td></tr>');
 
             const search = $('#searchInput').val() || '';
-            const type = $('#filterType').val() || '';
             const limit = 10;
 
             let url = AUTH_API + '?page=' + currentPage + '&limit=' + limit;
             if (search) url += '&search=' + encodeURIComponent(search);
-            if (type) url += '&type=' + type;
 
             $.ajax({
                 url: url,
@@ -319,20 +332,20 @@
                 headers: getHeaders(),
                 success: function(r) {
                     if (r.success && r.data) {
-                        const data = Array.isArray(r.data) ? r.data : r.data.external_auths || [];
+                        const data = Array.isArray(r.data) ? r.data : r.data.external_auth || [];
                         const pagination = r.data.pagination || {};
                         const total = pagination.total || 0;
 
                         renderTable(data);
                         renderPagination(pagination);
-                        $('#authSubtitle').text(data.length + ' provider(s) found');
+                        $('#authSubtitle').text(data.length + ' auth configuration(s) found');
                     } else {
                         renderEmpty();
                     }
                 },
                 error: function(xhr) {
                     if (xhr.status === 401) { window.location.href = '/login.html'; return; }
-                    $('#authTableBody').html('<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--danger);">Failed to load providers</td></tr>');
+                    $('#authTableBody').html('<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--danger);">Failed to load external auth</td></tr>');
                 }
             });
         }
@@ -346,25 +359,20 @@
                     ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Active</span>'
                     : '<span class="badge badge-danger"><i class="fa-solid fa-times"></i> Inactive</span>';
 
-                const typeBadge = getTypeBadge(a.auth_type);
-                const providerInitials = a.name ? a.name.substring(0, 2).toUpperCase() : 'EX';
+                const methodClass = (a.http_method || 'POST').toLowerCase();
+                const methodBadge = '<span class="method-badge ' + methodClass + '">' + escapeHtml(a.http_method || 'POST') + '</span>';
+                const vdirPath = a.source_path || getVdirPath(a.virtual_directory_id);
 
                 html += '<tr>' +
                     '<td>' + ((currentPage - 1) * 10 + i + 1) + '</td>' +
-                    '<td><div class="provider-info">' +
-                        '<div class="provider-icon ' + (a.auth_type || 'custom') + '">' + providerInitials + '</div>' +
-                        '<div class="provider-details">' +
-                            '<h4>' + escapeHtml(a.name || '-') + '</h4>' +
-                            '<p>' + escapeHtml(a.provider_url || 'No URL') + '</p>' +
-                        '</div>' +
-                    '</div></td>' +
-                    '<td>' + typeBadge + '</td>' +
-                    '<td><span class="endpoint-url" title="' + escapeHtml(a.auth_endpoint || a.token_endpoint || '-') + '">' + escapeHtml(a.auth_endpoint || a.token_endpoint || '-') + '</span></td>' +
-                    '<td><span style="font-weight:600;color:var(--accent);">' + (a.priority || 1) + '</span></td>' +
+                    '<td><div class="vhost-chip"><i class="fa-solid fa-route"></i>' + escapeHtml(vdirPath) + '</div></td>' +
+                    '<td><span class="auth-url" title="' + escapeHtml(a.auth_url) + '">' + escapeHtml(a.auth_url) + '</span></td>' +
+                    '<td>' + methodBadge + '</td>' +
+                    '<td><span style="font-weight:600;">' + (a.request_timeout_seconds || 5) + 's</span></td>' +
                     '<td>' + statusBadge + '</td>' +
                     '<td><div style="display:flex;gap:6px;">' +
                         '<button class="btn btn-sm btn-secondary" title="Edit" onclick="editAuth(' + a.id + ')"><i class="fa-solid fa-pen"></i></button>' +
-                        '<button class="btn btn-sm btn-danger" title="Delete" onclick="deleteAuth(' + a.id + ',\'' + escapeHtml(a.name) + '\')"><i class="fa-solid fa-trash"></i></button>' +
+                        '<button class="btn btn-sm btn-danger" title="Delete" onclick="deleteAuth(' + a.id + ')"><i class="fa-solid fa-trash"></i></button>' +
                     '</div></td>' +
                 '</tr>';
             });
@@ -373,8 +381,8 @@
         }
 
         function renderEmpty() {
-            $('#authTableBody').html('<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-shield-halved"></i><h4>No Providers Yet</h4><p>Click <strong>Add Provider</strong> to configure an external auth</p></div></td></tr>');
-            $('#authSubtitle').text('0 providers');
+            $('#authTableBody').html('<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-shield-halved"></i><h4>No External Auth Yet</h4><p>Click <strong>Add Auth</strong> to configure external authentication</p></div></td></tr>');
+            $('#authSubtitle').text('0 configurations');
             $('#paginationButtons').html('');
             $('#paginationInfo').text('Showing 0 - 0 of 0');
         }
@@ -405,16 +413,6 @@
             $('#paginationButtons').html(html);
         }
 
-        function getTypeBadge(type) {
-            const badges = {
-                'oauth2': '<span class="badge badge-info">OAuth 2.0</span>',
-                'ldap': '<span class="badge badge-primary">LDAP</span>',
-                'saml': '<span class="badge badge-warning">SAML</span>',
-                'custom': '<span class="badge badge-success">Custom</span>'
-            };
-            return badges[type] || '<span class="badge badge-info">' + escapeHtml(type || 'Custom') + '</span>';
-        }
-
         function handleSearch() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(function() {
@@ -426,26 +424,26 @@
             editingId = null;
 
             // Init Select2 if not already
-            if (!$('#authType').hasClass('select2-hidden-accessible')) {
-                $('#authType').select2({ theme: 'default' });
+            if (!$('#authVdir').hasClass('select2-hidden-accessible')) {
+                $('#authVdir').select2({ theme: 'default', placeholder: '-- Select virtual directory --' });
+            }
+            if (!$('#httpMethod').hasClass('select2-hidden-accessible')) {
+                $('#httpMethod').select2({ theme: 'default' });
             }
 
-            $('#modalTitle').text('Add Provider');
+            $('#modalTitle').text('Add External Auth');
             $('#authId').val('');
-            $('#authName').val('');
-            $('#authType').val('oauth2').trigger('change.select2');
-            $('#authProviderUrl').val('');
-            $('#authClientId').val('');
-            $('#authClientSecret').val('');
-            $('#authAuthEndpoint').val('');
-            $('#authTokenEndpoint').val('');
-            $('#authUserInfoEndpoint').val('');
-            $('#authPriority').val(1);
-            $('#authTimeout').val(30);
-            $('#authScopes').val('');
+            $('#authVdir').val('').trigger('change.select2');
+            $('#authUrl').val('');
+            $('#httpMethod').val('POST').trigger('change.select2');
+            $('#requestTimeout').val(5);
+            $('#successKey').val('status');
+            $('#successValue').val('true');
+            $('#messageKey').val('message');
+            $('#tokenKey').val('');
             $('#authIsActive').prop('checked', true);
-            $('#authAutoProvision').prop('checked', false);
-            $('#authStrictCert').prop('checked', true);
+            $('#sendHeaders').prop('checked', true);
+            $('#sendBody').prop('checked', false);
             $('#btnSaveText').text('Save');
             $('#btnSaveAuth').removeClass('btn-warning').addClass('btn-primary');
 
@@ -454,8 +452,11 @@
 
         function editAuth(id) {
             // Init Select2 if not already
-            if (!$('#authType').hasClass('select2-hidden-accessible')) {
-                $('#authType').select2({ theme: 'default' });
+            if (!$('#authVdir').hasClass('select2-hidden-accessible')) {
+                $('#authVdir').select2({ theme: 'default', placeholder: '-- Select virtual directory --' });
+            }
+            if (!$('#httpMethod').hasClass('select2-hidden-accessible')) {
+                $('#httpMethod').select2({ theme: 'default' });
             }
 
             $.ajax({
@@ -466,28 +467,25 @@
                     if (r.success && r.data) {
                         const a = r.data;
                         editingId = id;
-                        $('#modalTitle').text('Edit Provider');
+                        $('#modalTitle').text('Edit External Auth');
                         $('#authId').val(a.id);
-                        $('#authName').val(a.name || '');
-                        $('#authType').val(a.auth_type || 'oauth2').trigger('change.select2');
-                        $('#authProviderUrl').val(a.provider_url || '');
-                        $('#authClientId').val(a.client_id || '');
-                        $('#authClientSecret').val('').attr('placeholder', '•••••••• (leave blank to keep current)');
-                        $('#authAuthEndpoint').val(a.auth_endpoint || '');
-                        $('#authTokenEndpoint').val(a.token_endpoint || '');
-                        $('#authUserInfoEndpoint').val(a.userinfo_endpoint || '');
-                        $('#authPriority').val(a.priority || 1);
-                        $('#authTimeout').val(a.timeout_seconds || 30);
-                        $('#authScopes').val(a.scopes || '');
+                        $('#authVdir').val(a.virtual_directory_id).trigger('change.select2');
+                        $('#authUrl').val(a.auth_url || '');
+                        $('#httpMethod').val(a.http_method || 'POST').trigger('change.select2');
+                        $('#requestTimeout').val(a.request_timeout_seconds || 5);
+                        $('#successKey').val(a.success_key || 'status');
+                        $('#successValue').val(a.success_value || 'true');
+                        $('#messageKey').val(a.message_key || 'message');
+                        $('#tokenKey').val(a.token_key || '');
                         $('#authIsActive').prop('checked', a.is_active !== false);
-                        $('#authAutoProvision').prop('checked', a.auto_provision === true);
-                        $('#authStrictCert').prop('checked', a.strict_cert_validation !== false);
+                        $('#sendHeaders').prop('checked', a.send_headers !== false);
+                        $('#sendBody').prop('checked', a.send_body === true);
                         $('#btnSaveText').text('Update');
                         $('#btnSaveAuth').removeClass('btn-primary').addClass('btn-warning');
                         $('#authModal').addClass('active');
                     }
                 },
-                error: function() { showError('Error', 'Failed to load provider data'); }
+                error: function() { showError('Error', 'Failed to load external auth data'); }
             });
         }
 
@@ -497,31 +495,25 @@
         }
 
         function saveAuth() {
-            const name = $('#authName').val().trim();
-            if (!name) { showWarning('Provider name is required'); $('#authName').focus(); return; }
+            const vdirId = parseInt($('#authVdir').val());
+            if (!vdirId) { showWarning('Please select a virtual directory'); return; }
 
-            const secret = $('#authClientSecret').val().trim();
+            const authUrl = $('#authUrl').val().trim();
+            if (!authUrl) { showWarning('Auth URL is required'); return; }
 
             const payload = {
-                name: name,
-                auth_type: $('#authType').val(),
-                provider_url: $('#authProviderUrl').val().trim(),
-                client_id: $('#authClientId').val().trim(),
-                auth_endpoint: $('#authAuthEndpoint').val().trim(),
-                token_endpoint: $('#authTokenEndpoint').val().trim(),
-                userinfo_endpoint: $('#authUserInfoEndpoint').val().trim(),
-                priority: parseInt($('#authPriority').val()) || 1,
-                timeout_seconds: parseInt($('#authTimeout').val()) || 30,
-                scopes: $('#authScopes').val().trim(),
+                virtual_directory_id: vdirId,
+                auth_url: authUrl,
+                http_method: $('#httpMethod').val(),
+                request_timeout_seconds: parseInt($('#requestTimeout').val()) || 5,
+                success_key: $('#successKey').val().trim(),
+                success_value: $('#successValue').val().trim(),
+                message_key: $('#messageKey').val().trim(),
+                token_key: $('#tokenKey').val().trim(),
                 is_active: $('#authIsActive').is(':checked'),
-                auto_provision: $('#authAutoProvision').is(':checked'),
-                strict_cert_validation: $('#authStrictCert').is(':checked')
+                send_headers: $('#sendHeaders').is(':checked'),
+                send_body: $('#sendBody').is(':checked')
             };
-
-            // Only include client_secret if provided
-            if (secret) {
-                payload.client_secret = secret;
-            }
 
             const btn = $('#btnSaveAuth');
             const orig = btn.html();
@@ -538,7 +530,7 @@
                 data: JSON.stringify(payload),
                 success: function() {
                     closeModal();
-                    showToast(editingId ? 'Provider updated successfully' : 'Provider created successfully', 'success');
+                    showToast(editingId ? 'External auth updated successfully' : 'External auth created successfully', 'success');
                     loadExternalAuths(currentPage);
                 },
                 error: function(xhr) {
@@ -550,14 +542,14 @@
             });
         }
 
-        function deleteAuth(id, name) {
-            showConfirm('Delete Provider', 'Are you sure you want to delete "' + name + '"? This action cannot be undone.', 'Yes, Delete', 'Cancel').then(function(result) {
+        function deleteAuth(id) {
+            showConfirm('Delete External Auth', 'Are you sure you want to delete this external auth configuration? This action cannot be undone.', 'Yes, Delete', 'Cancel').then(function(result) {
                 if (result.isConfirmed) {
                     $.ajax({
                         url: AUTH_API + '/' + id,
                         method: 'DELETE',
                         headers: getHeaders(),
-                        success: function() { showToast('Provider deleted', 'success'); loadExternalAuths(currentPage); },
+                        success: function() { showToast('External auth deleted', 'success'); loadExternalAuths(currentPage); },
                         error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to delete'); }
                     });
                 }
