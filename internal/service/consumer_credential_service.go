@@ -189,6 +189,22 @@ func (s *APIKeyService) DeleteAPIKey(id int64) error {
 	return s.KeyRepo.Delete(id)
 }
 
+// RegenerateAPIKey generate ulang API key dengan key baru
+func (s *APIKeyService) RegenerateAPIKey(id int64) (string, error) {
+	_, err := s.KeyRepo.GetByID(id)
+	if err != nil {
+		return "", fmt.Errorf("API key tidak ditemukan")
+	}
+
+	// Generate new API key
+	newKey, err := s.KeyRepo.Regenerate(id)
+	if err != nil {
+		return "", fmt.Errorf("gagal regenerate API key: %w", err)
+	}
+
+	return newKey, nil
+}
+
 // === Route Consumer Access Service ===
 
 // RouteConsumerAccessService menangani business logic untuk ACL

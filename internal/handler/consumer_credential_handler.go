@@ -262,6 +262,27 @@ func (h *APIKeyHandler) DeleteAPIKey(w http.ResponseWriter, r *http.Request) {
 	response.Success(w, "API key berhasil dihapus", nil)
 }
 
+// RegenerateAPIKey handler untuk generate ulang API key
+func (h *APIKeyHandler) RegenerateAPIKey(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "ID tidak valid")
+		return
+	}
+
+	newKey, err := h.Service.RegenerateAPIKey(id)
+	if err != nil {
+		response.BadRequest(w, err.Error())
+		return
+	}
+
+	responseData := map[string]string{
+		"api_key": newKey,
+	}
+
+	response.Success(w, "API key berhasil di-regenerate", responseData)
+}
+
 // === Route Consumer Access Handler ===
 
 // RouteConsumerAccessHandler menangani HTTP request untuk ACL

@@ -507,6 +507,29 @@ func (r *APIKeyRepository) Delete(id int64) error {
 	return nil
 }
 
+// Regenerate generate ulang API key dengan key baru
+func (r *APIKeyRepository) Regenerate(id int64) (string, error) {
+	// Generate new API key
+	newKey, err := generateAPIKey()
+	if err != nil {
+		return "", fmt.Errorf("gagal generate API key baru: %w", err)
+	}
+
+	// Update api_key in database
+	query := `UPDATE api_keys SET api_key = ? WHERE id = ?`
+	result, err := r.DB.Exec(query, newKey, id)
+	if err != nil {
+		return "", fmt.Errorf("gagal update API key: %w", err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return "", fmt.Errorf("API key tidak ditemukan")
+	}
+
+	return newKey, nil
+}
+
 // Count menghitung total API keys
 func (r *APIKeyRepository) Count(search string) (int64, error) {
 	var count int64

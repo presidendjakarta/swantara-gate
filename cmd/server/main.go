@@ -305,6 +305,7 @@ func setupAdminRouter(
 	mux.HandleFunc("GET /api/admin/api-keys/{id}", apiKeyHandler.GetAPIKeyByID)
 	mux.HandleFunc("PUT /api/admin/api-keys/{id}", apiKeyHandler.UpdateAPIKey)
 	mux.HandleFunc("DELETE /api/admin/api-keys/{id}", apiKeyHandler.DeleteAPIKey)
+	mux.HandleFunc("POST /api/admin/api-keys/{id}/regenerate", apiKeyHandler.RegenerateAPIKey)
 	mux.HandleFunc("GET /api/admin/consumers/{consumer_id}/api-keys", apiKeyHandler.GetAPIKeysByConsumer)
 
 	// Routes untuk Route Consumer Access (ACL)
