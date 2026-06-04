@@ -57,11 +57,11 @@
         .section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 8px; }
         .section-title i { font-size: 13px; color: var(--accent); }
 
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px 16px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px 18px; }
         .form-grid .full-width { grid-column: 1 / -1; }
         .form-grid .half-width { grid-column: span 2; }
-        .form-grid label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; display: block; }
-        .form-grid .form-control { height: 36px; font-size: 13px; }
+        .form-grid label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+        .form-grid .form-control { height: 38px; font-size: 13px; }
 
         .switch-toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
         .switch-toggle input { opacity: 0; width: 0; height: 0; }
@@ -178,9 +178,9 @@
             <div class="modal-body">
                 <form id="routeForm" onsubmit="return false;">
                     <input type="hidden" id="routeId">
-                    <div class="form-group" style="margin-bottom:14px;">
+                    <div class="form-group" style="margin-bottom:16px;">
                         <label style="font-size:12px;font-weight:500;color:var(--text-secondary);">Virtual Host <span style="color:var(--danger);">*</span></label>
-                        <select class="form-control" id="routeVHostSelect" style="height:36px;"></select>
+                        <select class="form-control" id="routeVHostSelect" style="height:38px;"></select>
                     </div>
                     <div class="form-grid">
                         <div class="form-group half-width">
@@ -246,8 +246,7 @@
                         </div>
                     </div>
 
-                    <div class="form-grid" style="margin-top: 14px;">
-                    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;">
+                    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:18px;">
                         <div style="display:flex;align-items:center;gap:8px;">
                             <label class="switch-toggle"><input type="checkbox" id="routeStripPrefix" checked><span class="switch-slider"></span></label>
                             <span style="font-size:12px;color:var(--text-secondary);">Strip Prefix</span>
@@ -269,8 +268,8 @@
                             <span id="routeStatusLabel" style="font-size:12px;font-weight:500;color:var(--success);">Active</span>
                         </div>
                     </div>
-                    <div style="margin-top:14px;">
-                        <label style="font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;display:block;">Allowed HTTP Methods</label>
+                    <div style="margin-top:18px;">
+                        <label style="font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:8px;display:block;">Allowed HTTP Methods</label>
                         <div style="display:flex;gap:8px;flex-wrap:wrap;" id="routeMethodsGroup">
                             <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="GET" checked> GET</label>
                             <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="POST" checked> POST</label>
@@ -585,12 +584,12 @@
             
             // Load current allowed consumers
             $.ajax({
-                url: '/api/admin/virtual-directories/' + vdirId + '/allowed-consumers',
+                url: '/api/admin/virtual-directories/' + vdirId + '/access',
                 method: 'GET',
                 headers: getHeaders(),
                 success: function(r) {
-                    if (r.success && r.data.consumers) {
-                        const consumerIds = r.data.consumers.map(function(c) { return c.id; });
+                    if (r.success && r.data) {
+                        const consumerIds = r.data.map(function(c) { return c.consumer_id; });
                         $('#routeAllowedConsumers').val(consumerIds).trigger('change.select2');
                     }
                 }
@@ -821,39 +820,52 @@
                 
                 // Get current consumers
                 $.ajax({
-                    url: '/api/admin/virtual-directories/' + vdirId + '/allowed-consumers',
+                    url: '/api/admin/virtual-directories/' + vdirId + '/access',
                     method: 'GET',
                     headers: getHeaders(),
                     success: function(r) {
-                        const currentConsumerIds = (r.success && r.data.consumers) ? r.data.consumers.map(function(c) { return c.id; }) : [];
+                        const currentConsumerIds = (r.success && r.data) ? r.data.map(function(c) { return c.consumer_id; }) : [];
                         
                         const consumersToRemove = currentConsumerIds.filter(function(id) { return selectedConsumers.indexOf(String(id)) === -1; });
                         const consumersToAdd = selectedConsumers.filter(function(id) { return currentConsumerIds.indexOf(parseInt(id)) === -1; });
                         
                         let removeCount = consumersToRemove.length;
                         consumersToRemove.forEach(function(consumerId) {
-                            $.ajax({
-                                url: '/api/admin/virtual-directories/' + vdirId + '/consumers/' + consumerId,
-                                method: 'DELETE',
-                                headers: getHeaders(),
-                                complete: function() {
-                                    removeCount--;
-                                    if (removeCount === 0 && consumersToAdd.length === 0) {
-                                        if (callback) callback();
+                            // Find the access ID for this consumer
+                            const accessItem = r.data.find(function(c) { return c.consumer_id == consumerId; });
+                            if (accessItem) {
+                                $.ajax({
+                                    url: '/api/admin/route-access/' + accessItem.id,
+                                    method: 'DELETE',
+                                    headers: getHeaders(),
+                                    complete: function() {
+                                        removeCount--;
+                                        if (removeCount === 0 && consumersToAdd.length === 0) {
+                                            if (callback) callback();
+                                        }
                                     }
+                                });
+                            } else {
+                                removeCount--;
+                                if (removeCount === 0 && consumersToAdd.length === 0) {
+                                    if (callback) callback();
                                 }
-                            });
+                            }
                         });
                         
                         if (consumersToAdd.length > 0) {
                             let addCount = consumersToAdd.length;
                             consumersToAdd.forEach(function(consumerId) {
                                 $.ajax({
-                                    url: '/api/admin/virtual-directories/' + vdirId + '/consumers',
+                                    url: '/api/admin/route-access',
                                     method: 'POST',
                                     headers: getHeaders(),
                                     contentType: 'application/json',
-                                    data: JSON.stringify({ consumer_id: parseInt(consumerId) }),
+                                    data: JSON.stringify({ 
+                                        virtual_directory_id: vdirId, 
+                                        consumer_id: parseInt(consumerId),
+                                        is_active: true 
+                                    }),
                                     complete: function() {
                                         addCount--;
                                         if (addCount === 0 && removeCount === 0) {
