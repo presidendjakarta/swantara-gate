@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 
 	_ "modernc.org/sqlite" // Driver SQLite pure Go (tidak perlu CGO)
 )
@@ -142,7 +143,7 @@ func tableExists(tableName string) (bool, error) {
 	return count > 0, nil
 }
 
-// runMigration menjalankan file SQL untuk membuat tabel-tabel
+// runMigration menjalankan file SQL untuk membuat tabel-tabel yang belum ada
 func runMigration(sqlPath string) error {
 	// Membaca file SQL
 	sqlBytes, err := os.ReadFile(sqlPath)
@@ -150,13 +151,114 @@ func runMigration(sqlPath string) error {
 		return fmt.Errorf("gagal membaca file SQL %s: %w", sqlPath, err)
 	}
 
-	// Menjalankan semua statement SQL
-	_, err = DB.Exec(string(sqlBytes))
-	if err != nil {
-		return fmt.Errorf("gagal mengeksekusi SQL migration: %w", err)
+	sqlContent := string(sqlBytes)
+
+	// Parse dan execute hanya untuk tabel yang missing
+	for _, tableName := range requiredTables {
+		exists, err := tableExists(tableName)
+		if err != nil {
+			return fmt.Errorf("gagal mengecek tabel %s: %w", tableName, err)
+		}
+
+		if !exists {
+			log.Printf("  Membuat tabel: %s", tableName)
+			
+			// Extract CREATE TABLE statement untuk tabel ini
+			createStmt, err := extractCreateTableStatement(sqlContent, tableName)
+			if err != nil {
+				return fmt.Errorf("gagal extract CREATE TABLE untuk %s: %w", tableName, err)
+			}
+
+			if createStmt == "" {
+				log.Printf("  ⚠ CREATE TABLE untuk %s tidak ditemukan di SQL file, skip", tableName)
+				continue
+			}
+
+			// Execute CREATE TABLE
+			_, err = DB.Exec(createStmt)
+			if err != nil {
+				return fmt.Errorf("gagal membuat tabel %s: %w", tableName, err)
+			}
+
+			log.Printf("  ✓ Tabel %s berhasil dibuat", tableName)
+		}
 	}
 
 	return nil
+}
+
+// extractCreateTableStatement ekstrak CREATE TABLE statement untuk tabel tertentu dari SQL content
+func extractCreateTableStatement(sqlContent, tableName string) (string, error) {
+	// Pattern: CREATE TABLE table_name ( ... );
+	// Case insensitive search
+	searchPattern := "(?i)CREATE TABLE\\s+" + tableName + "\\s*\\("
+	
+	re := regexp.MustCompile(searchPattern)
+	match := re.FindStringIndex(sqlContent)
+	
+	if match == nil {
+		return "", nil // Not found
+	}
+
+	// Find the start of CREATE TABLE
+	startIdx := match[0]
+	
+	// Find the closing ); for this CREATE TABLE
+	// We need to count parentheses to find the correct closing
+	parenCount := 0
+	endIdx := -1
+	inString := false
+	escaped := false
+	
+	for i := startIdx; i < len(sqlContent); i++ {
+		char := sqlContent[i]
+		
+		if escaped {
+			escaped = false
+			continue
+		}
+		
+		if char == '\\' {
+			escaped = true
+			continue
+		}
+		
+		if char == '\'' {
+			inString = !inString
+			continue
+		}
+		
+		if inString {
+			continue
+		}
+		
+		if char == '(' {
+			parenCount++
+		} else if char == ')' {
+			parenCount--
+			if parenCount == 0 {
+				// Found closing ), now find the semicolon
+				for j := i + 1; j < len(sqlContent); j++ {
+					if sqlContent[j] == ';' {
+						endIdx = j + 1
+						break
+					}
+					if sqlContent[j] != ' ' && sqlContent[j] != '\t' && sqlContent[j] != '\n' && sqlContent[j] != '\r' {
+						// Non-whitespace character before semicolon
+						endIdx = i + 1
+						break
+					}
+				}
+				break
+			}
+		}
+	}
+	
+	if endIdx == -1 {
+		return "", fmt.Errorf("tidak menemukan penutup CREATE TABLE untuk %s", tableName)
+	}
+	
+	return sqlContent[startIdx:endIdx], nil
 }
 
 // CloseDatabase menutup koneksi database dengan aman
