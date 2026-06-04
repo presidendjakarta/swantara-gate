@@ -285,6 +285,7 @@ func setupAdminRouter(
 	mux.HandleFunc("PUT /api/admin/virtual-directories/{id}", vdirHandler.UpdateVirtualDirectory)
 	mux.HandleFunc("DELETE /api/admin/virtual-directories/{id}", vdirHandler.DeleteVirtualDirectory)
 	mux.HandleFunc("GET /api/admin/virtual-hosts/{vhost_id}/virtual-directories", vdirHandler.GetVirtualDirectoriesByVHost)
+	mux.HandleFunc("GET /api/admin/hosts/{host_id}/virtual-directories", vdirHandler.GetVirtualDirectoriesByHost)
 
 	// Routes untuk Virtual Directory Methods
 	mux.HandleFunc("GET /api/admin/virtual-directories/{id}/methods", vdirHandler.GetMethods)

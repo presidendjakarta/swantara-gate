@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/presidendjakarta/swantara-gate/internal/model"
@@ -92,7 +93,34 @@ func (r *VirtualDirectoryRepository) GetByID(id int64) (*model.VirtualDirectory,
 		return nil, fmt.Errorf("gagal mengambil virtual directory: %w", err)
 	}
 
+	// Load methods for this directory
+	methods, err := r.getMethodsByDirectoryID(vd.ID)
+	if err != nil {
+		return nil, err
+	}
+	vd.Methods = methods
+
 	return &vd, nil
+}
+
+// getMethodsByDirectoryID mengambil methods untuk satu directory
+func (r *VirtualDirectoryRepository) getMethodsByDirectoryID(dirID int64) ([]string, error) {
+	query := `SELECT http_method FROM virtual_directory_methods WHERE virtual_directory_id = ? ORDER BY http_method ASC`
+	rows, err := r.DB.Query(query, dirID)
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil methods: %w", err)
+	}
+	defer rows.Close()
+
+	var methods []string
+	for rows.Next() {
+		var method string
+		if err := rows.Scan(&method); err != nil {
+			return nil, fmt.Errorf("gagal memindai method: %w", err)
+		}
+		methods = append(methods, method)
+	}
+	return methods, nil
 }
 
 // GetAll mengambil semua virtual directory dengan pagination
@@ -134,7 +162,100 @@ func (r *VirtualDirectoryRepository) GetAll(page, limit int) ([]model.VirtualDir
 		dirs = append(dirs, vd)
 	}
 
+	// Batch load methods
+	if err := r.loadMethodsBatch(dirs); err != nil {
+		return nil, err
+	}
+
 	return dirs, nil
+}
+
+// GetByHostID mengambil virtual directories berdasarkan host ID (melalui virtual_hosts)
+func (r *VirtualDirectoryRepository) GetByHostID(hostID int64) ([]model.VirtualDirectory, error) {
+	query := `
+		SELECT vd.id, vd.virtual_host_id, vd.source_path, vd.target_path, vd.match_type,
+		       vd.strip_prefix, vd.preserve_host_header, vd.auth_type, vd.is_active,
+		       vd.proxy_timeout_seconds, vd.retry_count, vd.retry_delay_ms,
+		       vd.max_request_size_mb, vd.websocket_enabled, vd.cache_enabled,
+		       vd.cache_ttl_seconds, vd.created_at, vd.updated_at,
+		       vh.vhost_name
+		FROM virtual_directories vd
+		LEFT JOIN virtual_hosts vh ON vd.virtual_host_id = vh.id
+		WHERE vh.host_id = ?
+		ORDER BY vh.vhost_name ASC, vd.source_path ASC
+	`
+
+	rows, err := r.DB.Query(query, hostID)
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil virtual directories by host: %w", err)
+	}
+	defer rows.Close()
+
+	var dirs []model.VirtualDirectory
+	for rows.Next() {
+		var vd model.VirtualDirectory
+		err := rows.Scan(
+			&vd.ID, &vd.VirtualHostID, &vd.SourcePath, &vd.TargetPath, &vd.MatchType,
+			&vd.StripPrefix, &vd.PreserveHostHeader, &vd.AuthType, &vd.IsActive,
+			&vd.ProxyTimeoutSeconds, &vd.RetryCount, &vd.RetryDelayMs,
+			&vd.MaxRequestSizeMB, &vd.WebsocketEnabled, &vd.CacheEnabled,
+			&vd.CacheTTLSeconds, &vd.CreatedAt, &vd.UpdatedAt,
+			&vd.VHostName,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("gagal memindai virtual directory: %w", err)
+		}
+		dirs = append(dirs, vd)
+	}
+
+	// Batch load methods
+	if err := r.loadMethodsBatch(dirs); err != nil {
+		return nil, err
+	}
+
+	return dirs, nil
+}
+
+// loadMethodsBatch memuat methods untuk banyak directory sekaligus (batch query)
+func (r *VirtualDirectoryRepository) loadMethodsBatch(dirs []model.VirtualDirectory) error {
+	if len(dirs) == 0 {
+		return nil
+	}
+
+	// Build list of IDs
+	ids := make([]string, len(dirs))
+	dirMap := make(map[int64]*model.VirtualDirectory)
+	for i := range dirs {
+		ids[i] = fmt.Sprintf("%d", dirs[i].ID)
+		dirMap[dirs[i].ID] = &dirs[i]
+	}
+
+	// Batch query: ambil semua methods untuk directory IDs tersebut
+	query := fmt.Sprintf(`
+		SELECT virtual_directory_id, http_method
+		FROM virtual_directory_methods
+		WHERE virtual_directory_id IN (%s)
+		ORDER BY http_method ASC
+	`, strings.Join(ids, ","))
+
+	rows, err := r.DB.Query(query)
+	if err != nil {
+		return fmt.Errorf("gagal mengambil methods: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var dirID int64
+		var method string
+		if err := rows.Scan(&dirID, &method); err != nil {
+			return fmt.Errorf("gagal memindai method: %w", err)
+		}
+		if dir, ok := dirMap[dirID]; ok {
+			dir.Methods = append(dir.Methods, method)
+		}
+	}
+
+	return nil
 }
 
 // GetByVirtualHostID mengambil virtual directories berdasarkan virtual host ID
@@ -173,6 +294,11 @@ func (r *VirtualDirectoryRepository) GetByVirtualHostID(vhostID int64) ([]model.
 			return nil, fmt.Errorf("gagal memindai virtual directory: %w", err)
 		}
 		dirs = append(dirs, vd)
+	}
+
+	// Batch load methods
+	if err := r.loadMethodsBatch(dirs); err != nil {
+		return nil, err
 	}
 
 	return dirs, nil

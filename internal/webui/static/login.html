@@ -1,153 +1,565 @@
+
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Swantara Gate</title>
     
-    <!-- Metro UI CSS -->
-    <link rel="stylesheet" href="https://cdn.metroui.org.ua/v4/css/metro-all.min.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- App Styles -->
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+    <link rel="stylesheet" href="/assets/css/swal-custom.css">
     
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body, .login-page {
+            overflow-y: auto !important; /* Allow vertical scroll if needed */
+            height: auto !important;     /* Let height adjust to content */
+            min-height: 100vh;           /* Ensure minimum full screen height */
+        }
+
+        .login-page {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Inter', sans-serif;
         }
-        .login-container {
-            max-width: 400px;
-            width: 100%;
+
+        .login-page::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80') center/cover;
+            z-index: 0;
         }
+
+        .login-page::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+            z-index: 1;
+        }
+
         .login-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            padding: 2rem;
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 420px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 16px;
+            padding: 48px 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.2);
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
         }
-        .login-logo {
+
+        .login-card.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .login-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 24px;
+            display: block;
+            background: linear-gradient(135deg, #0078D4, #00BCF2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(0, 120, 212, 0.3);
+        }
+
+        .login-avatar i {
+            font-size: 36px;
+            color: #fff;
+        }
+
+        .login-title {
             text-align: center;
-            margin-bottom: 2rem;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
         }
-        .login-logo h1 {
-            margin: 0;
-            color: #667eea;
-            font-size: 2rem;
-        }
-        .login-logo p {
+
+        .login-subtitle {
+            text-align: center;
+            font-size: 14px;
             color: #666;
-            margin: 0.5rem 0 0 0;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #444;
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i.field-icon {
+            position: absolute;
+            left: 14px;
+            color: #999;
+            font-size: 14px;
+            transition: color 0.2s;
+            pointer-events: none;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 12px 42px 12px 42px;
+            border: 2px solid #e8e8e8;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            background: rgba(255,255,255,0.8);
+            transition: all 0.25s ease;
+            outline: none;
+        }
+
+        .input-wrapper input:focus {
+            border-color: #0078D4;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+        }
+
+        .input-wrapper input:focus ~ i.field-icon {
+            color: #0078D4;
+        }
+
+        .input-wrapper .toggle-password {
+            position: absolute;
+            right: 14px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+            font-size: 14px;
+            padding: 4px;
+            z-index: 1;
+        }
+
+        .input-wrapper .toggle-password:hover {
+            color: #0078D4;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #555;
+            cursor: pointer;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #0078D4;
+        }
+
+        .forgot-link {
+            font-size: 13px;
+            color: #0078D4;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #0078D4 0%, #005a9e 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(0, 120, 212, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .login-btn .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin: 0 auto;
+        }
+
+        .login-btn.loading .btn-text { display: none; }
+        .login-btn.loading .spinner { display: block; }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .error-message {
+            font-size: 12px;
+            color: #E81123;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .form-group.error .error-message { display: block; }
+        .form-group.error .input-wrapper input { border-color: #E81123; }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Floating particles */
+        .particles {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                margin: 16px;
+                padding: 32px 24px;
+            }
+        }
+        
+        /* Fix SweetAlert scroll */
+        .swal2-html-container {
+            max-height: 70vh !important;
+            overflow-y: auto !important;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-logo">
-                <h1>🚀 Swantara Gate</h1>
-                <p>API Gateway Admin Panel</p>
+    <div class="login-page">
+        <div class="particles" id="particles"></div>
+        
+        <div class="login-card" id="loginCard">
+            <div class="login-avatar">
+                <i class="fa-solid fa-user"></i>
             </div>
-            
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="username" class="input" placeholder="Enter username" required data-role="input">
+            <h1 class="login-title">Swantara Gate</h1>
+            <p class="login-subtitle">API Gateway Admin Panel</p>
+
+            <form id="loginForm" novalidate>
+                <input type="hidden" name="_token" value="7IBDWZtRxt8gF73NEQ7WsAw4a53ewlXhuvmVumeS" autocomplete="off">                
+                                
+                <div id="alertSuccess" class="alert alert-success" style="background: #d4edda; color: #155724; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; display: none;">
+                    <i class="fa-solid fa-circle-check"></i> <span id="alertSuccessMessage"></span>
                 </div>
                 
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="password" class="input" placeholder="Enter password" required data-role="input">
+                <div id="alertErrorAjax" class="alert alert-danger" style="background: #fee; color: #c33; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; display: none;">
+                    <i class="fa-solid fa-circle-exclamation"></i> <span id="alertErrorAjaxMessage"></span>
                 </div>
-                
+
                 <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="rememberMe" data-role="checkbox">
-                        <span class="check"></span>
-                        Remember me
+                    <label for="username">Username</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" name="username" placeholder="Enter username" required autocomplete="off">
+                        <i class="fa-solid fa-user field-icon"></i>
+                    </div>
+                                            <span class="error-message" id="usernameErrorMessage"></span>
+                                    </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" placeholder="Enter password" required autocomplete="new-password">
+                        <i class="fa-solid fa-lock field-icon"></i>
+                        <button type="button" class="toggle-password" id="togglePassword">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                                            <span class="error-message" id="passwordErrorMessage"></span>
+                                    </div>
+
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember"> Remember Me
                     </label>
+                    <a href="#" class="forgot-link">Forgot Password?</a>
                 </div>
-                
-                <div class="form-group">
-                    <button type="submit" class="button primary" id="loginBtn">
-                        Login
-                    </button>
-                </div>
-                
-                <div id="errorMessage" class="alert alert-danger" style="display: none;">
-                    <span id="errorText"></span>
-                </div>
+
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <span class="btn-text">Sign In</span>
+                    <div class="spinner"></div>
+                </button>
             </form>
+
+            <div class="login-footer">
+                &copy; 2026 Swantara Gate. API Gateway Management.
+            </div>
         </div>
     </div>
-    
+
     <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Metro UI JS -->
-    <script src="https://cdn.metroui.org.ua/v4/js/metro.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- SweetAlert2 for nice alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SweetAlert2 Custom Config (Global) -->
+    <script src="/assets/js/swal-config.js"></script>
     
     <script>
-        const API_BASE_URL = 'http://localhost:8081';
-        
         $(document).ready(function() {
-            // Check if already logged in
-            const token = localStorage.getItem('access_token');
-            if (token) {
-                window.location.href = '/dashboard.html';
+            // Animate card entrance with jQuery
+            $('#loginCard').css({
+                'opacity': 0,
+                'transform': 'translateY(30px) scale(0.95)'
+            }).animate({
+                opacity: 1
+            }, {
+                duration: 700,
+                step: function(now, fx) {
+                    if (fx.prop === 'opacity') {
+                        const progress = now;
+                        const translateY = 30 * (1 - progress);
+                        const scale = 0.95 + (0.05 * progress);
+                        $(this).css('transform', `translateY(${translateY}px) scale(${scale})`);
+                    }
+                },
+                easing: 'swing'
+            });
+
+            // Create particles
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particlesContainer.appendChild(particle);
+
+                // Animate particles with jQuery
+                function animateParticle($p) {
+                    const duration = (Math.random() * 8000) + 5000;
+                    $p.animate({
+                        opacity: 0
+                    }, {
+                        duration: duration,
+                        step: function(now) {
+                            const progress = 1 - (now / 1);
+                            const y = -window.innerHeight * progress;
+                            const x = (Math.random() - 0.5) * 200 * progress;
+                            $(this).css({
+                                'transform': `translate(${x}px, ${y}px)`,
+                                'opacity': now
+                            });
+                        },
+                        complete: function() {
+                            $(this).css({
+                                'top': Math.random() * 100 + '%',
+                                'left': Math.random() * 100 + '%',
+                                'transform': 'translate(0, 0)',
+                                'opacity': 1
+                            });
+                            animateParticle($(this));
+                        }
+                    });
+                }
+                
+                animateParticle($(particle));
             }
-            
-            // Handle login form submission
+
+            // Toggle password visibility
+            $('#togglePassword').on('click', function() {
+                const $input = $('#password');
+                const $icon = $(this).find('i');
+                
+                if ($input.attr('type') === 'password') {
+                    $input.attr('type', 'text');
+                    $icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    $input.attr('type', 'password');
+                    $icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
+            });
+
+            // AJAX Login Form Submit
             $('#loginForm').on('submit', function(e) {
                 e.preventDefault();
                 
-                const username = $('#username').val();
-                const password = $('#password').val();
+                // Clear previous errors
+                $('.form-group').removeClass('error');
+                $('.error-message').hide();
+                $('#alertErrorAjax').hide();
                 
-                // Disable button and show loading
-                $('#loginBtn').prop('disabled', true).text('Logging in...');
-                $('#errorMessage').hide();
+                // Get form data
+                const formData = {
+                    username: $('#username').val(),
+                    password: $('#password').val()
+                };
                 
-                // Send login request
+                // Client-side validation
+                let hasError = false;
+                
+                if (!formData.username) {
+                    $('#username').closest('.form-group').addClass('error');
+                    $('#usernameErrorMessage').text('Username is required').show();
+                    hasError = true;
+                }
+                
+                if (!formData.password) {
+                    $('#password').closest('.form-group').addClass('error');
+                    $('#password').next('.error-message').show();
+                    hasError = true;
+                }
+                
+                if (hasError) return;
+                
+                // Show loading
+                const $btn = $('#loginBtn');
+                const originalText = $btn.find('.btn-text').text();
+                $btn.addClass('loading');
+                
+                // AJAX request
                 $.ajax({
-                    url: API_BASE_URL + '/api/admin/auth/login',
-                    method: 'POST',
+                    url: '/api/admin/auth/login',
+                    type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({
-                        username: username,
-                        password: password
-                    }),
+                    data: JSON.stringify(formData),
+                    dataType: 'json',
                     success: function(response) {
                         if (response.data && response.data.access_token) {
-                            // Save tokens
+                            // Save tokens to localStorage
                             localStorage.setItem('access_token', response.data.access_token);
                             localStorage.setItem('refresh_token', response.data.refresh_token);
                             
-                            // Redirect to dashboard
-                            window.location.href = '/dashboard.html';
+                            // Verify tokens saved
+                            const savedToken = localStorage.getItem('access_token');
+                            console.log('[Login] Token saved:', savedToken ? 'YES' : 'NO', savedToken?.substring(0, 20) + '...');
+                            
+                            // Show success with SweetAlert2
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Login Successful!',
+                                text: 'Welcome to Swantara Gate',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                // Double check before redirect
+                                const tokenBeforeRedirect = localStorage.getItem('access_token');
+                                console.log('[Login] Token before redirect:', tokenBeforeRedirect ? 'EXISTS' : 'MISSING');
+                                
+                                // Redirect to dashboard
+                                window.location.href = '/dashboard.html';
+                            });
                         } else {
-                            showError('Login failed: Invalid response');
+                            // Show error
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Login Failed',
+                                text: response.message || 'Invalid username or password'
+                            });
+                            $btn.removeClass('loading');
                         }
                     },
                     error: function(xhr) {
-                        let message = 'Login failed';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            message = xhr.responseJSON.message;
+                        $btn.removeClass('loading');
+                        
+                        if (xhr.status === 422) {
+                            // Validation errors
+                            const errors = xhr.responseJSON.errors;
+                            
+                            if (errors.username) {
+                                $('#username').closest('.form-group').addClass('error');
+                                $('#usernameErrorMessage').text(errors.username[0]).show();
+                            }
+                            
+                            if (errors.password) {
+                                $('#password').closest('.form-group').addClass('error');
+                                $('#passwordErrorMessage').text(errors.password[0]).show();
+                            }
                         } else if (xhr.status === 401) {
-                            message = 'Invalid username or password';
+                            // Unauthorized
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Login Failed',
+                                text: 'Invalid username or password'
+                            });
+                        } else {
+                            // Server error
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: xhr.responseJSON?.message || 'An error occurred on the server'
+                            });
                         }
-                        showError(message);
-                    },
-                    complete: function() {
-                        $('#loginBtn').prop('disabled', false).text('Login');
                     }
                 });
             });
         });
-        
-        function showError(message) {
-            $('#errorText').text(message);
-            $('#errorMessage').fadeIn();
-        }
     </script>
 </body>
 </html>

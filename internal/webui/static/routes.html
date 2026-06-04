@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Directories - Swantara Gate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.metroui.org.ua/current/metro.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+    <link rel="stylesheet" href="/assets/css/datatables.css">
+    <link rel="stylesheet" href="/assets/css/animations.css">
+    <link rel="stylesheet" href="/assets/css/dark.css">
+    <link rel="stylesheet" href="/assets/css/swal-custom.css">
+    <style>
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9999; display: none; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 700px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: slideUp 0.25s ease; overflow: hidden; }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); }
+        .modal-header h3 { margin: 0; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .modal-header h3 i { color: var(--accent); }
+        .modal-close { background: none; border: none; font-size: 18px; color: var(--text-tertiary); cursor: pointer; padding: 4px; border-radius: 6px; transition: var(--transition-fast); }
+        .modal-close:hover { background: var(--bg-secondary); color: var(--text-primary); }
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--border-subtle); background: var(--bg-secondary); }
+
+        .host-selector { display: flex; align-items: center; gap: 12px; padding: 16px 20px; background: var(--bg-secondary); border-radius: var(--radius-md); margin-bottom: 24px; }
+        .host-selector label { font-size: 13px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+        .host-selector label i { color: var(--accent); }
+        .host-selector select { flex: 1; height: 40px; }
+
+        .info-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .info-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: 20px; font-size: 12px; color: var(--text-secondary); }
+        .info-chip i { font-size: 11px; color: var(--accent); }
+
+        .path-cell { display: flex; align-items: center; gap: 8px; font-family: 'SF Mono', 'Consolas', monospace; font-size: 12px; }
+        .path-arrow { color: var(--text-tertiary); font-size: 11px; }
+        .path-source { color: var(--accent); font-weight: 600; }
+        .path-target { color: var(--text-secondary); }
+
+        .method-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.3px; display: inline-block; margin: 1px; }
+        .method-badge.get { background: #e3f2fd; color: #1565c0; }
+        .method-badge.post { background: #e8f5e9; color: #2e7d32; }
+        .method-badge.put { background: #fff3e0; color: #e65100; }
+        .method-badge.delete { background: #ffebee; color: #c62828; }
+        .method-badge.patch { background: #f3e5f5; color: #6a1b9a; }
+        .method-badge.options { background: #e0f2f1; color: #00695c; }
+        .method-badge.head { background: #fce4ec; color: #ad1457; }
+
+        .section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 8px; }
+        .section-title i { font-size: 13px; color: var(--accent); }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px 16px; }
+        .form-grid .full-width { grid-column: 1 / -1; }
+        .form-grid .half-width { grid-column: span 2; }
+        .form-grid label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; display: block; }
+        .form-grid .form-control { height: 36px; font-size: 13px; }
+
+        .switch-toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .switch-toggle input { opacity: 0; width: 0; height: 0; }
+        .switch-slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; cursor: pointer; transition: var(--transition-fast); }
+        .switch-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: var(--transition-fast); }
+        .switch-toggle input:checked + .switch-slider { background: var(--success); }
+        .switch-toggle input:checked + .switch-slider::before { transform: translateX(18px); }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-tertiary); }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+        .empty-state h4 { font-size: 16px; color: var(--text-secondary); margin-bottom: 6px; }
+        .empty-state p { font-size: 13px; margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebar-container"></div>
+        <div class="app-main">
+            <div id="navbar-container"></div>
+            <main class="app-content">
+                <div class="page-header">
+                    <div>
+                        <h1>Virtual Directories</h1>
+                        <p>Manage route paths and path mappings</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="loadRoutes()"><i class="fa-solid fa-arrows-rotate"></i> <span>Refresh</span></button>
+                    </div>
+                </div>
+
+                <!-- Host Selector -->
+                <div class="host-selector">
+                    <label><i class="fa-solid fa-server"></i> Host</label>
+                    <select class="form-control" id="hostSelect" onchange="onHostChange()">
+                        <option value="">-- Select host --</option>
+                    </select>
+                </div>
+
+                <!-- Info Chips -->
+                <div class="info-chips" id="infoChips" style="display:none;"></div>
+
+                <!-- Routes Table -->
+                <div class="content-card" id="routesCard" style="display:none;">
+                    <div class="card-header">
+                        <div class="card-header-left">
+                            <div class="card-icon bg-primary"><i class="fa-solid fa-route"></i></div>
+                            <div>
+                                <h3>Route List</h3>
+                                <p class="card-subtitle" id="routeSubtitle">Virtual directories</p>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" id="btnAddRoute" onclick="openAddForm()" style="display:none;"><i class="fa-solid fa-plus"></i> Add Route</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="data-table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:40px;">#</th>
+                                        <th>VHost</th>
+                                        <th>Path Mapping</th>
+                                        <th>Match</th>
+                                        <th>Methods</th>
+                                        <th>Auth</th>
+                                        <th style="width:80px;">Status</th>
+                                        <th style="width:100px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="routeTableBody">
+                                    <tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-route"></i><h4>Select a Host</h4><p>Choose a host above to view its routes</p></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="routeModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-route"></i> <span id="modalTitle">Add Route</span></h3>
+                <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="routeForm" onsubmit="return false;">
+                    <input type="hidden" id="routeId">
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:500;color:var(--text-secondary);">Virtual Host <span style="color:var(--danger);">*</span></label>
+                        <select class="form-control" id="routeVHostSelect" style="height:36px;"></select>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group half-width">
+                            <label>Source Path <span style="color:var(--danger);">*</span></label>
+                            <input type="text" class="form-control" id="routeSourcePath" placeholder="/api/v1/users">
+                        </div>
+                        <div class="form-group half-width">
+                            <label>Target Path <span style="color:var(--danger);">*</span></label>
+                            <input type="text" class="form-control" id="routeTargetPath" placeholder="/users">
+                        </div>
+                        <div class="form-group">
+                            <label>Match Type</label>
+                            <select class="form-control" id="routeMatchType">
+                                <option value="prefix">Prefix</option>
+                                <option value="exact">Exact</option>
+                                <option value="regex">Regex</option>
+                                <option value="rewrite">Rewrite</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Auth Type</label>
+                            <select class="form-control" id="routeAuthType">
+                                <option value="none">None</option>
+                                <option value="jwt">JWT</option>
+                                <option value="api_key">API Key</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Proxy Timeout (sec)</label>
+                            <input type="number" class="form-control" id="routeTimeout" value="30" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Retry Count</label>
+                            <input type="number" class="form-control" id="routeRetryCount" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Retry Delay (ms)</label>
+                            <input type="number" class="form-control" id="routeRetryDelay" value="100" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Max Request Size (MB)</label>
+                            <input type="number" class="form-control" id="routeMaxSize" value="10" min="1">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label class="switch-toggle"><input type="checkbox" id="routeStripPrefix" checked><span class="switch-slider"></span></label>
+                            <span style="font-size:12px;color:var(--text-secondary);">Strip Prefix</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label class="switch-toggle"><input type="checkbox" id="routePreserveHost"><span class="switch-slider"></span></label>
+                            <span style="font-size:12px;color:var(--text-secondary);">Preserve Host</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label class="switch-toggle"><input type="checkbox" id="routeWebsocket"><span class="switch-slider"></span></label>
+                            <span style="font-size:12px;color:var(--text-secondary);">WebSocket</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label class="switch-toggle"><input type="checkbox" id="routeCache"><span class="switch-slider"></span></label>
+                            <span style="font-size:12px;color:var(--text-secondary);">Cache</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label class="switch-toggle"><input type="checkbox" id="routeIsActive" checked><span class="switch-slider"></span></label>
+                            <span id="routeStatusLabel" style="font-size:12px;font-weight:500;color:var(--success);">Active</span>
+                        </div>
+                    </div>
+                    <div style="margin-top:14px;">
+                        <label style="font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;display:block;">Allowed HTTP Methods</label>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="routeMethodsGroup">
+                            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="GET" checked> GET</label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="POST" checked> POST</label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="PUT" checked> PUT</label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="DELETE" checked> DELETE</label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="PATCH"> PATCH</label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="OPTIONS"> OPTIONS</label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" value="HEAD"> HEAD</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                <button class="btn btn-primary" id="btnSaveRoute" onclick="saveRoute()"><i class="fa-solid fa-check"></i> <span id="btnSaveText">Save</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="command-palette-overlay" id="commandPaletteOverlay">
+        <div class="command-palette" id="commandPalette">
+            <div class="command-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="commandInput" placeholder="Type a command or search...">
+                <kbd>ESC</kbd>
+            </div>
+            <div class="command-results" id="commandResults"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.metroui.org.ua/current/metro.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="/assets/js/swal-config.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script>
+        let currentHostId = null;
+        let currentHostName = '';
+        let hosts = [];
+        let vhostsForHost = [];
+        let editingId = null;
+
+        function getHeaders() { return { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }; }
+        function escapeHtml(t) { if (!t) return ''; return t.replace(/[&<>"']/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]; }); }
+
+        $(document).ready(function() {
+            $('#sidebar-container').load('/components/sidebar.html', function() {
+                $(this).find('.nav-item').removeClass('active');
+                $(this).find('a[href="/routes.html"]').closest('.nav-item').addClass('active');
+                $(this).find('a[href="/routes.html"]').closest('.has-submenu').addClass('open');
+            });
+            $('#navbar-container').load('/components/navbar.html');
+            if (!localStorage.getItem('access_token')) { window.location.href = '/login.html'; return; }
+            loadHosts();
+            $('#routeIsActive').on('change', function() {
+                $(this).is(':checked') ? $('#routeStatusLabel').text('Active').css('color','var(--success)') : $('#routeStatusLabel').text('Inactive').css('color','var(--text-tertiary)');
+            });
+            $('#routeModal').on('click', function(e) { if (e.target === this) closeModal(); });
+            $(document).on('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+        });
+
+        function loadHosts() {
+            $.ajax({ url: '/api/admin/hosts?limit=200', method: 'GET', headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        hosts = r.data.hosts || [];
+                        const $s = $('#hostSelect');
+                        $s.find('option:not(:first)').remove();
+                        hosts.forEach(function(h) { $s.append('<option value="'+h.id+'">'+escapeHtml(h.host_name)+'</option>'); });
+                    }
+                }, error: function(xhr) { if (xhr.status === 401) window.location.href = '/login.html'; }
+            });
+        }
+
+        function onHostChange() {
+            const val = $('#hostSelect').val();
+            if (!val) { currentHostId = null; $('#routesCard').hide(); $('#infoChips').hide(); return; }
+            currentHostId = parseInt(val);
+            currentHostName = hosts.find(function(h) { return h.id == val; })?.host_name || '';
+            $('#infoChips').show().html('<div class="info-chip"><i class="fa-solid fa-server"></i> '+escapeHtml(currentHostName)+'</div>');
+            $('#routesCard').show();
+            $('#btnAddRoute').show();
+            loadRoutes();
+        }
+
+        function loadRoutes() {
+            if (!currentHostId) return;
+            $('#routeTableBody').html('<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-tertiary);"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px;"></i>Loading...</td></tr>');
+            $.ajax({ url: '/api/admin/hosts/' + currentHostId + '/virtual-directories', method: 'GET', headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        const dirs = Array.isArray(r.data) ? r.data : [];
+                        renderTable(dirs);
+                    } else { renderEmpty(); }
+                }, error: function(xhr) { if (xhr.status === 401) { window.location.href = '/login.html'; return; } $('#routeTableBody').html('<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--danger);">Failed to load routes</td></tr>'); }
+            });
+        }
+
+        function renderTable(dirs) {
+            if (!dirs || dirs.length === 0) { renderEmpty(); return; }
+            let html = '';
+            dirs.forEach(function(d, i) {
+                const status = d.is_active ? '<span class="badge badge-success" style="font-size:11px;">Active</span>' : '<span class="badge badge-danger" style="font-size:11px;">Inactive</span>';
+                const match = '<span class="badge badge-primary" style="font-size:10px;">'+escapeHtml(d.match_type||'prefix')+'</span>';
+                const ws = d.websocket_enabled ? '<i class="fa-solid fa-plug" style="color:var(--accent);font-size:10px;margin-left:4px;" title="WebSocket"></i>' : '';
+                const ca = d.cache_enabled ? '<i class="fa-solid fa-database" style="color:var(--warning);font-size:10px;margin-left:4px;" title="Cache"></i>' : '';
+                let methods = '';
+                if (d.methods && d.methods.length > 0) { d.methods.forEach(function(m) { methods += '<span class="method-badge '+m.toLowerCase()+'">'+m.toUpperCase()+'</span>'; }); }
+                else { methods = '<span style="font-size:11px;color:var(--text-tertiary);">All</span>'; }
+                html += '<tr><td>'+(i+1)+'</td>' +
+                    '<td><span style="font-size:12px;color:var(--text-secondary);">'+escapeHtml(d.vhost_name||'-')+'</span></td>' +
+                    '<td><div class="path-cell"><span class="path-source">'+escapeHtml(d.source_path)+'</span><span class="path-arrow"><i class="fa-solid fa-arrow-right"></i></span><span class="path-target">'+escapeHtml(d.target_path)+'</span>'+ws+ca+'</div></td>' +
+                    '<td>'+match+'</td><td><div style="display:flex;gap:3px;flex-wrap:wrap;">'+methods+'</div></td>' +
+                    '<td><span style="font-size:12px;">'+escapeHtml(d.auth_type||'none')+'</span></td>' +
+                    '<td>'+status+'</td>' +
+                    '<td><div style="display:flex;gap:4px;">' +
+                        '<button class="btn btn-sm btn-secondary" title="Edit" onclick="editRoute('+d.id+')"><i class="fa-solid fa-pen"></i></button>' +
+                        '<button class="btn btn-sm btn-danger" title="Delete" onclick="deleteRoute('+d.id+',\''+escapeHtml(d.source_path)+'\')"><i class="fa-solid fa-trash"></i></button>' +
+                    '</div></td></tr>';
+            });
+            $('#routeTableBody').html(html);
+            $('#routeSubtitle').text(dirs.length + ' route(s) found');
+        }
+
+        function renderEmpty() {
+            $('#routeTableBody').html('<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-route"></i><h4>No Routes Yet</h4><p>Click <strong>Add Route</strong> to create one</p></div></td></tr>');
+            $('#routeSubtitle').text('0 routes');
+        }
+
+        function loadVHostsForForm() {
+            $.ajax({ url: '/api/admin/virtual-hosts?limit=200', method: 'GET', headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        const all = r.data.virtual_hosts || [];
+                        vhostsForHost = all.filter(function(v) { return v.host_id == currentHostId; });
+                        const $s = $('#routeVHostSelect');
+                        $s.find('option').remove();
+                        vhostsForHost.forEach(function(v) { $s.append('<option value="'+v.id+'">'+escapeHtml(v.vhost_name)+'</option>'); });
+                        if (vhostsForHost.length > 0) $s.val(vhostsForHost[0].id);
+                    }
+                }
+            });
+        }
+
+        function openAddForm() {
+            editingId = null;
+            $('#modalTitle').text('Add Route');
+            $('#routeId').val('');
+            $('#routeSourcePath').val('');
+            $('#routeTargetPath').val('');
+            $('#routeMatchType').val('prefix');
+            $('#routeAuthType').val('none');
+            $('#routeTimeout').val(30);
+            $('#routeRetryCount').val(0);
+            $('#routeRetryDelay').val(100);
+            $('#routeMaxSize').val(10);
+            $('#routeStripPrefix').prop('checked', true);
+            $('#routePreserveHost').prop('checked', false);
+            $('#routeWebsocket').prop('checked', false);
+            $('#routeCache').prop('checked', false);
+            $('#routeIsActive').prop('checked', true).trigger('change');
+            $('#routeMethodsGroup input[type=checkbox]').each(function() { $(this).prop('checked', ['GET','POST','PUT','DELETE'].indexOf($(this).val()) >= 0); });
+            $('#btnSaveText').text('Save');
+            $('#btnSaveRoute').removeClass('btn-warning').addClass('btn-primary');
+            loadVHostsForForm();
+            $('#routeModal').addClass('active');
+        }
+
+        function editRoute(id) {
+            loadVHostsForForm();
+            $.ajax({ url: '/api/admin/virtual-directories/' + id, method: 'GET', headers: getHeaders(),
+                success: function(r) {
+                    if (r.success && r.data) {
+                        const d = r.data;
+                        editingId = id;
+                        $('#modalTitle').text('Edit Route');
+                        $('#routeId').val(d.id);
+                        $('#routeVHostSelect').val(d.virtual_host_id);
+                        $('#routeSourcePath').val(d.source_path);
+                        $('#routeTargetPath').val(d.target_path);
+                        $('#routeMatchType').val(d.match_type || 'prefix');
+                        $('#routeAuthType').val(d.auth_type || 'none');
+                        $('#routeTimeout').val(d.proxy_timeout_seconds || 30);
+                        $('#routeRetryCount').val(d.retry_count || 0);
+                        $('#routeRetryDelay').val(d.retry_delay_ms || 100);
+                        $('#routeMaxSize').val(d.max_request_size_mb || 10);
+                        $('#routeStripPrefix').prop('checked', d.strip_prefix);
+                        $('#routePreserveHost').prop('checked', d.preserve_host_header);
+                        $('#routeWebsocket').prop('checked', d.websocket_enabled);
+                        $('#routeCache').prop('checked', d.cache_enabled);
+                        $('#routeIsActive').prop('checked', d.is_active).trigger('change');
+                        const methods = (d.methods || []).map(function(m) { return m.toUpperCase(); });
+                        $('#routeMethodsGroup input[type=checkbox]').each(function() { $(this).prop('checked', methods.indexOf($(this).val()) >= 0); });
+                        $('#btnSaveText').text('Update');
+                        $('#btnSaveRoute').removeClass('btn-primary').addClass('btn-warning');
+                        $('#routeModal').addClass('active');
+                    }
+                }, error: function() { showError('Error', 'Failed to load route data'); }
+            });
+        }
+
+        function closeModal() { $('#routeModal').removeClass('active'); editingId = null; }
+
+        function saveRoute() {
+            const sp = $('#routeSourcePath').val().trim();
+            const tp = $('#routeTargetPath').val().trim();
+            if (!sp) { showWarning('Source path is required'); $('#routeSourcePath').focus(); return; }
+            if (!tp) { showWarning('Target path is required'); $('#routeTargetPath').focus(); return; }
+            const methods = [];
+            $('#routeMethodsGroup input[type=checkbox]:checked').each(function() { methods.push($(this).val()); });
+            const payload = {
+                virtual_host_id: parseInt($('#routeVHostSelect').val()),
+                source_path: sp, target_path: tp,
+                match_type: $('#routeMatchType').val(),
+                strip_prefix: $('#routeStripPrefix').is(':checked'),
+                preserve_host_header: $('#routePreserveHost').is(':checked'),
+                auth_type: $('#routeAuthType').val(),
+                is_active: $('#routeIsActive').is(':checked'),
+                proxy_timeout_seconds: parseInt($('#routeTimeout').val()) || 30,
+                retry_count: parseInt($('#routeRetryCount').val()) || 0,
+                retry_delay_ms: parseInt($('#routeRetryDelay').val()) || 100,
+                max_request_size_mb: parseInt($('#routeMaxSize').val()) || 10,
+                websocket_enabled: $('#routeWebsocket').is(':checked'),
+                cache_enabled: $('#routeCache').is(':checked'),
+                cache_ttl_seconds: 60
+            };
+            const btn = $('#btnSaveRoute');
+            const orig = btn.html();
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Saving...');
+
+            if (editingId) {
+                delete payload.virtual_host_id;
+                $.ajax({ url: '/api/admin/virtual-directories/' + editingId, method: 'PUT', headers: getHeaders(), contentType: 'application/json', data: JSON.stringify(payload),
+                    success: function() {
+                        $.ajax({ url: '/api/admin/virtual-directories/' + editingId + '/methods', method: 'PUT', headers: getHeaders(), contentType: 'application/json', data: JSON.stringify({ methods: methods }),
+                            complete: function() { closeModal(); showToast('Route updated successfully', 'success'); loadRoutes(); }
+                        });
+                    }, error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to update'); },
+                    complete: function() { btn.prop('disabled', false).html(orig); }
+                });
+            } else {
+                $.ajax({ url: '/api/admin/virtual-directories', method: 'POST', headers: getHeaders(), contentType: 'application/json', data: JSON.stringify(payload),
+                    success: function(resp) {
+                        const newId = resp.data?.id;
+                        if (newId && methods.length > 0) {
+                            $.ajax({ url: '/api/admin/virtual-directories/' + newId + '/methods', method: 'PUT', headers: getHeaders(), contentType: 'application/json', data: JSON.stringify({ methods: methods }),
+                                complete: function() { closeModal(); showToast('Route added successfully', 'success'); loadRoutes(); }
+                            });
+                        } else { closeModal(); showToast('Route added successfully', 'success'); loadRoutes(); }
+                    }, error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to create'); },
+                    complete: function() { btn.prop('disabled', false).html(orig); }
+                });
+            }
+        }
+
+        function deleteRoute(id, path) {
+            showConfirm('Delete Route', 'Are you sure you want to delete "' + path + '"?', 'Yes, Delete', 'Cancel').then(function(result) {
+                if (result.isConfirmed) {
+                    $.ajax({ url: '/api/admin/virtual-directories/' + id, method: 'DELETE', headers: getHeaders(),
+                        success: function() { showToast('Route deleted', 'success'); loadRoutes(); },
+                        error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to delete'); }
+                    });
+                }
+            });
+        }
+
+        function reloadConfig() {
+            $.ajax({ url: '/api/admin/config/reload', method: 'POST', headers: getHeaders(),
+                success: function() { showToast('Config reloaded', 'success'); },
+                error: function(xhr) { showError('Error', xhr.responseJSON?.message || 'Failed to reload'); }
+            });
+        }
+    </script>
+</body>
+</html>

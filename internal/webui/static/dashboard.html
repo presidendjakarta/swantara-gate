@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="id" data-theme="light">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,7 +34,7 @@
 <body>
     <!-- App Container -->
     <div class="app-container">
-        
+
         <!-- Sidebar (loaded from component) -->
         <div id="sidebar-container"></div>
 
@@ -46,244 +46,246 @@
             <!-- Page Content -->
             <main class="app-content">
                 <!-- KPI Cards -->
-<div class="stats-grid stagger-children" id="statsGrid">
-    <div class="stat-card hover-lift">
-        <div class="stat-icon blue"><i class="fa-solid fa-server"></i></div>
-        <div class="stat-value counter" id="hostCount" data-target="0">0</div>
-        <div class="stat-label">Total Hosts</div>
-    </div>
-    <div class="stat-card hover-lift">
-        <div class="stat-icon green"><i class="fa-solid fa-globe"></i></div>
-        <div class="stat-value counter" id="vhostCount" data-target="0">0</div>
-        <div class="stat-label">Virtual Hosts</div>
-    </div>
-    <div class="stat-card hover-lift">
-        <div class="stat-icon orange"><i class="fa-solid fa-network-wired"></i></div>
-        <div class="stat-value counter" id="upstreamCount" data-target="0">0</div>
-        <div class="stat-label">Upstream Servers</div>
-    </div>
-    <div class="stat-card hover-lift">
-        <div class="stat-icon red"><i class="fa-solid fa-route"></i></div>
-        <div class="stat-value counter" id="routeCount" data-target="0">0</div>
-        <div class="stat-label">Routes</div>
-    </div>
-    <div class="stat-card hover-lift">
-        <div class="stat-icon purple"><i class="fa-solid fa-plug"></i></div>
-        <div class="stat-value counter" id="consumerCount" data-target="0">0</div>
-        <div class="stat-label">API Consumers</div>
-    </div>
-    <div class="stat-card hover-lift">
-        <div class="stat-icon cyan"><i class="fa-solid fa-gauge-high"></i></div>
-        <div class="stat-value counter" id="rateLimitCount" data-target="0">0</div>
-        <div class="stat-label">Rate Limits</div>
-    </div>
-    <div class="stat-card hover-lift">
-        <div class="stat-icon yellow"><i class="fa-solid fa-shield-halved"></i></div>
-        <div class="stat-value counter" id="corsCount" data-target="0">0</div>
-        <div class="stat-label">CORS Configs</div>
-    </div>
-    <div class="stat-card hover-lift">
-        <div class="stat-icon pink"><i class="fa-solid fa-bolt"></i></div>
-        <div class="stat-value counter" id="circuitBreakerCount" data-target="0">0</div>
-        <div class="stat-label">Circuit Breakers</div>
-    </div>
-    <div class="stat-card hover-lift">
-        <div class="stat-icon cyan"><i class="fa-solid fa-lock"></i></div>
-        <div class="stat-value counter" id="sslBindingCount" data-target="0">0</div>
-        <div class="stat-label">SSL Bindings</div>
-    </div>
-    <div class="stat-card hover-lift">
-        <div class="stat-icon green"><i class="fa-solid fa-users"></i></div>
-        <div class="stat-value counter" id="activeUserCount" data-target="0">0</div>
-        <div class="stat-label">Active Users</div>
-    </div>
-</div>
+                <div class="stats-grid stagger-children" id="statsGrid">
+                    <div class="stat-card hover-lift">
+                        <div class="stat-icon blue"><i class="fa-solid fa-server"></i></div>
+                        <div class="stat-value counter" id="hostCount" data-target="0">0</div>
+                        <div class="stat-label">Total Hosts</div>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <div class="stat-icon green"><i class="fa-solid fa-globe"></i></div>
+                        <div class="stat-value counter" id="vhostCount" data-target="0">0</div>
+                        <div class="stat-label">Virtual Hosts</div>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <div class="stat-icon orange"><i class="fa-solid fa-network-wired"></i></div>
+                        <div class="stat-value counter" id="upstreamCount" data-target="0">0</div>
+                        <div class="stat-label">Upstream Servers</div>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <div class="stat-icon red"><i class="fa-solid fa-route"></i></div>
+                        <div class="stat-value counter" id="routeCount" data-target="0">0</div>
+                        <div class="stat-label">Routes</div>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <div class="stat-icon purple"><i class="fa-solid fa-plug"></i></div>
+                        <div class="stat-value counter" id="consumerCount" data-target="0">0</div>
+                        <div class="stat-label">API Consumers</div>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <div class="stat-icon cyan"><i class="fa-solid fa-gauge-high"></i></div>
+                        <div class="stat-value counter" id="rateLimitCount" data-target="0">0</div>
+                        <div class="stat-label">Rate Limits</div>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <div class="stat-icon yellow"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div class="stat-value counter" id="corsCount" data-target="0">0</div>
+                        <div class="stat-label">CORS Configs</div>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <div class="stat-icon pink"><i class="fa-solid fa-bolt"></i></div>
+                        <div class="stat-value counter" id="circuitBreakerCount" data-target="0">0</div>
+                        <div class="stat-label">Circuit Breakers</div>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <div class="stat-icon cyan"><i class="fa-solid fa-lock"></i></div>
+                        <div class="stat-value counter" id="sslBindingCount" data-target="0">0</div>
+                        <div class="stat-label">SSL Bindings</div>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <div class="stat-icon green"><i class="fa-solid fa-users"></i></div>
+                        <div class="stat-value counter" id="activeUserCount" data-target="0">0</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                </div>
 
-<!-- Proxy Config Summary -->
-<div class="charts-grid">
-    <div class="content-card">
-        <div class="card-header">
-            <div class="card-header-left">
-                <div class="card-icon bg-primary">
-                    <i class="fa-solid fa-server"></i>
+                <!-- Proxy Config Summary -->
+                <div class="charts-grid">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <div class="card-header-left">
+                                <div class="card-icon bg-primary">
+                                    <i class="fa-solid fa-server"></i>
+                                </div>
+                                <div>
+                                    <h3>Proxy Routing</h3>
+                                    <p class="card-subtitle">Proxy routing configuration summary</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <ul class="activity-list" id="proxyRoutingList">
+                                <li class="activity-item">
+                                    <div class="activity-dot" style="background: var(--accent)"></div>
+                                    <div class="activity-content">
+                                        <p><strong>Hosts</strong> registered</p>
+                                        <time id="summaryHosts">-</time>
+                                    </div>
+                                </li>
+                                <li class="activity-item">
+                                    <div class="activity-dot" style="background: var(--success)"></div>
+                                    <div class="activity-content">
+                                        <p><strong>Virtual Hosts</strong> active</p>
+                                        <time id="summaryVhosts">-</time>
+                                    </div>
+                                </li>
+                                <li class="activity-item">
+                                    <div class="activity-dot" style="background: var(--warning)"></div>
+                                    <div class="activity-content">
+                                        <p><strong>Upstream Servers</strong> connected</p>
+                                        <time id="summaryUpstreams">-</time>
+                                    </div>
+                                </li>
+                                <li class="activity-item">
+                                    <div class="activity-dot" style="background: var(--info)"></div>
+                                    <div class="activity-content">
+                                        <p><strong>Routes</strong> configured</p>
+                                        <time id="summaryRoutes">-</time>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="content-card">
+                        <div class="card-header">
+                            <div class="card-header-left">
+                                <div class="card-icon bg-success">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </div>
+                                <div>
+                                    <h3>Security & Policies</h3>
+                                    <p class="card-subtitle">Security and policy summary</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <ul class="activity-list" id="securitySummaryList">
+                                <li class="activity-item">
+                                    <div class="activity-dot" style="background: var(--accent)"></div>
+                                    <div class="activity-content">
+                                        <p><strong>API Consumers</strong> registered</p>
+                                        <time id="summaryConsumers">-</time>
+                                    </div>
+                                </li>
+                                <li class="activity-item">
+                                    <div class="activity-dot" style="background: var(--success)"></div>
+                                    <div class="activity-content">
+                                        <p><strong>Rate Limits</strong> active</p>
+                                        <time id="summaryRateLimits">-</time>
+                                    </div>
+                                </li>
+                                <li class="activity-item">
+                                    <div class="activity-dot" style="background: var(--warning)"></div>
+                                    <div class="activity-content">
+                                        <p><strong>CORS Configs</strong> configured</p>
+                                        <time id="summaryCors">-</time>
+                                    </div>
+                                </li>
+                                <li class="activity-item">
+                                    <div class="activity-dot" style="background: var(--danger)"></div>
+                                    <div class="activity-content">
+                                        <p><strong>Circuit Breakers</strong> active</p>
+                                        <time id="summaryCircuitBreakers">-</time>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <h3>Proxy Routing</h3>
-                    <p class="card-subtitle">Ringkasan konfigurasi routing proxy</p>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <ul class="activity-list" id="proxyRoutingList">
-                <li class="activity-item">
-                    <div class="activity-dot" style="background: var(--accent)"></div>
-                    <div class="activity-content">
-                        <p><strong>Hosts</strong> terdaftar</p>
-                        <time id="summaryHosts">-</time>
-                    </div>
-                </li>
-                <li class="activity-item">
-                    <div class="activity-dot" style="background: var(--success)"></div>
-                    <div class="activity-content">
-                        <p><strong>Virtual Hosts</strong> aktif</p>
-                        <time id="summaryVhosts">-</time>
-                    </div>
-                </li>
-                <li class="activity-item">
-                    <div class="activity-dot" style="background: var(--warning)"></div>
-                    <div class="activity-content">
-                        <p><strong>Upstream Servers</strong> terhubung</p>
-                        <time id="summaryUpstreams">-</time>
-                    </div>
-                </li>
-                <li class="activity-item">
-                    <div class="activity-dot" style="background: var(--info)"></div>
-                    <div class="activity-content">
-                        <p><strong>Routes</strong> terkonfigurasi</p>
-                        <time id="summaryRoutes">-</time>
-                    </div>
-                </li>
-            </ul>
-        </div>
-    </div>
-    <div class="content-card">
-        <div class="card-header">
-            <div class="card-header-left">
-                <div class="card-icon bg-success">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
-                <div>
-                    <h3>Security & Policies</h3>
-                    <p class="card-subtitle">Ringkasan keamanan dan kebijakan</p>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <ul class="activity-list" id="securitySummaryList">
-                <li class="activity-item">
-                    <div class="activity-dot" style="background: var(--accent)"></div>
-                    <div class="activity-content">
-                        <p><strong>API Consumers</strong> terdaftar</p>
-                        <time id="summaryConsumers">-</time>
-                    </div>
-                </li>
-                <li class="activity-item">
-                    <div class="activity-dot" style="background: var(--success)"></div>
-                    <div class="activity-content">
-                        <p><strong>Rate Limits</strong> aktif</p>
-                        <time id="summaryRateLimits">-</time>
-                    </div>
-                </li>
-                <li class="activity-item">
-                    <div class="activity-dot" style="background: var(--warning)"></div>
-                    <div class="activity-content">
-                        <p><strong>CORS Configs</strong> terkonfigurasi</p>
-                        <time id="summaryCors">-</time>
-                    </div>
-                </li>
-                <li class="activity-item">
-                    <div class="activity-dot" style="background: var(--danger)"></div>
-                    <div class="activity-content">
-                        <p><strong>Circuit Breakers</strong> aktif</p>
-                        <time id="summaryCircuitBreakers">-</time>
-                    </div>
-                </li>
-            </ul>
-        </div>
-    </div>
-</div>
 
-<!-- System Info & Quick Actions -->
-<div class="charts-grid">
-    <div class="content-card">
-        <div class="card-header">
-            <div class="card-header-left">
-                <div class="card-icon bg-warning">
-                    <i class="fa-solid fa-circle-info"></i>
+                <!-- System Info & Quick Actions -->
+                <div class="charts-grid">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <div class="card-header-left">
+                                <div class="card-icon bg-warning">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                </div>
+                                <div>
+                                    <h3>System Status</h3>
+                                    <p class="card-subtitle">Gateway system health status</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="systemStatus" style="padding: 1rem 0;">
+                                <p style="color: var(--text-secondary);">Checking system status...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="content-card">
+                        <div class="card-header">
+                            <div class="card-header-left">
+                                <div class="card-icon bg-info">
+                                    <i class="fa-solid fa-bolt"></i>
+                                </div>
+                                <div>
+                                    <h3>Quick Actions</h3>
+                                    <p class="card-subtitle">Frequently used quick actions</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: flex; flex-direction: column; gap: 12px; padding: 1rem 0;">
+                                <button class="btn btn-primary" onclick="reloadConfig()"
+                                    style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 8px; border: none; background: var(--accent); color: white; cursor: pointer; font-size: 14px; font-weight: 500;">
+                                    <i class="fa-solid fa-arrows-rotate"></i> Reload Proxy Config
+                                </button>
+                                <button class="btn btn-secondary" onclick="checkHealth()"
+                                    style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-primary); cursor: pointer; font-size: 14px; font-weight: 500;">
+                                    <i class="fa-solid fa-heartbeat"></i> Health Check
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <h3>System Status</h3>
-                    <p class="card-subtitle">Status kesehatan sistem gateway</p>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <div id="systemStatus" style="padding: 1rem 0;">
-                <p style="color: var(--text-secondary);">Memeriksa status sistem...</p>
-            </div>
-        </div>
-    </div>
-    <div class="content-card">
-        <div class="card-header">
-            <div class="card-header-left">
-                <div class="card-icon bg-info">
-                    <i class="fa-solid fa-bolt"></i>
-                </div>
-                <div>
-                    <h3>Quick Actions</h3>
-                    <p class="card-subtitle">Aksi cepat yang sering digunakan</p>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <div style="display: flex; flex-direction: column; gap: 12px; padding: 1rem 0;">
-                <button class="btn btn-primary" onclick="reloadConfig()" style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 8px; border: none; background: var(--accent); color: white; cursor: pointer; font-size: 14px; font-weight: 500;">
-                    <i class="fa-solid fa-arrows-rotate"></i> Reload Proxy Config
-                </button>
-                <button class="btn btn-secondary" onclick="checkHealth()" style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-primary); cursor: pointer; font-size: 14px; font-weight: 500;">
-                    <i class="fa-solid fa-heartbeat"></i> Health Check
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
             </main>
         </div>
     </div>
 
     <!-- Command Palette -->
     <!-- Command Palette -->
-<div class="command-palette-overlay" id="commandPaletteOverlay">
-    <div class="command-palette" id="commandPalette">
-        <div class="command-input-wrapper">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="commandInput" placeholder="Ketik perintah atau cari...">
-            <kbd>ESC</kbd>
-        </div>
-        <div class="command-results" id="commandResults">
-            <div class="command-group">
-                <div class="command-group-title">Halaman</div>
-                <div class="command-item" data-action="navigate" data-target="/dashboard.html">
-                    <i class="fa-solid fa-house"></i><span>Dashboard</span>
-                </div>
-                <div class="command-item" data-action="navigate" data-target="/hosts.html">
-                    <i class="fa-solid fa-server"></i><span>Hosts</span>
-                </div>
-                <div class="command-item" data-action="navigate" data-target="/vhosts.html">
-                    <i class="fa-solid fa-globe"></i><span>Virtual Hosts</span>
-                </div>
-                <div class="command-item" data-action="navigate" data-target="/routes.html">
-                    <i class="fa-solid fa-route"></i><span>Routes</span>
-                </div>
-                <div class="command-item" data-action="navigate" data-target="/consumers.html">
-                    <i class="fa-solid fa-plug"></i><span>Consumers</span>
-                </div>
-                <div class="command-item" data-action="navigate" data-target="/ratelimits.html">
-                    <i class="fa-solid fa-gauge-high"></i><span>Rate Limits</span>
-                </div>
+    <div class="command-palette-overlay" id="commandPaletteOverlay">
+        <div class="command-palette" id="commandPalette">
+            <div class="command-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="commandInput" placeholder="Type a command or search...">
+                <kbd>ESC</kbd>
             </div>
-            <div class="command-group">
-                <div class="command-group-title">Aksi Cepat</div>
-                <div class="command-item" data-action="theme">
-                    <i class="fa-solid fa-moon"></i><span>Ganti Tema</span>
+            <div class="command-results" id="commandResults">
+                <div class="command-group">
+                    <div class="command-group-title">Pages</div>
+                    <div class="command-item" data-action="navigate" data-target="/dashboard.html">
+                        <i class="fa-solid fa-house"></i><span>Dashboard</span>
+                    </div>
+                    <div class="command-item" data-action="navigate" data-target="/hosts.html">
+                        <i class="fa-solid fa-server"></i><span>Hosts</span>
+                    </div>
+                    <div class="command-item" data-action="navigate" data-target="/virtual-hosts.html">
+                        <i class="fa-solid fa-globe"></i><span>Virtual Hosts</span>
+                    </div>
+                    <div class="command-item" data-action="navigate" data-target="/routes.html">
+                        <i class="fa-solid fa-route"></i><span>Routes</span>
+                    </div>
+                    <div class="command-item" data-action="navigate" data-target="/consumers.html">
+                        <i class="fa-solid fa-plug"></i><span>Consumers</span>
+                    </div>
+                    <div class="command-item" data-action="navigate" data-target="/ratelimits.html">
+                        <i class="fa-solid fa-gauge-high"></i><span>Rate Limits</span>
+                    </div>
                 </div>
-                <div class="command-item" data-action="fullscreen">
-                    <i class="fa-solid fa-expand"></i><span>Fullscreen</span>
+                <div class="command-group">
+                    <div class="command-group-title">Quick Actions</div>
+                    <div class="command-item" data-action="theme">
+                        <i class="fa-solid fa-moon"></i><span>Toggle Theme</span>
+                    </div>
+                    <div class="command-item" data-action="fullscreen">
+                        <i class="fa-solid fa-expand"></i><span>Fullscreen</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
 
     <!-- Scripts -->
@@ -434,10 +436,10 @@
                     'Authorization': 'Bearer ' + localStorage.getItem('access_token')
                 },
                 success: function() {
-                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Konfigurasi proxy berhasil di-reload', timer: 1500, showConfirmButton: false });
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Proxy configuration reloaded successfully', timer: 1500, showConfirmButton: false });
                 },
                 error: function(xhr) {
-                    Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'Gagal reload konfigurasi' });
+                    Swal.fire({ icon: 'error', title: 'Error', text: xhr.responseJSON?.message || 'Failed to reload configuration' });
                 }
             });
         }
@@ -447,10 +449,10 @@
                 url: '/api/health',
                 method: 'GET',
                 success: function() {
-                    $('#systemStatus').html('<div style="display:flex;align-items:center;gap:10px;padding:1rem 0;"><i class="fa-solid fa-circle-check" style="font-size:24px;color:var(--success)"></i><div><p style="font-weight:600;margin:0;">System Healthy</p><p style="color:var(--text-secondary);margin:4px 0 0;font-size:13px;">Semua layanan gateway berjalan normal</p></div></div>');
+                    $('#systemStatus').html('<div style="display:flex;align-items:center;gap:10px;padding:1rem 0;"><i class="fa-solid fa-circle-check" style="font-size:24px;color:var(--success)"></i><div><p style="font-weight:600;margin:0;">System Healthy</p><p style="color:var(--text-secondary);margin:4px 0 0;font-size:13px;">All gateway services are running normally</p></div></div>');
                 },
                 error: function() {
-                    $('#systemStatus').html('<div style="display:flex;align-items:center;gap:10px;padding:1rem 0;"><i class="fa-solid fa-circle-xmark" style="font-size:24px;color:var(--danger)"></i><div><p style="font-weight:600;margin:0;">System Unreachable</p><p style="color:var(--text-secondary);margin:4px 0 0;font-size:13px;">Tidak dapat terhubung ke gateway</p></div></div>');
+                    $('#systemStatus').html('<div style="display:flex;align-items:center;gap:10px;padding:1rem 0;"><i class="fa-solid fa-circle-xmark" style="font-size:24px;color:var(--danger)"></i><div><p style="font-weight:600;margin:0;">System Unreachable</p><p style="color:var(--text-secondary);margin:4px 0 0;font-size:13px;">Unable to connect to gateway</p></div></div>');
                 }
             });
         }

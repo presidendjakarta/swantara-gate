@@ -94,6 +94,23 @@ func (h *VirtualDirectoryHandler) GetVirtualDirectoriesByVHost(w http.ResponseWr
 	response.Success(w, "Virtual directories berhasil diambil", dirs)
 }
 
+// GetVirtualDirectoriesByHost handler untuk mengambil directories per host
+func (h *VirtualDirectoryHandler) GetVirtualDirectoriesByHost(w http.ResponseWriter, r *http.Request) {
+	hostID, err := strconv.ParseInt(r.PathValue("host_id"), 10, 64)
+	if err != nil {
+		response.BadRequest(w, "host_id tidak valid")
+		return
+	}
+
+	dirs, err := h.Service.GetVirtualDirectoriesByHostID(hostID)
+	if err != nil {
+		response.InternalServerError(w, "Gagal mengambil virtual directories")
+		return
+	}
+
+	response.Success(w, "Virtual directories berhasil diambil", dirs)
+}
+
 // UpdateVirtualDirectory handler untuk memperbarui virtual directory
 func (h *VirtualDirectoryHandler) UpdateVirtualDirectory(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)

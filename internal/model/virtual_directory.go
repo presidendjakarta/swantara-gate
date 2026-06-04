@@ -24,7 +24,8 @@ type VirtualDirectory struct {
 	UpdatedAt           time.Time `json:"updated_at"`
 
 	// Data join
-	VHostName string `json:"vhost_name,omitempty"`
+	VHostName string   `json:"vhost_name,omitempty"`
+	Methods   []string `json:"methods,omitempty"`
 }
 
 // CreateVirtualDirectoryRequest request untuk membuat virtual directory baru

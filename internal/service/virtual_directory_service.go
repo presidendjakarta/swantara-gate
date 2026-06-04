@@ -81,6 +81,11 @@ func (s *VirtualDirectoryService) GetVirtualDirectoriesByVHostID(vhostID int64) 
 	return s.DirRepo.GetByVirtualHostID(vhostID)
 }
 
+// GetVirtualDirectoriesByHostID mengambil directories berdasarkan host ID (melalui virtual_hosts)
+func (s *VirtualDirectoryService) GetVirtualDirectoriesByHostID(hostID int64) ([]model.VirtualDirectory, error) {
+	return s.DirRepo.GetByHostID(hostID)
+}
+
 // UpdateVirtualDirectory memperbarui virtual directory
 func (s *VirtualDirectoryService) UpdateVirtualDirectory(id int64, req *model.UpdateVirtualDirectoryRequest) error {
 	_, err := s.DirRepo.GetByID(id)
