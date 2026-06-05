@@ -337,14 +337,21 @@ func (a *Authenticator) authenticateExternal(r *http.Request, route *VDirConfig)
 
 // checkRouteAccess checks if a consumer has access to a route via ACL
 func (a *Authenticator) checkRouteAccess(vdirID, consumerID int64) bool {
-	// If no ACL entries exist for this route, allow all authenticated consumers
+	// Check if this route has any consumer ACL entries
 	var count int
 	err := a.db.QueryRow(`SELECT COUNT(*) FROM route_consumer_access WHERE virtual_directory_id = ? AND is_active = 1`, vdirID).Scan(&count)
-	if err != nil || count == 0 {
-		return true // No ACL = open access
+	if err != nil {
+		log.Printf("[Proxy:Auth] Error checking route access for vdir=%d: %v", vdirID, err)
+		return false // Error = deny by default (secure)
+	}
+	
+	// SECURITY: If no ACL entries exist for this route, DENY all access
+	// This enforces mandatory consumer selection (deny-by-default policy)
+	if count == 0 {
+		return false // No ACL configured = deny all (must select at least 1 consumer)
 	}
 
-	// Check if this consumer has access
+	// Check if this specific consumer has access
 	var accessCount int
 	err = a.db.QueryRow(`SELECT COUNT(*) FROM route_consumer_access WHERE virtual_directory_id = ? AND consumer_id = ? AND is_active = 1`, vdirID, consumerID).Scan(&accessCount)
 	return err == nil && accessCount > 0
