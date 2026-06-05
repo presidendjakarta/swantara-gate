@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Directories - Swantara Gate</title>
+    <title>Virtual Directories - Breewc Gate</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.metroui.org.ua/current/metro.css">
@@ -231,11 +231,11 @@
                         </div>
 
                         <div class="form-group" style="margin-bottom: 14px;">
-                            <label>Allowed API Consumers</label>
+                            <label>Allowed API Consumers <span style="color:var(--danger);">*</span></label>
                             <select class="form-control" id="routeAllowedConsumers" multiple style="min-height: 80px;">
-                                <option value="">-- No consumer restriction --</option>
+                                <option value="">-- Select at least one consumer --</option>
                             </select>
-                            <small style="color: var(--text-tertiary); font-size: 11px;">Hold Ctrl/Cmd to select multiple. Leave empty to allow all consumers.</small>
+                            <small style="color: var(--text-tertiary); font-size: 11px;">Hold Ctrl/Cmd to select multiple. Route will be inaccessible if no consumers are selected.</small>
                         </div>
 
                         <div style="display: flex; gap: 20px; flex-wrap: wrap;">
@@ -676,6 +676,14 @@
             if (!tp) { showWarning('Target path is required'); $('#routeTargetPath').focus(); return; }
             const methods = [];
             $('#routeMethodsGroup input[type=checkbox]:checked').each(function() { methods.push($(this).val()); });
+            
+            // Validate at least 1 consumer is selected
+            const selectedConsumers = $('#routeAllowedConsumers').val() || [];
+            if (selectedConsumers.length === 0) {
+                showWarning('Validation', 'At least one API consumer must be selected. Route will be inaccessible without consumers.');
+                $('#routeAllowedConsumers').focus();
+                return;
+            }
             
             // Determine auth_type
             let authType = 'none';
